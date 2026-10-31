@@ -18,13 +18,13 @@
       --border-cyan: rgba(0, 242, 254, 0.3);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; color: var(--text-main); }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; color: var(--text-main); touch-action: none; }
     
     #video-feed {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
     }
     #ar-canvas {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
     }
 
     /* UI Flotante Estilo Natex */
@@ -42,11 +42,19 @@
     }
     .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-neon); }
 
+    .help-hint {
+      position: absolute; top: 4.5rem; left: 50%; transform: translateX(-50%); z-index: 10;
+      background: rgba(0, 242, 254, 0.15); border: 1px solid var(--cyan-glow);
+      color: var(--cyan-glow); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      padding: 0.35rem 0.8rem; border-radius: 20px; backdrop-filter: blur(6px); pointer-events: none;
+      text-align: center; white-space: nowrap;
+    }
+
     .ar-hud-card {
       position: absolute; bottom: 1.5rem; left: 1rem; right: 1rem; z-index: 10;
       background: rgba(15, 20, 28, 0.85); border: 1px solid var(--border-cyan);
       border-radius: 12px; padding: 1rem; backdrop-filter: blur(10px);
-      display: flex; flex-direction: column; gap: 0.5rem;
+      display: flex; flex-direction: column; gap: 0.4rem;
     }
     .hud-row {
       display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
@@ -59,7 +67,7 @@
       padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; cursor: pointer; margin-top: 0.4rem;
     }
 
-    /* Modal Alumno */
+    /* Modales */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(7, 9, 14, 0.9); z-index: 50;
       display: flex; align-items: center; justify-content: center; padding: 1.5rem;
@@ -94,6 +102,8 @@
     </div>
   </div>
 
+  <div class="help-hint">👆 Arrastra con 1 dedo para mover a la mesa • Pellizca para escalar</div>
+
   <!-- HUD Telemetría -->
   <div class="ar-hud-card">
     <div class="hud-row"><span>Longitud (L):</span> <span id="ar-l">1.00 m</span></div>
@@ -107,10 +117,10 @@
   <div class="modal-overlay" id="modal-entry">
     <div class="modal-card">
       <div style="font-size:2rem; margin-bottom:0.5rem;">🌌</div>
-      <h3>Laboratorio de Física AR</h3>
-      <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:1.2rem;">Ingresa tu nombre para conectarte a la sesión y responder las preguntas del profesor.</p>
+      <h3>VirtualLab_N AR</h3>
+      <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:1.2rem;">Ingresa tu nombre para activar el soporte de laboratorio en tu mesa.</p>
       <input type="text" id="student-name-input" class="input-natex" placeholder="Tu Nombre y Apellido" value="Estudiante 01">
-      <button class="btn-enter" id="btn-start-ar">Comenzar en la Mesa</button>
+      <button class="btn-enter" id="btn-start-ar">Plantar en la Mesa</button>
     </div>
   </div>
 
@@ -141,7 +151,7 @@
         });
         document.getElementById('video-feed').srcObject = stream;
       } catch (err) {
-        console.warn("Cámara no disponible, usando modo simulado de laboratorio:", err);
+        console.warn("Cámara no disponible, usando modo simulado:", err);
       }
     }
 
@@ -149,36 +159,123 @@
     const container = document.getElementById('ar-canvas');
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 0, 3.2);
+    camera.position.set(0, 0, 3.5);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
     // Iluminación
-    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    const pLight = new THREE.PointLight(0x00f2fe, 1.5, 10);
-    pLight.position.set(1, 2, 2);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+    const pLight = new THREE.DirectionalLight(0x00f2fe, 1.2);
+    pLight.position.set(2, 4, 3);
     scene.add(pLight);
 
-    // Péndulo 3D
-    const pivot = new THREE.Group();
-    pivot.position.set(0, 0.8, 0);
-    scene.add(pivot);
+    // CONTENEDOR RAÍZ DEL APARATO DE LABORATORIO (Se mueve en la mesa)
+    const labApparatus = new THREE.Group();
+    labApparatus.position.set(0, -0.4, 0); // Altura inicial de mesa
+    labApparatus.scale.set(0.85, 0.85, 0.85);
+    scene.add(labApparatus);
 
+    // 1. BASE METÁLICA PESADA (Apoyada en la mesa)
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.2 });
+    const basePlate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.04, 0.4), baseMat);
+    basePlate.position.set(0.15, -1.2, 0);
+    labApparatus.add(basePlate);
+
+    // Patas de goma de la base
+    const footMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
+    const foot1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.02), footMat);
+    foot1.position.set(-0.15, -1.22, 0.15);
+    basePlate.add(foot1);
+
+    // 2. VARILLA VERTICAL DE SOPORTE
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9, roughness: 0.1 });
+    const verticalPost = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.3, 16), postMat);
+    verticalPost.position.set(0.4, -0.05, 0);
+    labApparatus.add(verticalPost);
+
+    // 3. NUEZ / MORDAZA DE FIJACIÓN
+    const clampMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.3 });
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.08), clampMat);
+    clamp.position.set(0.4, 1.1, 0);
+    labApparatus.add(clamp);
+
+    // 4. BRAZO HORIZONTAL SUPERIOR
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 16), postMat);
+    arm.rotation.z = Math.PI / 2;
+    arm.position.set(0.18, 1.1, 0);
+    labApparatus.add(arm);
+
+    // 5. PIVOTE DEL PÉNDULO (Cuelga del brazo horizontal)
+    const pivot = new THREE.Group();
+    pivot.position.set(0, 1.1, 0);
+    labApparatus.add(pivot);
+
+    // Cuerda
     const rod = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.015, 0.015, 1, 16),
-      new THREE.MeshBasicMaterial({ color: 0x94a3b8 })
+      new THREE.CylinderGeometry(0.01, 0.01, 1, 16),
+      new THREE.MeshBasicMaterial({ color: 0xe2e8f0 })
     );
     rod.position.y = -0.5;
     pivot.add(rod);
 
+    // Esfera (Esmeralda / Cian Estilo Natex)
     const sphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.14, 32, 32),
-      new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.3 })
+      new THREE.SphereGeometry(0.12, 32, 32),
+      new THREE.MeshStandardMaterial({ 
+        color: 0x00f2fe, 
+        metalness: 0.6, 
+        roughness: 0.1, 
+        emissive: 0x00f2fe, 
+        emissiveIntensity: 0.25 
+      })
     );
     sphere.position.y = -1;
     pivot.add(sphere);
+
+    // CONTROLES TÁCTILES: ARRASTRAR Y ESCALAR EN LA MESA
+    let isDragging = false;
+    let prevTouchX = 0;
+    let prevTouchY = 0;
+    let initialPinchDist = 0;
+    let initialScale = 0.85;
+
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        prevTouchX = e.touches[0].clientX;
+        prevTouchY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        initialPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialScale = labApparatus.scale.x;
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      if (isDragging && e.touches.length === 1) {
+        let deltaX = (e.touches[0].clientX - prevTouchX) * 0.005;
+        let deltaY = (e.touches[0].clientY - prevTouchY) * 0.005;
+        labApparatus.position.x += deltaX;
+        labApparatus.position.y -= deltaY;
+        prevTouchX = e.touches[0].clientX;
+        prevTouchY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        let currentDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        let factor = currentDist / initialPinchDist;
+        let newScale = Math.max(0.3, Math.min(2.0, initialScale * factor));
+        labApparatus.scale.set(newScale, newScale, newScale);
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => { isDragging = false; });
 
     // Sincronización MQTT
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
@@ -221,7 +318,6 @@
       if (dt > 0.1) dt = 0.1;
 
       if (!params.paused) {
-        // RK4
         let gL = params.gravity / params.length;
         let k1_th = state.omega;
         let k1_om = -gL * Math.sin(state.theta) - params.friction * state.omega;
