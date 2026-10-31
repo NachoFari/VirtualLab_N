@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Cámara AR Estudiante | VirtualLab_N</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --cyan-glow: #00f2fe;
+      --green-neon: #10b981;
+      --text-main: #f8fafc;
+      --border-cyan: rgba(0, 242, 254, 0.3);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; color: var(--text-main); }
+    
+    #video-feed {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
+    }
+    #ar-canvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;
+    }
+
+    /* UI Flotante Estilo Natex */
+    .ar-header {
+      position: absolute; top: 1rem; left: 1rem; right: 1rem; z-index: 10;
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(15, 20, 28, 0.85); border: 1px solid var(--border-cyan);
+      padding: 0.6rem 1rem; border-radius: 30px; backdrop-filter: blur(10px);
+    }
+    .room-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--cyan-glow);
+    }
+    .sync-indicator {
+      display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--green-neon); font-family: 'JetBrains Mono', monospace;
+    }
+    .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-neon); }
+
+    .ar-hud-card {
+      position: absolute; bottom: 1.5rem; left: 1rem; right: 1rem; z-index: 10;
+      background: rgba(15, 20, 28, 0.85); border: 1px solid var(--border-cyan);
+      border-radius: 12px; padding: 1rem; backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .hud-row {
+      display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+    }
+    .hud-row span:last-child { color: var(--cyan-glow); font-weight: 700; }
+    
+    .btn-capture {
+      width: 100%; background: linear-gradient(135deg, var(--cyan-glow), #4facfe);
+      border: none; color: #000; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+      padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; cursor: pointer; margin-top: 0.4rem;
+    }
+
+    /* Modal Alumno */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(7, 9, 14, 0.9); z-index: 50;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    .modal-card {
+      background: #0f141c; border: 1px solid var(--cyan-glow); border-radius: 12px;
+      padding: 1.5rem; width: 100%; max-width: 400px; text-align: center;
+    }
+    .modal-card h3 { font-family: 'JetBrains Mono', monospace; color: var(--cyan-glow); margin-bottom: 0.8rem; }
+    .input-natex {
+      width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-cyan);
+      color: #fff; font-family: 'Inter', sans-serif; border-radius: 6px; margin-bottom: 1rem; outline: none;
+    }
+    .btn-enter {
+      width: 100%; padding: 0.8rem; background: var(--cyan-glow); color: #000;
+      border: none; border-radius: 6px; font-weight: 700; font-family: 'JetBrains Mono', monospace; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Video Cámara del Teléfono -->
+  <video id="video-feed" playsinline autoplay muted></video>
+  <div id="ar-canvas"></div>
+
+  <!-- Header Flotante -->
+  <div class="ar-header">
+    <div class="room-badge">VLAB_N • SALA-NATEX</div>
+    <div class="sync-indicator">
+      <div class="sync-dot"></div>
+      <span id="sync-text">Sincronizado</span>
+    </div>
+  </div>
+
+  <!-- HUD Telemetría -->
+  <div class="ar-hud-card">
+    <div class="hud-row"><span>Longitud (L):</span> <span id="ar-l">1.00 m</span></div>
+    <div class="hud-row"><span>Gravedad (g):</span> <span id="ar-g">9.80 m/s²</span></div>
+    <div class="hud-row"><span>Ángulo (&theta;):</span> <span id="ar-angle">0.0°</span></div>
+    <div class="hud-row"><span>Alumno:</span> <span id="ar-student">Camila Soto</span></div>
+    <button class="btn-capture" id="btn-snap">📸 Capturar Evidencia de Laboratorio</button>
+  </div>
+
+  <!-- Modal Inicial: Nombre del Alumno -->
+  <div class="modal-overlay" id="modal-entry">
+    <div class="modal-card">
+      <div style="font-size:2rem; margin-bottom:0.5rem;">🌌</div>
+      <h3>Laboratorio de Física AR</h3>
+      <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:1.2rem;">Ingresa tu nombre para conectarte a la sesión y responder las preguntas del profesor.</p>
+      <input type="text" id="student-name-input" class="input-natex" placeholder="Tu Nombre y Apellido" value="Estudiante 01">
+      <button class="btn-enter" id="btn-start-ar">Comenzar en la Mesa</button>
+    </div>
+  </div>
+
+  <!-- Modal Quiz en Vivo -->
+  <div class="modal-overlay" id="modal-quiz-live" style="display:none;">
+    <div class="modal-card">
+      <div style="color:var(--cyan-glow); font-family:'JetBrains Mono', monospace; font-size:0.8rem; margin-bottom:0.5rem;">PREGUNTA DEL PROFESOR</div>
+      <h3 style="font-size:1rem; margin-bottom:1rem;" id="quiz-q">¿Qué ocurre al cuadruplicar la longitud?</h3>
+      <div style="display:flex; flex-direction:column; gap:0.5rem;" id="quiz-opts">
+        <button class="input-natex" style="cursor:pointer; text-align:left;" onclick="sendAnswer('A')">A) Se reduce a la mitad</button>
+        <button class="input-natex" style="cursor:pointer; text-align:left;" onclick="sendAnswer('B')">B) Se duplica el período ✅</button>
+        <button class="input-natex" style="cursor:pointer; text-align:left;" onclick="sendAnswer('C')">C) Queda exactamente igual</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let studentName = "Estudiante";
+    let params = { length: 1.0, mass: 1.0, gravity: 9.8, friction: 0.05, paused: false };
+    let state = { theta: Math.PI / 4, omega: 0.0 };
+
+    // Iniciar Cámara Móvil
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+        document.getElementById('video-feed').srcObject = stream;
+      } catch (err) {
+        console.warn("Cámara no disponible, usando modo simulado de laboratorio:", err);
+      }
+    }
+
+    // Configuración Three.js
+    const container = document.getElementById('ar-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 3.2);
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // Iluminación
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const pLight = new THREE.PointLight(0x00f2fe, 1.5, 10);
+    pLight.position.set(1, 2, 2);
+    scene.add(pLight);
+
+    // Péndulo 3D
+    const pivot = new THREE.Group();
+    pivot.position.set(0, 0.8, 0);
+    scene.add(pivot);
+
+    const rod = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.015, 0.015, 1, 16),
+      new THREE.MeshBasicMaterial({ color: 0x94a3b8 })
+    );
+    rod.position.y = -0.5;
+    pivot.add(rod);
+
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.14, 32, 32),
+      new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.3 })
+    );
+    sphere.position.y = -1;
+    pivot.add(sphere);
+
+    // Sincronización MQTT
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
+    client.on('connect', () => {
+      client.subscribe("vlab-n/sala-natex");
+      document.getElementById('sync-text').innerText = "En Vivo";
+    });
+
+    client.on('message', (topic, message) => {
+      try {
+        const payload = JSON.parse(message.toString());
+        if (payload.type === 'PARAMS') {
+          params = payload.data;
+          document.getElementById('ar-l').innerText = params.length.toFixed(2) + ' m';
+          document.getElementById('ar-g').innerText = params.gravity.toFixed(2) + ' m/s²';
+        } else if (payload.type === 'QUIZ') {
+          document.getElementById('modal-quiz-live').style.display = 'flex';
+        }
+      } catch (e) {}
+    });
+
+    function sendAnswer(opt) {
+      if (client.connected) {
+        client.publish("vlab-n/sala-natex/answers", JSON.stringify({
+          alumno: studentName,
+          respuesta: opt,
+          timestamp: new Date().toISOString()
+        }));
+      }
+      document.getElementById('modal-quiz-live').style.display = 'none';
+      alert("¡Respuesta enviada al panel del profesor!");
+    }
+
+    // Física RK4
+    let lastT = performance.now();
+    function animate(t) {
+      requestAnimationFrame(animate);
+      let dt = (t - lastT) / 1000;
+      lastT = t;
+      if (dt > 0.1) dt = 0.1;
+
+      if (!params.paused) {
+        // RK4
+        let gL = params.gravity / params.length;
+        let k1_th = state.omega;
+        let k1_om = -gL * Math.sin(state.theta) - params.friction * state.omega;
+        let k2_th = state.omega + 0.5 * dt * k1_om;
+        let k2_om = -gL * Math.sin(state.theta + 0.5 * dt * k1_th) - params.friction * (state.omega + 0.5 * dt * k1_om);
+        state.theta += dt * k2_th;
+        state.omega += dt * k2_om;
+      }
+
+      pivot.rotation.z = state.theta;
+      rod.scale.set(1, params.length, 1);
+      rod.position.y = -params.length / 2;
+      sphere.position.y = -params.length;
+
+      document.getElementById('ar-angle').innerText = (state.theta * 180 / Math.PI).toFixed(1) + '°';
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+
+    // Entrada Inicial
+    document.getElementById('btn-start-ar').onclick = () => {
+      studentName = document.getElementById('student-name-input').value.trim() || "Estudiante";
+      document.getElementById('ar-student').innerText = studentName;
+      document.getElementById('modal-entry').style.display = 'none';
+      initCamera();
+    };
+
+    // Captura de Evidencia con Marca de Agua
+    document.getElementById('btn-snap').onclick = () => {
+      const snapCanvas = document.createElement('canvas');
+      snapCanvas.width = window.innerWidth;
+      snapCanvas.height = window.innerHeight;
+      const ctx = snapCanvas.getContext('2d');
+
+      const video = document.getElementById('video-feed');
+      if (video.videoWidth > 0) {
+        ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+      }
+      ctx.drawImage(renderer.domElement, 0, 0);
+
+      // Marca de agua
+      ctx.fillStyle = "rgba(7, 9, 14, 0.85)";
+      ctx.fillRect(20, snapCanvas.height - 80, 360, 60);
+      ctx.fillStyle = "#00f2fe";
+      ctx.font = "bold 16px 'JetBrains Mono', monospace";
+      ctx.fillText("VIRTUALLAB_N • EVIDENCIA AR", 30, snapCanvas.height - 55);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "12px sans-serif";
+      ctx.fillText(`${studentName} • L: ${params.length}m • g: ${params.gravity}m/s²`, 30, snapCanvas.height - 35);
+
+      const link = document.createElement('a');
+      link.download = `Evidencia_AR_${studentName}.png`;
+      link.href = snapCanvas.toDataURL('image/png');
+      link.click();
+    };
+  </script>
+</body>
+</html>

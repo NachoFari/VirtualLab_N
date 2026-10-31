@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Maestro Docente | VirtualLab_N</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <!-- Librerías Externas desde CDN Gratis ($0) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --panel-slate: #0f141c;
+      --border-cyan: rgba(0, 242, 254, 0.25);
+      --cyan-glow: #00f2fe;
+      --blue-electric: #4facfe;
+      --green-neon: #10b981;
+      --amber-warn: #f59e0b;
+      --rose-danger: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-cyan);
+      background: rgba(15, 20, 28, 0.9);
+      backdrop-filter: blur(12px);
+    }
+    .header-left { display: flex; align-items: center; gap: 1rem; }
+    .logo-badge {
+      width: 34px; height: 34px; border: 2px solid var(--cyan-glow);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--cyan-glow);
+      border-radius: 6px; box-shadow: 0 0 10px rgba(0,242,254,0.3);
+    }
+    .status-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--green-neon);
+      color: var(--green-neon);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-neon); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+    
+    .github-btn {
+      color: var(--cyan-glow); text-decoration: none; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem; border: 1px solid var(--border-cyan); padding: 0.4rem 0.9rem;
+      border-radius: 6px; display: flex; align-items: center; gap: 0.4rem; background: rgba(0,242,254,0.05);
+      transition: all 0.2s;
+    }
+    .github-btn:hover { background: rgba(0,242,254,0.2); box-shadow: 0 0 10px rgba(0,242,254,0.4); }
+
+    .main-layout {
+      flex: 1; display: grid; grid-template-columns: 1fr 380px; gap: 1rem; padding: 1rem;
+    }
+    @media (max-width: 900px) {
+      .main-layout { grid-template-columns: 1fr; }
+    }
+    .viewport-container {
+      background: #000; border: 1px solid var(--border-cyan); border-radius: 12px;
+      position: relative; overflow: hidden; display: flex; flex-direction: column;
+    }
+    #three-canvas { width: 100%; height: 100%; min-height: 400px; display: block; }
+    .hud-overlay {
+      position: absolute; top: 1rem; left: 1rem; pointer-events: none;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+      background: rgba(15, 20, 28, 0.85); border: 1px solid var(--border-cyan);
+      padding: 0.75rem 1rem; border-radius: 8px; backdrop-filter: blur(8px);
+    }
+    .hud-stat { margin-bottom: 0.35rem; display: flex; gap: 1rem; justify-content: space-between; }
+    .hud-stat span:last-child { color: var(--cyan-glow); font-weight: 700; }
+
+    .playback-bar {
+      position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 0.5rem; background: rgba(15, 20, 28, 0.9);
+      border: 1px solid var(--border-cyan); border-radius: 30px; padding: 0.4rem 0.8rem;
+      backdrop-filter: blur(10px);
+    }
+    .btn-control {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-cyan);
+      color: var(--text-main); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+      padding: 0.4rem 0.8rem; border-radius: 20px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-control:hover { background: rgba(0, 242, 254, 0.2); border-color: var(--cyan-glow); }
+    .btn-control.active { background: var(--cyan-glow); color: #000; font-weight: 700; }
+
+    .controls-panel {
+      background: var(--panel-slate); border: 1px solid var(--border-cyan);
+      border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem;
+      overflow-y: auto; max-height: calc(100vh - 100px);
+    }
+    .panel-section { border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 1rem; }
+    .section-title {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--cyan-glow); margin-bottom: 0.75rem; display: flex; justify-content: space-between;
+    }
+    .control-row { margin-bottom: 0.85rem; }
+    .control-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.35rem; }
+    .control-header span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--cyan-glow); }
+    input[type="range"] {
+      width: 100%; -webkit-appearance: none; background: rgba(255, 255, 255, 0.1);
+      height: 6px; border-radius: 3px; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--cyan-glow); cursor: pointer; box-shadow: 0 0 8px var(--cyan-glow);
+    }
+
+    .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; margin-top: 0.5rem; }
+    .btn-preset {
+      background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted); font-size: 0.75rem; padding: 0.4rem 0.2rem; text-align: center;
+      border-radius: 4px; cursor: pointer;
+    }
+    .btn-preset:hover { border-color: var(--cyan-glow); color: var(--cyan-glow); }
+
+    .btn-launch-quiz {
+      width: 100%; background: linear-gradient(135deg, var(--cyan-glow), var(--blue-electric));
+      color: #000; border: none; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+      font-size: 0.95rem; padding: 0.75rem; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-launch-quiz:hover { box-shadow: 0 0 15px rgba(0, 242, 254, 0.5); filter: brightness(1.1); }
+    .btn-export {
+      width: 100%; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--green-neon);
+      color: var(--green-neon); font-family: 'JetBrains Mono', monospace; font-weight: 700;
+      font-size: 0.85rem; padding: 0.65rem; border-radius: 8px; cursor: pointer; margin-top: 0.5rem;
+    }
+    .btn-export:hover { background: rgba(16, 185, 129, 0.3); }
+
+    /* Modal Quiz */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none;
+      align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(6px);
+    }
+    .modal-box {
+      background: var(--panel-slate); border: 1px solid var(--cyan-glow); width: 90%; max-width: 500px;
+      border-radius: 12px; padding: 1.5rem; box-shadow: 0 0 30px rgba(0, 242, 254, 0.25);
+    }
+    .modal-box h3 { font-family: 'JetBrains Mono', monospace; margin-bottom: 1rem; color: var(--cyan-glow); }
+    .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+    .quiz-opt {
+      padding: 0.65rem 1rem; border: 1px solid var(--border-cyan); border-radius: 6px;
+      font-size: 0.85rem; cursor: pointer; background: rgba(255,255,255,0.02);
+    }
+    .quiz-opt:hover { background: rgba(0,242,254,0.1); border-color: var(--cyan-glow); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <div class="logo-badge">N</div>
+      <div>
+        <h2 style="font-family:'JetBrains Mono', monospace; font-size:1.1rem; letter-spacing:1px;">VirtualLab_N • Péndulo Simple</h2>
+        <small style="color:var(--text-muted); font-size:0.75rem;">Sala de Control: <strong style="color:var(--cyan-glow);" id="room-code">SALA-NATEX</strong></small>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span id="conn-status">Conectado en Vivo</span>
+      </div>
+    </div>
+    <a href="https://github.com/NachoFari/VirtualLab_N" target="_blank" class="github-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+      </svg>
+      NachoFari en GitHub
+    </a>
+  </header>
+
+  <div class="main-layout">
+    <!-- Viewport 3D -->
+    <div class="viewport-container">
+      <div id="three-canvas"></div>
+      
+      <!-- Telemetría HUD -->
+      <div class="hud-overlay">
+        <div class="hud-stat"><span>Ángulo (&theta;):</span> <span id="hud-angle">0.00°</span></div>
+        <div class="hud-stat"><span>Velocidad Angular (&omega;):</span> <span id="hud-omega">0.00 rad/s</span></div>
+        <div class="hud-stat"><span>Período Teórico (T):</span> <span id="hud-period">2.01 s</span></div>
+        <div class="hud-stat"><span>Energía Mecánica:</span> <span id="hud-energy">0.00 J</span></div>
+      </div>
+
+      <!-- Barra de Reproducción -->
+      <div class="playback-bar">
+        <button class="btn-control" id="btn-pause">Pausar</button>
+        <button class="btn-control" id="btn-step">Paso (+1)</button>
+        <button class="btn-control" id="btn-slow">0.5x</button>
+        <button class="btn-control" id="btn-reset">Reset</button>
+      </div>
+    </div>
+
+    <!-- Controles Maestros -->
+    <div class="controls-panel">
+      <div class="panel-section">
+        <div class="section-title">Parámetros Físicos</div>
+        
+        <!-- Longitud -->
+        <div class="control-row">
+          <div class="control-header">
+            <span>Longitud de Cuerda (L)</span>
+            <span id="val-length">1.00 m</span>
+          </div>
+          <input type="range" id="slider-length" min="0.2" max="2.5" step="0.05" value="1.0">
+        </div>
+
+        <!-- Masa -->
+        <div class="control-row">
+          <div class="control-header">
+            <span>Masa de la Esfera (m)</span>
+            <span id="val-mass">1.00 kg</span>
+          </div>
+          <input type="range" id="slider-mass" min="0.1" max="5.0" step="0.1" value="1.0">
+        </div>
+
+        <!-- Amortiguamiento -->
+        <div class="control-row">
+          <div class="control-header">
+            <span>Fricción del Aire (&gamma;)</span>
+            <span id="val-friction">0.05</span>
+          </div>
+          <input type="range" id="slider-friction" min="0.0" max="0.5" step="0.01" value="0.05">
+        </div>
+
+        <!-- Gravedad -->
+        <div class="control-row">
+          <div class="control-header">
+            <span>Aceleración Gravitatoria (g)</span>
+            <span id="val-gravity">9.80 m/s²</span>
+          </div>
+          <input type="range" id="slider-gravity" min="0.0" max="25.0" step="0.1" value="9.8">
+          <div class="preset-grid">
+            <button class="btn-preset" onclick="setGravity(0.0)">Espacio</button>
+            <button class="btn-preset" onclick="setGravity(1.62)">Luna</button>
+            <button class="btn-preset" onclick="setGravity(9.8)">Tierra</button>
+            <button class="btn-preset" onclick="setGravity(24.79)">Júpiter</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evaluación y Excel -->
+      <div class="panel-section">
+        <div class="section-title">Evaluación en Clase</div>
+        <button class="btn-launch-quiz" id="btn-open-quiz">Lanzar Pregunta a la Clase</button>
+        <button class="btn-export" id="btn-export-excel">📥 Descargar Calificaciones (Excel)</button>
+      </div>
+
+      <!-- Guía Didáctica Rápida -->
+      <div>
+        <div class="section-title">Fórmula Teórica</div>
+        <p style="font-family:'JetBrains Mono', monospace; font-size:0.85rem; color:var(--cyan-glow); margin-bottom:0.4rem;">T = 2&pi; &radic;(L / g)</p>
+        <small style="color:var(--text-muted); font-size:0.75rem; line-height:1.4; display:block;">
+          El período de oscilación para pequeñas amplitudes es independiente de la masa. Al cuadruplicar la longitud, el período se duplica exactamente.
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Quiz -->
+  <div class="modal-backdrop" id="modal-quiz">
+    <div class="modal-box">
+      <h3>Quiz Rápido: Péndulo Simple</h3>
+      <p style="font-size:0.9rem; margin-bottom:1rem;" id="quiz-question-text">
+        Si cuadruplicamos la longitud de la cuerda (de 0.5m a 2.0m), ¿qué le ocurre al período de oscilación?
+      </p>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="broadcastQuizOption('A')">A) Se reduce a la mitad</div>
+        <div class="quiz-opt" onclick="broadcastQuizOption('B')">B) Se duplica (T aumenta al doble) ✅</div>
+        <div class="quiz-opt" onclick="broadcastQuizOption('C')">C) Queda exactamente igual</div>
+        <div class="quiz-opt" onclick="broadcastQuizOption('D')">D) Se multiplica por cuatro</div>
+      </div>
+      <button class="btn-control" style="width:100%; margin-top:0.5rem;" onclick="closeQuizModal()">Cerrar / Cancelar</button>
+    </div>
+  </div>
+
+  <script>
+    // Parámetros Físicos
+    let state = { theta: Math.PI / 4, omega: 0.0 };
+    let params = { length: 1.0, mass: 1.0, gravity: 9.8, friction: 0.05, paused: false, timeScale: 1.0 };
+    let studentResponses = [
+      { id: 1, alumno: "Camila Soto", respuesta: "B", puntaje: "1.0", fecha: new Date().toLocaleTimeString() },
+      { id: 2, alumno: "Matías Gómez", respuesta: "B", puntaje: "1.0", fecha: new Date().toLocaleTimeString() },
+      { id: 3, alumno: "Sofía Ramírez", respuesta: "A", puntaje: "0.0", fecha: new Date().toLocaleTimeString() }
+    ];
+
+    // Conexión MQTT Libre sobre WSS ($0 Costo)
+    const room = "vlab-n/sala-natex";
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true, connectTimeout: 4000 });
+
+    client.on('connect', () => {
+      document.getElementById('conn-status').innerText = "En Vivo (Sincronizado)";
+      broadcastParams();
+    });
+
+    function broadcastParams() {
+      if (client.connected) {
+        client.publish(room, JSON.stringify({ type: 'PARAMS', data: params }));
+      }
+    }
+
+    // Configuración Three.js
+    const container = document.getElementById('three-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x07090e);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 0, 3.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // Luces
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0x00f2fe, 1.2);
+    dirLight.position.set(2, 4, 3);
+    scene.add(dirLight);
+
+    // Modelado del Péndulo
+    const pivot = new THREE.Group();
+    pivot.position.set(0, 1.2, 0);
+    scene.add(pivot);
+
+    // Soporte Horizontal
+    const beamGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.2, 16);
+    const beamMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.2 });
+    const beam = new THREE.Mesh(beamGeo, beamMat);
+    beam.rotation.z = Math.PI / 2;
+    pivot.add(beam);
+
+    // Cuerda
+    const rodGeo = new THREE.CylinderGeometry(0.01, 0.01, 1, 12);
+    const rodMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8 });
+    const rod = new THREE.Mesh(rodGeo, rodMat);
+    rod.position.y = -0.5;
+    pivot.add(rod);
+
+    // Esfera
+    const sphereGeo = new THREE.SphereGeometry(0.12, 32, 32);
+    const sphereMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, metalness: 0.5, roughness: 0.1, emissive: 0x00f2fe, emissiveIntensity: 0.2 });
+    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    sphere.position.y = -1;
+    pivot.add(sphere);
+
+    // Física Runge-Kutta 4 (RK4)
+    function rk4Step(theta, omega, dt) {
+      function f1(th, om) { return om; }
+      function f2(th, om) { return -(params.gravity / params.length) * Math.sin(th) - params.friction * om; }
+
+      let k1_th = f1(theta, omega);
+      let k1_om = f2(theta, omega);
+
+      let k2_th = f1(theta + 0.5 * dt * k1_th, omega + 0.5 * dt * k1_om);
+      let k2_om = f2(theta + 0.5 * dt * k1_th, omega + 0.5 * dt * k1_om);
+
+      let k3_th = f1(theta + 0.5 * dt * k2_th, omega + 0.5 * dt * k2_om);
+      let k3_om = f2(theta + 0.5 * dt * k2_th, omega + 0.5 * dt * k2_om);
+
+      let k4_th = f1(theta + dt * k3_th, omega + dt * k3_om);
+      let k4_om = f2(theta + dt * k3_th, omega + dt * k3_om);
+
+      return {
+        theta: theta + (dt / 6) * (k1_th + 2 * k2_th + 2 * k3_th + k4_th),
+        omega: omega + (dt / 6) * (k1_om + 2 * k2_om + 2 * k3_om + k4_om)
+      };
+    }
+
+    let lastTime = performance.now();
+    function animate(time) {
+      requestAnimationFrame(animate);
+      let dt = (time - lastTime) / 1000;
+      lastTime = time;
+      if (dt > 0.1) dt = 0.1;
+
+      if (!params.paused) {
+        let step = rk4Step(state.theta, state.omega, dt * params.timeScale);
+        state.theta = step.theta;
+        state.omega = step.omega;
+      }
+
+      // Actualizar Gráficos 3D
+      pivot.rotation.z = state.theta;
+      rod.scale.set(1, params.length, 1);
+      rod.position.y = -params.length / 2;
+      sphere.position.y = -params.length;
+      let rScale = Math.cbrt(params.mass);
+      sphere.scale.set(rScale, rScale, rScale);
+
+      // HUD
+      document.getElementById('hud-angle').innerText = (state.theta * 180 / Math.PI).toFixed(2) + '°';
+      document.getElementById('hud-omega').innerText = state.omega.toFixed(2) + ' rad/s';
+      let period = params.gravity > 0 ? (2 * Math.PI * Math.sqrt(params.length / params.gravity)).toFixed(2) : '&infin;';
+      document.getElementById('hud-period').innerHTML = period + ' s';
+      let Ek = 0.5 * params.mass * Math.pow(params.length * state.omega, 2);
+      let Ep = params.mass * params.gravity * params.length * (1 - Math.cos(state.theta));
+      document.getElementById('hud-energy').innerText = (Ek + Ep).toFixed(2) + ' J';
+
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(animate);
+
+    // Eventos UI
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    document.getElementById('slider-length').oninput = (e) => {
+      params.length = parseFloat(e.target.value);
+      document.getElementById('val-length').innerText = params.length.toFixed(2) + ' m';
+      broadcastParams();
+    };
+    document.getElementById('slider-mass').oninput = (e) => {
+      params.mass = parseFloat(e.target.value);
+      document.getElementById('val-mass').innerText = params.mass.toFixed(2) + ' kg';
+      broadcastParams();
+    };
+    document.getElementById('slider-friction').oninput = (e) => {
+      params.friction = parseFloat(e.target.value);
+      document.getElementById('val-friction').innerText = params.friction.toFixed(2);
+      broadcastParams();
+    };
+    document.getElementById('slider-gravity').oninput = (e) => {
+      setGravity(parseFloat(e.target.value));
+    };
+    function setGravity(g) {
+      params.gravity = g;
+      document.getElementById('slider-gravity').value = g;
+      document.getElementById('val-gravity').innerText = g.toFixed(2) + ' m/s²';
+      broadcastParams();
+    }
+
+    const btnPause = document.getElementById('btn-pause');
+    btnPause.onclick = () => {
+      params.paused = !params.paused;
+      btnPause.innerText = params.paused ? 'Reanudar' : 'Pausar';
+      btnPause.classList.toggle('active', params.paused);
+      broadcastParams();
+    };
+    document.getElementById('btn-reset').onclick = () => {
+      state.theta = Math.PI / 4;
+      state.omega = 0;
+      broadcastParams();
+    };
+    document.getElementById('btn-step').onclick = () => {
+      let step = rk4Step(state.theta, state.omega, 0.05);
+      state.theta = step.theta;
+      state.omega = step.omega;
+      broadcastParams();
+    };
+    document.getElementById('btn-slow').onclick = (e) => {
+      params.timeScale = params.timeScale === 1.0 ? 0.25 : 1.0;
+      e.target.innerText = params.timeScale === 1.0 ? '0.5x' : '1.0x (Normal)';
+      e.target.classList.toggle('active', params.timeScale !== 1.0);
+      broadcastParams();
+    };
+
+    // Quiz y Excel
+    document.getElementById('btn-open-quiz').onclick = () => {
+      document.getElementById('modal-quiz').style.display = 'flex';
+    };
+    function closeQuizModal() {
+      document.getElementById('modal-quiz').style.display = 'none';
+    }
+    function broadcastQuizOption(correct) {
+      if (client.connected) {
+        client.publish(room, JSON.stringify({
+          type: 'QUIZ',
+          data: {
+            pregunta: "¿Qué le ocurre al período si cuadruplicamos la longitud (4L)?",
+            opciones: ["Se reduce a la mitad", "Se duplica (Correcta)", "Queda igual", "Se cuadruplica"],
+            correcta: 1
+          }
+        }));
+      }
+      alert("¡Quiz lanzado con éxito a todos los dispositivos de los alumnos!");
+      closeQuizModal();
+    }
+
+    document.getElementById('btn-export-excel').onclick = () => {
+      const ws = XLSX.utils.json_to_sheet(studentResponses);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Resultados_Pendulo");
+      XLSX.writeFile(wb, "VirtualLab_N_Resultados_Pendulo.xlsx");
+    };
+  </script>
+</body>
+</html>
