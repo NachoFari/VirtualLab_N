@@ -1,285 +1,152 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cámara AR Estudiante | VirtualLab_N</title>
+  <title>Cámara AR 6DoF Real | VirtualLab_N</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- A-Frame y AR.js para Detección Óptica Real de Marcador (6 Grados de Libertad) -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  
   <style>
-    :root {
-      --bg-dark: #07090e;
-      --cyan-glow: #00f2fe;
-      --green-neon: #10b981;
-      --text-main: #f8fafc;
-      --border-cyan: rgba(0, 242, 254, 0.4);
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; color: var(--text-main); touch-action: none; }
+    body { font-family: 'Inter', sans-serif; overflow: hidden; background: #000; }
     
-    #video-feed {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
+    /* Overlay UI Estilo Natex */
+    .ar-ui-container {
+      position: fixed; inset: 0; pointer-events: none; z-index: 99999;
+      display: flex; flex-direction: column; justify-content: space-between; padding: 1rem;
     }
-    #ar-canvas {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
+    .top-bar {
+      display: flex; justify-content: space-between; align-items: center; pointer-events: auto;
     }
-
-    /* UI Flotante Estilo Natex */
-    .ar-header {
-      position: absolute; top: 0.8rem; left: 0.8rem; right: 0.8rem; z-index: 10;
-      display: flex; justify-content: space-between; align-items: center;
-      background: rgba(15, 20, 28, 0.9); border: 1px solid var(--border-cyan);
-      padding: 0.5rem 0.9rem; border-radius: 30px; backdrop-filter: blur(10px);
+    .badge {
+      background: rgba(15, 20, 28, 0.9); border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #00f2fe; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      padding: 0.4rem 0.8rem; border-radius: 20px; backdrop-filter: blur(8px);
     }
-    .room-badge {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--cyan-glow); font-weight: 700;
+    .btn-marker-help {
+      background: rgba(0, 242, 254, 0.15); border: 1px solid #00f2fe; color: #00f2fe;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700;
+      padding: 0.4rem 0.8rem; border-radius: 20px; text-decoration: none; pointer-events: auto;
     }
-    .version-tag {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #10b981; background: rgba(16,185,129,0.15); padding: 0.2rem 0.5rem; border-radius: 10px;
-    }
-
-    .help-hint {
-      position: absolute; top: 3.8rem; left: 50%; transform: translateX(-50%); z-index: 10;
-      background: rgba(7, 9, 14, 0.85); border: 1px solid var(--cyan-glow);
-      color: var(--cyan-glow); font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-      padding: 0.35rem 0.8rem; border-radius: 20px; backdrop-filter: blur(6px); pointer-events: none;
-      text-align: center; white-space: nowrap; box-shadow: 0 0 10px rgba(0,242,254,0.3);
-    }
-
-    .ar-hud-card {
-      position: absolute; bottom: 1rem; left: 0.8rem; right: 0.8rem; z-index: 10;
-      background: rgba(15, 20, 28, 0.9); border: 1px solid var(--border-cyan);
-      border-radius: 12px; padding: 0.75rem 1rem; backdrop-filter: blur(10px);
-      display: flex; flex-direction: column; gap: 0.35rem;
-    }
-    .hud-row {
-      display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
-    }
-    .hud-row span:last-child { color: var(--cyan-glow); font-weight: 700; }
     
-    .btn-capture {
-      width: 100%; background: linear-gradient(135deg, var(--cyan-glow), #4facfe);
-      border: none; color: #000; font-family: 'JetBrains Mono', monospace; font-weight: 700;
-      padding: 0.65rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin-top: 0.3rem;
+    .status-toast {
+      align-self: center; background: rgba(7, 9, 14, 0.9); border: 1px solid #00f2fe;
+      color: #00f2fe; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      padding: 0.4rem 1rem; border-radius: 20px; box-shadow: 0 0 15px rgba(0,242,254,0.3);
+      text-align: center;
     }
 
-    /* Modales */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(7, 9, 14, 0.92); z-index: 50;
-      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+    .bottom-hud {
+      background: rgba(15, 20, 28, 0.9); border: 1px solid rgba(0, 242, 254, 0.3);
+      border-radius: 12px; padding: 0.8rem 1rem; backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; gap: 0.3rem; pointer-events: auto;
     }
-    .modal-card {
-      background: #0f141c; border: 1px solid var(--cyan-glow); border-radius: 12px;
-      padding: 1.5rem; width: 100%; max-width: 400px; text-align: center;
+    .hud-line {
+      display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #fff;
     }
-    .modal-card h3 { font-family: 'JetBrains Mono', monospace; color: var(--cyan-glow); margin-bottom: 0.8rem; }
-    .input-natex {
-      width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-cyan);
-      color: #fff; font-family: 'Inter', sans-serif; border-radius: 6px; margin-bottom: 1rem; outline: none;
-    }
-    .btn-enter {
-      width: 100%; padding: 0.8rem; background: var(--cyan-glow); color: #000;
-      border: none; border-radius: 6px; font-weight: 700; font-family: 'JetBrains Mono', monospace; cursor: pointer;
-    }
+    .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
   </style>
+
+  <!-- Auto Cache-Buster Script -->
+  <script>
+    const CURRENT_REV = "rev4_ar_real";
+    if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
+      window.location.replace("alumno.html?v=" + CURRENT_REV);
+    }
+  </script>
 </head>
 <body>
 
-  <!-- Video Cámara del Teléfono -->
-  <video id="video-feed" playsinline autoplay muted></video>
-  <div id="ar-canvas"></div>
+  <!-- UI FLOTANTE -->
+  <div class="ar-ui-container">
+    <div class="top-bar">
+      <div class="badge">VLAB_N • RA 6DoF REAL</div>
+      <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Marcador en Pantalla</a>
+    </div>
 
-  <!-- Header Flotante -->
-  <div class="ar-header">
-    <div class="room-badge">VLAB_N • PÉNDULO</div>
-    <div class="version-tag">v1.3 SOPORTE MESA ACTIVO</div>
-  </div>
+    <div class="status-toast" id="tracking-status">
+      🔍 Apunta la cámara al Marcador Hiro (en papel o en otra pantalla)
+    </div>
 
-  <div class="help-hint">👆 Toca y arrastra para colocar sobre la mesa • Pellizca para escalar</div>
-
-  <!-- HUD Telemetría -->
-  <div class="ar-hud-card">
-    <div class="hud-row"><span>Longitud (L):</span> <span id="ar-l">1.00 m</span></div>
-    <div class="hud-row"><span>Gravedad (g):</span> <span id="ar-g">9.80 m/s²</span></div>
-    <div class="hud-row"><span>Ángulo (&theta;):</span> <span id="ar-angle">0.0°</span></div>
-    <div class="hud-row"><span>Alumno:</span> <span id="ar-student">Estudiante</span></div>
-    <button class="btn-capture" id="btn-snap">📸 Guardar Evidencia de Laboratorio</button>
-  </div>
-
-  <!-- Modal Inicial -->
-  <div class="modal-overlay" id="modal-entry">
-    <div class="modal-card">
-      <div style="font-size:2rem; margin-bottom:0.5rem;">🌌</div>
-      <h3>VirtualLab_N</h3>
-      <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:1.2rem;">Ingresa tu nombre para activar el soporte de laboratorio sobre tu escritorio.</p>
-      <input type="text" id="student-name-input" class="input-natex" placeholder="Tu Nombre y Apellido" value="Estudiante 01">
-      <button class="btn-enter" id="btn-start-ar">Apoyar en la Mesa</button>
+    <div class="bottom-hud">
+      <div class="hud-line"><span>Estado Óptico:</span> <span id="ar-track">Buscando Marcador...</span></div>
+      <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">1.00 m</span></div>
+      <div class="hud-line"><span>Gravedad (g):</span> <span id="ar-g">9.80 m/s²</span></div>
+      <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">0.0°</span></div>
     </div>
   </div>
 
-  <!-- Modal Quiz en Vivo -->
-  <div class="modal-overlay" id="modal-quiz-live" style="display:none;">
-    <div class="modal-card">
-      <div style="color:var(--cyan-glow); font-family:'JetBrains Mono', monospace; font-size:0.8rem; margin-bottom:0.5rem;">PREGUNTA DEL PROFESOR</div>
-      <h3 style="font-size:1rem; margin-bottom:1rem;" id="quiz-q">¿Qué ocurre al cuadruplicar la longitud?</h3>
-      <div style="display:flex; flex-direction:column; gap:0.5rem;" id="quiz-opts">
-        <button class="input-natex" style="cursor:pointer; text-align:left;" onclick="sendAnswer('A')">A) Se reduce a la mitad</button>
-        <button class="input-natex" style="cursor:pointer; text-align:left;" onclick="sendAnswer('B')">B) Se duplica el período ✅</button>
-        <button class="input-natex" style="cursor:pointer; text-align:left;" onclick="sendAnswer('C')">C) Queda exactamente igual</button>
-      </div>
-    </div>
-  </div>
+  <!-- ESCENA AR.JS 6DOF ANCLADA A LA MESA -->
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+    
+    <!-- MARCADOR HIRO (EL EXPERIMENTO SE LEVANTA EN 3D DIRECTAMENTE DESDE EL PAPEL) -->
+    <a-marker preset="hiro" id="hiro-target">
+      
+      <!-- 1. BASE PESADA DE METAL EN LA MESA -->
+      <a-box position="0.1 0.02 0" width="0.65" height="0.04" depth="0.4" color="#1e293b" metalness="0.8" roughness="0.2"></a-box>
+      
+      <!-- 2. MÁSTIL VERTICAL DE ACERO -->
+      <a-cylinder position="0.32 0.75 0" radius="0.02" height="1.5" color="#94a3b8" metalness="0.9" roughness="0.1"></a-cylinder>
+      
+      <!-- 3. MORDAZA / PINZA SUPERIOR -->
+      <a-box position="0.32 1.48 0" width="0.07" height="0.07" depth="0.07" color="#00f2fe"></a-box>
+
+      <!-- 4. BRAZO HORIZONTAL DE SUJECIÓN -->
+      <a-cylinder position="0.15 1.48 0" rotation="0 0 90" radius="0.015" height="0.38" color="#94a3b8"></a-cylinder>
+
+      <!-- 5. PÉNDULO FÍSICO SUSPENDIDO -->
+      <a-entity id="pendulum-pivot" position="0 1.48 0">
+        <!-- Cuerda -->
+        <a-cylinder id="pendulum-rod" position="0 -0.4 0" radius="0.008" height="0.8" color="#ffffff"></a-cylinder>
+        <!-- Esfera Cian Luminosa -->
+        <a-sphere id="pendulum-bob" position="0 -0.8 0" radius="0.11" color="#00f2fe" material="metalness: 0.5; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.4;"></a-sphere>
+      </a-entity>
+
+    </a-marker>
+
+    <!-- Cámara AR con seguimiento de perspectiva de la cabeza -->
+    <a-entity camera></a-entity>
+  </a-scene>
 
   <script>
-    let studentName = "Estudiante";
-    let params = { length: 0.8, mass: 1.0, gravity: 9.8, friction: 0.05, paused: false };
+    // Variables de Física RK4
     let state = { theta: Math.PI / 4, omega: 0.0 };
+    let params = { length: 0.8, gravity: 9.8, friction: 0.05, paused: false };
 
-    // Iniciar Cámara Móvil
-    async function initCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false
-        });
-        document.getElementById('video-feed').srcObject = stream;
-      } catch (err) {
-        console.warn("Cámara sin permisos o no disponible:", err);
-      }
-    }
+    const pivotEl = document.getElementById('pendulum-pivot');
+    const rodEl = document.getElementById('pendulum-rod');
+    const bobEl = document.getElementById('pendulum-bob');
+    const markerEl = document.getElementById('hiro-target');
+    const trackStatus = document.getElementById('tracking-status');
+    const arTrackText = document.getElementById('ar-track');
 
-    // Three.js Config
-    const container = document.getElementById('ar-canvas');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 0, 3.0);
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    container.appendChild(renderer.domElement);
-
-    // Iluminación
-    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-    const dirLight = new THREE.DirectionalLight(0x00f2fe, 1.5);
-    dirLight.position.set(2, 4, 3);
-    scene.add(dirLight);
-
-    // APARATO COMPLETO DE SOPORTE (Todo centrado y visible)
-    const labApparatus = new THREE.Group();
-    labApparatus.position.set(0, -0.1, 0); // En el centro de la pantalla
-    labApparatus.scale.set(0.7, 0.7, 0.7);
-    scene.add(labApparatus);
-
-    // 1. BASE PESADA DE MESA (Gris Acero con Bordes Cian Brillantes)
-    const baseGeo = new THREE.BoxGeometry(0.75, 0.06, 0.45);
-    const baseMat = new THREE.MeshStandardMaterial({ color: 0x223044, metalness: 0.8, roughness: 0.2 });
-    const basePlate = new THREE.Mesh(baseGeo, baseMat);
-    basePlate.position.set(0.15, -0.9, 0);
-    labApparatus.add(basePlate);
-
-    // Borde brillante en la base
-    const baseEdges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(baseGeo),
-      new THREE.LineBasicMaterial({ color: 0x00f2fe, linewidth: 2 })
-    );
-    basePlate.add(baseEdges);
-
-    // 2. MÁSTIL VERTICAL DE ACERO
-    const postGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.8, 16);
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.1 });
-    const verticalPost = new THREE.Mesh(postGeo, postMat);
-    verticalPost.position.set(0.38, 0.0, 0);
-    labApparatus.add(verticalPost);
-
-    // 3. MORDAZA / PINZA DE FIJACIÓN
-    const clampGeo = new THREE.BoxGeometry(0.1, 0.08, 0.08);
-    const clampMat = new THREE.MeshStandardMaterial({ color: 0x00f2fe, metalness: 0.6, roughness: 0.2 });
-    const clamp = new THREE.Mesh(clampGeo, clampMat);
-    clamp.position.set(0.38, 0.85, 0);
-    labApparatus.add(clamp);
-
-    // 4. BRAZO HORIZONTAL
-    const armGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.55, 16);
-    const arm = new THREE.Mesh(armGeo, postMat);
-    arm.rotation.z = Math.PI / 2;
-    arm.position.set(0.15, 0.85, 0);
-    labApparatus.add(arm);
-
-    // 5. PIVOTE Y PÉNDULO
-    const pivot = new THREE.Group();
-    pivot.position.set(0, 0.85, 0);
-    labApparatus.add(pivot);
-
-    // Cuerda
-    const rodGeo = new THREE.CylinderGeometry(0.01, 0.01, 1, 16);
-    const rodMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const rod = new THREE.Mesh(rodGeo, rodMat);
-    rod.position.y = -0.5;
-    pivot.add(rod);
-
-    // Esfera Luminosa Cian Estilo Natex
-    const sphereGeo = new THREE.SphereGeometry(0.13, 32, 32);
-    const sphereMat = new THREE.MeshStandardMaterial({ 
-      color: 0x00f2fe, 
-      metalness: 0.5, 
-      roughness: 0.1, 
-      emissive: 0x00f2fe, 
-      emissiveIntensity: 0.4 
+    // Detección del Marcador Óptico
+    markerEl.addEventListener('markerFound', () => {
+      trackStatus.innerText = "🎯 ¡Marcador Detectado! Anclado a la mesa";
+      trackStatus.style.borderColor = "#10b981";
+      trackStatus.style.color = "#10b981";
+      arTrackText.innerText = "ANCLADO EN 3D";
+      arTrackText.style.color = "#10b981";
     });
-    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-    sphere.position.y = -1;
-    pivot.add(sphere);
 
-    // CONTROLES TÁCTILES: ARRASTRAR Y ESCALAR
-    let isDragging = false;
-    let prevTouchX = 0;
-    let prevTouchY = 0;
-    let initialPinchDist = 0;
-    let initialScale = 0.7;
+    markerEl.addEventListener('markerLost', () => {
+      trackStatus.innerText = "🔍 Apunta la cámara al Marcador Hiro (en papel o pantalla)";
+      trackStatus.style.borderColor = "#00f2fe";
+      trackStatus.style.color = "#00f2fe";
+      arTrackText.innerText = "Buscando Marcador...";
+      arTrackText.style.color = "#00f2fe";
+    });
 
-    window.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        isDragging = true;
-        prevTouchX = e.touches[0].clientX;
-        prevTouchY = e.touches[0].clientY;
-      } else if (e.touches.length === 2) {
-        isDragging = false;
-        initialPinchDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        initialScale = labApparatus.scale.x;
-      }
-    }, { passive: false });
-
-    window.addEventListener('touchmove', (e) => {
-      if (isDragging && e.touches.length === 1) {
-        let deltaX = (e.touches[0].clientX - prevTouchX) * 0.005;
-        let deltaY = (e.touches[0].clientY - prevTouchY) * 0.005;
-        labApparatus.position.x += deltaX;
-        labApparatus.position.y -= deltaY;
-        prevTouchX = e.touches[0].clientX;
-        prevTouchY = e.touches[0].clientY;
-      } else if (e.touches.length === 2) {
-        let currentDist = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        let factor = currentDist / initialPinchDist;
-        let newScale = Math.max(0.25, Math.min(2.0, initialScale * factor));
-        labApparatus.scale.set(newScale, newScale, newScale);
-      }
-    }, { passive: false });
-
-    window.addEventListener('touchend', () => { isDragging = false; });
-
-    // Sincronización MQTT
+    // Sincronización MQTT con el Panel Docente
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
     client.on('connect', () => {
       client.subscribe("vlab-n/sala-natex");
@@ -292,30 +159,17 @@
           params = payload.data;
           document.getElementById('ar-l').innerText = params.length.toFixed(2) + ' m';
           document.getElementById('ar-g').innerText = params.gravity.toFixed(2) + ' m/s²';
-        } else if (payload.type === 'QUIZ') {
-          document.getElementById('modal-quiz-live').style.display = 'flex';
         }
       } catch (e) {}
     });
 
-    function sendAnswer(opt) {
-      if (client.connected) {
-        client.publish("vlab-n/sala-natex/answers", JSON.stringify({
-          alumno: studentName,
-          respuesta: opt,
-          timestamp: new Date().toISOString()
-        }));
-      }
-      document.getElementById('modal-quiz-live').style.display = 'none';
-      alert("¡Respuesta enviada al panel del profesor!");
-    }
-
-    // Física RK4
+    // Bucle de Física Runge-Kutta 4
     let lastT = performance.now();
-    function animate(t) {
-      requestAnimationFrame(animate);
-      let dt = (t - lastT) / 1000;
-      lastT = t;
+    function tick() {
+      requestAnimationFrame(tick);
+      let now = performance.now();
+      let dt = (now - lastT) / 1000;
+      lastT = now;
       if (dt > 0.1) dt = 0.1;
 
       if (!params.paused) {
@@ -328,51 +182,18 @@
         state.omega += dt * k2_om;
       }
 
-      pivot.rotation.z = state.theta;
-      rod.scale.set(1, params.length, 1);
-      rod.position.y = -params.length / 2;
-      sphere.position.y = -params.length;
+      // Actualizar Rotación del Péndulo en A-Frame
+      let deg = state.theta * 180 / Math.PI;
+      pivotEl.setAttribute('rotation', `0 0 ${deg}`);
+      
+      // Actualizar Longitud
+      rodEl.setAttribute('height', params.length);
+      rodEl.setAttribute('position', `0 ${-params.length / 2} 0`);
+      bobEl.setAttribute('position', `0 ${-params.length} 0`);
 
-      document.getElementById('ar-angle').innerText = (state.theta * 180 / Math.PI).toFixed(1) + '°';
-      renderer.render(scene, camera);
+      document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
     }
-    requestAnimationFrame(animate);
-
-    // Entrada Inicial
-    document.getElementById('btn-start-ar').onclick = () => {
-      studentName = document.getElementById('student-name-input').value.trim() || "Estudiante";
-      document.getElementById('ar-student').innerText = studentName;
-      document.getElementById('modal-entry').style.display = 'none';
-      initCamera();
-    };
-
-    // Captura con Marca de Agua
-    document.getElementById('btn-snap').onclick = () => {
-      const snapCanvas = document.createElement('canvas');
-      snapCanvas.width = window.innerWidth;
-      snapCanvas.height = window.innerHeight;
-      const ctx = snapCanvas.getContext('2d');
-
-      const video = document.getElementById('video-feed');
-      if (video.videoWidth > 0) {
-        ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
-      }
-      ctx.drawImage(renderer.domElement, 0, 0);
-
-      ctx.fillStyle = "rgba(7, 9, 14, 0.85)";
-      ctx.fillRect(20, snapCanvas.height - 80, 360, 60);
-      ctx.fillStyle = "#00f2fe";
-      ctx.font = "bold 16px 'JetBrains Mono', monospace";
-      ctx.fillText("VIRTUALLAB_N • EVIDENCIA AR", 30, snapCanvas.height - 55);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "12px sans-serif";
-      ctx.fillText(`${studentName} • L: ${params.length}m • g: ${params.gravity}m/s²`, 30, snapCanvas.height - 35);
-
-      const link = document.createElement('a');
-      link.download = `Evidencia_AR_${studentName}.png`;
-      link.href = snapCanvas.toDataURL('image/png');
-      link.click();
-    };
+    requestAnimationFrame(tick);
   </script>
 </body>
 </html>

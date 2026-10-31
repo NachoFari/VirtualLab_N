@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marcador AR para Pantalla o Imprimir | VirtualLab_N</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #07090e; color: #fff; font-family: 'Inter', sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 1.5rem; text-align: center; margin: 0;
+    }
+    .card {
+      background: #0f141c; border: 1px solid rgba(0,242,254,0.3); padding: 2rem; border-radius: 16px;
+      max-width: 500px; box-shadow: 0 0 30px rgba(0,242,254,0.15);
+    }
+    h1 { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; color: #00f2fe; margin-bottom: 0.5rem; }
+    p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    .marker-frame {
+      background: #fff; padding: 1.5rem; border-radius: 12px; display: inline-block; margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .marker-img { width: 260px; height: 260px; display: block; }
+    .btn {
+      display: inline-block; background: #00f2fe; color: #000; font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Diana Óptica de Laboratorio (AR)</h1>
+    <p>Apunta con la cámara de tu teléfono móvil directamente a este recuadro negro en tu pantalla. El experimento de física se levantará en 3D sobre él.</p>
+    
+    <div class="marker-frame">
+      <!-- Marcador Óptico Universal Hiro para WebAR de 6 Grados de Libertad -->
+      <img src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" alt="Marcador Hiro" class="marker-img">
+    </div>
+
+    <div>
+      <a href="alumno.html" class="btn">Abrir Cámara en este Teléfono</a>
+    </div>
+  </div>
+</body>
+</html>
