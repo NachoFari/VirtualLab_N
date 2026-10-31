@@ -308,12 +308,25 @@
 
     client.on('connect', () => {
       document.getElementById('conn-status').innerText = "En Vivo (Sincronizado)";
-      broadcastParams();
+      broadcastState();
     });
 
-    function broadcastParams() {
-      if (client.connected) {
-        client.publish(room, JSON.stringify({ type: 'PARAMS', data: params }));
+    let lastBroadcastTime = 0;
+    function broadcastState(force = false) {
+      if (!client.connected) return;
+      let now = performance.now();
+      // Transmite a 30 FPS o inmediato si es forzado (slider/pausa)
+      if (force || now - lastBroadcastTime > 33) {
+        lastBroadcastTime = now;
+        client.publish(room, JSON.stringify({
+          type: 'SYNC',
+          theta: state.theta,
+          omega: state.omega,
+          length: params.length,
+          mass: params.mass,
+          gravity: params.gravity,
+          paused: params.paused
+        }));
       }
     }
 
@@ -415,6 +428,9 @@
       let Ep = params.mass * params.gravity * params.length * (1 - Math.cos(state.theta));
       document.getElementById('hud-energy').innerText = (Ek + Ep).toFixed(2) + ' J';
 
+      // Transmitir sincronización en tiempo real
+      broadcastState();
+
       renderer.render(scene, camera);
     }
     requestAnimationFrame(animate);
@@ -429,17 +445,17 @@
     document.getElementById('slider-length').oninput = (e) => {
       params.length = parseFloat(e.target.value);
       document.getElementById('val-length').innerText = params.length.toFixed(2) + ' m';
-      broadcastParams();
+      broadcastState(true);
     };
     document.getElementById('slider-mass').oninput = (e) => {
       params.mass = parseFloat(e.target.value);
       document.getElementById('val-mass').innerText = params.mass.toFixed(2) + ' kg';
-      broadcastParams();
+      broadcastState(true);
     };
     document.getElementById('slider-friction').oninput = (e) => {
       params.friction = parseFloat(e.target.value);
       document.getElementById('val-friction').innerText = params.friction.toFixed(2);
-      broadcastParams();
+      broadcastState(true);
     };
     document.getElementById('slider-gravity').oninput = (e) => {
       setGravity(parseFloat(e.target.value));
@@ -448,7 +464,7 @@
       params.gravity = g;
       document.getElementById('slider-gravity').value = g;
       document.getElementById('val-gravity').innerText = g.toFixed(2) + ' m/s²';
-      broadcastParams();
+      broadcastState(true);
     }
 
     const btnPause = document.getElementById('btn-pause');
@@ -456,24 +472,24 @@
       params.paused = !params.paused;
       btnPause.innerText = params.paused ? 'Reanudar' : 'Pausar';
       btnPause.classList.toggle('active', params.paused);
-      broadcastParams();
+      broadcastState(true);
     };
     document.getElementById('btn-reset').onclick = () => {
       state.theta = Math.PI / 4;
       state.omega = 0;
-      broadcastParams();
+      broadcastState(true);
     };
     document.getElementById('btn-step').onclick = () => {
       let step = rk4Step(state.theta, state.omega, 0.05);
       state.theta = step.theta;
       state.omega = step.omega;
-      broadcastParams();
+      broadcastState(true);
     };
     document.getElementById('btn-slow').onclick = (e) => {
       params.timeScale = params.timeScale === 1.0 ? 0.25 : 1.0;
       e.target.innerText = params.timeScale === 1.0 ? '0.5x' : '1.0x (Normal)';
       e.target.classList.toggle('active', params.timeScale !== 1.0);
-      broadcastParams();
+      broadcastState(true);
     };
 
     // Quiz y Excel

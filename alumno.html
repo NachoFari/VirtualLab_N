@@ -6,11 +6,11 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cámara AR 6DoF Real | VirtualLab_N</title>
+  <title>Cámara AR | VirtualLab_N</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   
-  <!-- A-Frame y AR.js para Detección Óptica Real de Marcador (6 Grados de Libertad) -->
+  <!-- A-Frame y AR.js -->
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
@@ -19,10 +19,9 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; overflow: hidden; background: #000; }
     
-    /* Overlay UI Estilo Natex */
     .ar-ui-container {
       position: fixed; inset: 0; pointer-events: none; z-index: 99999;
-      display: flex; flex-direction: column; justify-content: space-between; padding: 1rem;
+      display: flex; flex-direction: column; justify-content: space-between; padding: 0.8rem;
     }
     .top-bar {
       display: flex; justify-content: space-between; align-items: center; pointer-events: auto;
@@ -47,8 +46,8 @@
 
     .bottom-hud {
       background: rgba(15, 20, 28, 0.9); border: 1px solid rgba(0, 242, 254, 0.3);
-      border-radius: 12px; padding: 0.8rem 1rem; backdrop-filter: blur(10px);
-      display: flex; flex-direction: column; gap: 0.3rem; pointer-events: auto;
+      border-radius: 12px; padding: 0.75rem 1rem; backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; gap: 0.25rem; pointer-events: auto;
     }
     .hud-line {
       display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #fff;
@@ -56,9 +55,9 @@
     .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
   </style>
 
-  <!-- Auto Cache-Buster Script -->
+  <!-- Auto Cache-Buster Revision 5 -->
   <script>
-    const CURRENT_REV = "rev4_ar_real";
+    const CURRENT_REV = "rev5_natex_sync";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -69,85 +68,97 @@
   <!-- UI FLOTANTE -->
   <div class="ar-ui-container">
     <div class="top-bar">
-      <div class="badge">VLAB_N • RA 6DoF REAL</div>
-      <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Marcador en Pantalla</a>
+      <div class="badge">VLAB_N • 100% SINCRONIZADO</div>
+      <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Diana Natex</a>
     </div>
 
     <div class="status-toast" id="tracking-status">
-      🔍 Apunta la cámara al Marcador Hiro (en papel o en otra pantalla)
+      🔍 Apunta la cámara a la Diana Natex (Círculo, Triángulo, Diamante, Cuadrado)
     </div>
 
     <div class="bottom-hud">
-      <div class="hud-line"><span>Estado Óptico:</span> <span id="ar-track">Buscando Marcador...</span></div>
+      <div class="hud-line"><span>Anclaje Mesa:</span> <span id="ar-track">Buscando Diana...</span></div>
+      <div class="hud-line"><span>Sincronización Docente:</span> <span id="sync-rate" style="color:#10b981;">30 FPS En Vivo</span></div>
       <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">1.00 m</span></div>
-      <div class="hud-line"><span>Gravedad (g):</span> <span id="ar-g">9.80 m/s²</span></div>
       <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">0.0°</span></div>
     </div>
   </div>
 
-  <!-- ESCENA AR.JS 6DOF ANCLADA A LA MESA -->
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+  <!-- ESCENA AR CON DOBLE COMPATIBILIDAD (NATEX + HIRO) -->
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
     
-    <!-- MARCADOR HIRO (EL EXPERIMENTO SE LEVANTA EN 3D DIRECTAMENTE DESDE EL PAPEL) -->
-    <a-marker preset="hiro" id="hiro-target">
-      
-      <!-- 1. BASE PESADA DE METAL EN LA MESA -->
+    <!-- 1. DIANA OFICIAL NATEX (Círculo, Triángulo, Diamante, Cuadrado y N) -->
+    <a-marker type="pattern" url="pattern-natex.patt" id="natex-target">
+      <!-- Base de Metal -->
       <a-box position="0.1 0.02 0" width="0.65" height="0.04" depth="0.4" color="#1e293b" metalness="0.8" roughness="0.2"></a-box>
-      
-      <!-- 2. MÁSTIL VERTICAL DE ACERO -->
+      <!-- Mástil Vertical -->
       <a-cylinder position="0.32 0.75 0" radius="0.02" height="1.5" color="#94a3b8" metalness="0.9" roughness="0.1"></a-cylinder>
-      
-      <!-- 3. MORDAZA / PINZA SUPERIOR -->
+      <!-- Mordaza -->
       <a-box position="0.32 1.48 0" width="0.07" height="0.07" depth="0.07" color="#00f2fe"></a-box>
-
-      <!-- 4. BRAZO HORIZONTAL DE SUJECIÓN -->
+      <!-- Brazo Horizontal -->
       <a-cylinder position="0.15 1.48 0" rotation="0 0 90" radius="0.015" height="0.38" color="#94a3b8"></a-cylinder>
 
-      <!-- 5. PÉNDULO FÍSICO SUSPENDIDO -->
-      <a-entity id="pendulum-pivot" position="0 1.48 0">
-        <!-- Cuerda -->
-        <a-cylinder id="pendulum-rod" position="0 -0.4 0" radius="0.008" height="0.8" color="#ffffff"></a-cylinder>
-        <!-- Esfera Cian Luminosa -->
-        <a-sphere id="pendulum-bob" position="0 -0.8 0" radius="0.11" color="#00f2fe" material="metalness: 0.5; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.4;"></a-sphere>
+      <!-- Péndulo Sincronizado en Vivo -->
+      <a-entity id="pendulum-pivot-natex" position="0 1.48 0">
+        <a-cylinder id="pendulum-rod-natex" position="0 -0.4 0" radius="0.008" height="0.8" color="#ffffff"></a-cylinder>
+        <a-sphere id="pendulum-bob-natex" position="0 -0.8 0" radius="0.11" color="#00f2fe" material="metalness: 0.5; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.4;"></a-sphere>
       </a-entity>
-
     </a-marker>
 
-    <!-- Cámara AR con seguimiento de perspectiva de la cabeza -->
+    <!-- 2. FALLBACK UNIVERSAL HIRO -->
+    <a-marker preset="hiro" id="hiro-target">
+      <a-box position="0.1 0.02 0" width="0.65" height="0.04" depth="0.4" color="#1e293b" metalness="0.8" roughness="0.2"></a-box>
+      <a-cylinder position="0.32 0.75 0" radius="0.02" height="1.5" color="#94a3b8" metalness="0.9" roughness="0.1"></a-cylinder>
+      <a-box position="0.32 1.48 0" width="0.07" height="0.07" depth="0.07" color="#00f2fe"></a-box>
+      <a-cylinder position="0.15 1.48 0" rotation="0 0 90" radius="0.015" height="0.38" color="#94a3b8"></a-cylinder>
+      <a-entity id="pendulum-pivot-hiro" position="0 1.48 0">
+        <a-cylinder id="pendulum-rod-hiro" position="0 -0.4 0" radius="0.008" height="0.8" color="#ffffff"></a-cylinder>
+        <a-sphere id="pendulum-bob-hiro" position="0 -0.8 0" radius="0.11" color="#00f2fe" material="metalness: 0.5; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.4;"></a-sphere>
+      </a-entity>
+    </a-marker>
+
     <a-entity camera></a-entity>
   </a-scene>
 
   <script>
-    // Variables de Física RK4
-    let state = { theta: Math.PI / 4, omega: 0.0 };
-    let params = { length: 0.8, gravity: 9.8, friction: 0.05, paused: false };
+    const pivotNatex = document.getElementById('pendulum-pivot-natex');
+    const rodNatex = document.getElementById('pendulum-rod-natex');
+    const bobNatex = document.getElementById('pendulum-bob-natex');
 
-    const pivotEl = document.getElementById('pendulum-pivot');
-    const rodEl = document.getElementById('pendulum-rod');
-    const bobEl = document.getElementById('pendulum-bob');
-    const markerEl = document.getElementById('hiro-target');
+    const pivotHiro = document.getElementById('pendulum-pivot-hiro');
+    const rodHiro = document.getElementById('pendulum-rod-hiro');
+    const bobHiro = document.getElementById('pendulum-bob-hiro');
+
+    const natexMarker = document.getElementById('natex-target');
+    const hiroMarker = document.getElementById('hiro-target');
     const trackStatus = document.getElementById('tracking-status');
     const arTrackText = document.getElementById('ar-track');
 
-    // Detección del Marcador Óptico
-    markerEl.addEventListener('markerFound', () => {
-      trackStatus.innerText = "🎯 ¡Marcador Detectado! Anclado a la mesa";
+    function onMarkerDetected(name) {
+      trackStatus.innerText = "🎯 ¡" + name + " Detectado! Anclado en 3D";
       trackStatus.style.borderColor = "#10b981";
       trackStatus.style.color = "#10b981";
       arTrackText.innerText = "ANCLADO EN 3D";
       arTrackText.style.color = "#10b981";
-    });
+    }
 
-    markerEl.addEventListener('markerLost', () => {
-      trackStatus.innerText = "🔍 Apunta la cámara al Marcador Hiro (en papel o pantalla)";
+    function onMarkerLost() {
+      trackStatus.innerText = "🔍 Apunta la cámara a la Diana Natex";
       trackStatus.style.borderColor = "#00f2fe";
       trackStatus.style.color = "#00f2fe";
-      arTrackText.innerText = "Buscando Marcador...";
+      arTrackText.innerText = "Buscando Diana...";
       arTrackText.style.color = "#00f2fe";
-    });
+    }
 
-    // Sincronización MQTT con el Panel Docente
+    natexMarker.addEventListener('markerFound', () => onMarkerDetected("Diana Natex"));
+    natexMarker.addEventListener('markerLost', onMarkerLost);
+    hiroMarker.addEventListener('markerFound', () => onMarkerDetected("Marcador Hiro"));
+    hiroMarker.addEventListener('markerLost', onMarkerLost);
+
+    // SINCRONIZACIÓN 100% EN TIEMPO REAL CON EL PROFESOR
+    let currentLength = 0.8;
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
+    
     client.on('connect', () => {
       client.subscribe("vlab-n/sala-natex");
     });
@@ -155,45 +166,30 @@
     client.on('message', (topic, message) => {
       try {
         const payload = JSON.parse(message.toString());
-        if (payload.type === 'PARAMS') {
-          params = payload.data;
-          document.getElementById('ar-l').innerText = params.length.toFixed(2) + ' m';
-          document.getElementById('ar-g').innerText = params.gravity.toFixed(2) + ' m/s²';
+        if (payload.type === 'SYNC') {
+          // El ángulo del alumno es un espejo idéntico del ángulo del profesor
+          let deg = payload.theta * 180 / Math.PI;
+          pivotNatex.setAttribute('rotation', `0 0 ${deg}`);
+          pivotHiro.setAttribute('rotation', `0 0 ${deg}`);
+
+          // Si el profesor cambió la longitud, actualiza la cuerda y la esfera
+          if (payload.length !== currentLength) {
+            currentLength = payload.length;
+            rodNatex.setAttribute('height', currentLength);
+            rodNatex.setAttribute('position', `0 ${-currentLength / 2} 0`);
+            bobNatex.setAttribute('position', `0 ${-currentLength} 0`);
+
+            rodHiro.setAttribute('height', currentLength);
+            rodHiro.setAttribute('position', `0 ${-currentLength / 2} 0`);
+            bobHiro.setAttribute('position', `0 ${-currentLength} 0`);
+
+            document.getElementById('ar-l').innerText = currentLength.toFixed(2) + ' m';
+          }
+
+          document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
         }
       } catch (e) {}
     });
-
-    // Bucle de Física Runge-Kutta 4
-    let lastT = performance.now();
-    function tick() {
-      requestAnimationFrame(tick);
-      let now = performance.now();
-      let dt = (now - lastT) / 1000;
-      lastT = now;
-      if (dt > 0.1) dt = 0.1;
-
-      if (!params.paused) {
-        let gL = params.gravity / Math.max(0.2, params.length);
-        let k1_th = state.omega;
-        let k1_om = -gL * Math.sin(state.theta) - params.friction * state.omega;
-        let k2_th = state.omega + 0.5 * dt * k1_om;
-        let k2_om = -gL * Math.sin(state.theta + 0.5 * dt * k1_th) - params.friction * (state.omega + 0.5 * dt * k1_om);
-        state.theta += dt * k2_th;
-        state.omega += dt * k2_om;
-      }
-
-      // Actualizar Rotación del Péndulo en A-Frame
-      let deg = state.theta * 180 / Math.PI;
-      pivotEl.setAttribute('rotation', `0 0 ${deg}`);
-      
-      // Actualizar Longitud
-      rodEl.setAttribute('height', params.length);
-      rodEl.setAttribute('position', `0 ${-params.length / 2} 0`);
-      bobEl.setAttribute('position', `0 ${-params.length} 0`);
-
-      document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
-    }
-    requestAnimationFrame(tick);
   </script>
 </body>
 </html>
