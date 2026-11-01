@@ -1,72 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
-  <!-- Fondo Blanco de Alto Contraste para Impresión -->
+  <!-- Fondo Blanco de la Hoja -->
   <rect width="1000" height="1000" fill="#ffffff" />
   
-  <!-- Marco Exterior de Calibración Milimétrica -->
-  <rect x="40" y="40" width="920" height="920" fill="none" stroke="#000000" stroke-width="8" />
-  <rect x="55" y="55" width="890" height="890" fill="none" stroke="#000000" stroke-width="2" stroke-dasharray="10,10" />
+  <!-- MARCO NEGRO SÓLIDO OBLIGATORIO DE ARTOOLKIT (PatternRatio 0.5) -->
+  <!-- Tamaño exterior: 700x700 centrado en (150, 150) -->
+  <rect x="150" y="150" width="700" height="700" fill="#000000" />
+  
+  <!-- HUECO BLANCO INTERIOR (Exactamente 50% = 350x350 centrado en 325, 325) -->
+  <rect x="325" y="325" width="350" height="350" fill="#ffffff" />
 
-  <!-- ESQUINA 1: CÍRCULO CON PUNTO FOCAL (Superior Izquierda) -->
-  <g transform="translate(140, 140)">
-    <circle cx="0" cy="0" r="60" fill="none" stroke="#000000" stroke-width="12" />
-    <circle cx="0" cy="0" r="35" fill="none" stroke="#000000" stroke-width="4" stroke-dasharray="6,6" />
-    <circle cx="0" cy="0" r="16" fill="#000000" />
-    <line x1="-75" y1="0" x2="-60" y2="0" stroke="#000000" stroke-width="6" />
-    <line x1="60" y1="0" x2="75" y2="0" stroke="#000000" stroke-width="6" />
-    <line x1="0" y1="-75" x2="0" y2="-60" stroke="#000000" stroke-width="6" />
-    <line x1="0" y1="60" x2="0" y2="75" stroke="#000000" stroke-width="6" />
-  </g>
+  <!-- SÍMBOLOS INTERIORES DE ALTO CONTRASTE -->
+  
+  <!-- 1. CÍRCULO CON PUNTO (Top-Left) -->
+  <circle cx="380" cy="380" r="32" fill="none" stroke="#000000" stroke-width="12" />
+  <circle cx="380" cy="380" r="10" fill="#000000" />
 
-  <!-- ESQUINA 2: TRIÁNGULO (Superior Derecha - Hacia la Pizarra) -->
-  <g transform="translate(860, 140)">
-    <polygon points="0,-70 65,50 -65,50" fill="none" stroke="#000000" stroke-width="12" stroke-linejoin="round" />
-    <polygon points="0,30 35,-30 -35,-30" fill="#000000" />
-    <circle cx="0" cy="0" r="8" fill="#ffffff" />
-    <text x="0" y="85" font-family="'JetBrains Mono', monospace" font-size="16" font-weight="bold" text-anchor="middle" fill="#000000">▲ HACIA LA PIZARRA</text>
-  </g>
+  <!-- 2. TRIÁNGULO (Top-Right) -->
+  <polygon points="620,348 658,412 582,412" fill="#000000" />
 
-  <!-- ESQUINA 3: DIAMANTE (Inferior Izquierda) -->
-  <g transform="translate(140, 860)">
-    <polygon points="0,-65 65,0 0,65 -65,0" fill="none" stroke="#000000" stroke-width="12" stroke-linejoin="round" />
-    <polygon points="0,-35 35,0 0,35 -35,0" fill="#000000" />
-    <line x1="-80" y1="0" x2="80" y2="0" stroke="#ffffff" stroke-width="4" />
-    <line x1="0" y1="-80" x2="0" y2="80" stroke="#ffffff" stroke-width="4" />
-  </g>
+  <!-- 3. DIAMANTE (Bottom-Left) -->
+  <polygon points="380,588 416,624 380,660 344,624" fill="#000000" />
 
-  <!-- ESQUINA 4: CUADRADO CON RETÍCULO (Inferior Derecha) -->
-  <g transform="translate(860, 860)">
-    <rect x="-60" y="-60" width="120" height="120" fill="none" stroke="#000000" stroke-width="12" />
-    <rect x="-35" y="-35" width="70" height="70" fill="none" stroke="#000000" stroke-width="4" />
-    <rect x="-16" y="-16" width="32" height="32" fill="#000000" />
-    <line x1="-70" y1="0" x2="70" y2="0" stroke="#000000" stroke-width="4" />
-    <line x1="0" y1="-70" x2="0" y2="70" stroke="#000000" stroke-width="4" />
-  </g>
+  <!-- 4. CUADRADO CON CRUZ (Bottom-Right) -->
+  <rect x="590" y="590" width="60" height="60" fill="#000000" />
+  <line x1="620" y1="590" x2="620" y2="650" stroke="#ffffff" stroke-width="8" />
+  <line x1="590" y1="620" x2="650" y2="620" stroke="#ffffff" stroke-width="8" />
 
-  <!-- CENTRO: LOGO ESTILO NATEX / VIRTUALLAB_N -->
-  <g transform="translate(500, 500)">
-    <!-- Marco Hexagonal Estilo Natex -->
-    <polygon points="0,-160 140,-80 140,80 0,160 -140,80 -140,-80" fill="none" stroke="#000000" stroke-width="12" />
-    <polygon points="0,-130 115,-65 115,65 0,130 -115,65 -115,-65" fill="none" stroke="#000000" stroke-width="4" stroke-dasharray="12,8" />
-    
-    <!-- Glifo "N" Cuántica / Vectorial de Natex -->
-    <path d="M -60,70 L -60,-70 L -30,-70 L 30,30 L 30,-70 L 60,-70 L 60,70 L 30,70 L -30,-30 L -30,70 Z" fill="#000000" />
-    
-    <!-- Puntos de Conexión Orbital (Alta Densidad de Feature Points) -->
-    <circle cx="0" cy="-160" r="14" fill="#000000" />
-    <circle cx="140" cy="-80" r="14" fill="#000000" />
-    <circle cx="140" cy="80" r="14" fill="#000000" />
-    <circle cx="0" cy="160" r="14" fill="#000000" />
-    <circle cx="-140" cy="80" r="14" fill="#000000" />
-    <circle cx="-140" cy="-80" r="14" fill="#000000" />
+  <!-- 5. GLIFO CENTRAL "N" DE NATEX -->
+  <path d="M 445,575 L 445,425 L 485,425 L 515,505 L 515,425 L 555,425 L 555,575 L 515,575 L 485,495 L 485,575 Z" fill="#000000" />
 
-    <!-- Tipografía del Proyecto -->
-    <text x="0" y="210" font-family="'JetBrains Mono', monospace" font-size="34" font-weight="900" letter-spacing="6" text-anchor="middle" fill="#000000">VIRTUALLAB_N</text>
-    <text x="0" y="240" font-family="'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="3" text-anchor="middle" fill="#000000">NATEX AR TARGET • DIANA DE CALIBRACIÓN</text>
-  </g>
-
-  <!-- Líneas Guía de Alineación Horizontal y Vertical -->
-  <line x1="240" y1="500" x2="330" y2="500" stroke="#000000" stroke-width="6" />
-  <line x1="670" y1="500" x2="760" y2="500" stroke="#000000" stroke-width="6" />
-  <line x1="500" y1="240" x2="500" y2="310" stroke="#000000" stroke-width="6" />
-  <line x1="500" y1="690" x2="500" y2="760" stroke="#000000" stroke-width="6" />
+  <!-- TEXTOS PEDAGÓGICOS EXTERIORES -->
+  <text x="500" y="100" font-family="'JetBrains Mono', monospace" font-size="28" font-weight="900" letter-spacing="4" text-anchor="middle" fill="#000000">▲ HACIA LA PIZARRA</text>
+  <text x="500" y="910" font-family="'JetBrains Mono', monospace" font-size="34" font-weight="900" letter-spacing="6" text-anchor="middle" fill="#000000">VIRTUALLAB_N</text>
+  <text x="500" y="950" font-family="'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="3" text-anchor="middle" fill="#000000">DIANA ÓPTICA OFICIAL • PATTERN RATIO 0.5</text>
 </svg>

@@ -55,9 +55,9 @@
     .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
   </style>
 
-  <!-- Auto Cache-Buster Revision 7 -->
+  <!-- Auto Cache-Buster Revision 8 -->
   <script>
-    const CURRENT_REV = "rev7_natex_emits_events";
+    const CURRENT_REV = "rev8_svg_calibrated";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -88,7 +88,7 @@
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
     
     <!-- 1. DIANA OFICIAL NATEX (Círculo, Triángulo, Diamante, Cuadrado y N) -->
-    <a-marker type="pattern" url="./pattern-natex.patt" patternRatio="0.5" emitsEvents="true" smooth="true" smoothCount="5" id="natex-target">
+    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt" patternRatio="0.5" emitsEvents="true" smooth="true" smoothCount="3" id="natex-target">
       <!-- Base de Metal -->
       <a-box position="0.1 0.02 0" width="0.65" height="0.04" depth="0.4" color="#1e293b" metalness="0.8" roughness="0.2"></a-box>
       <!-- Mástil Vertical -->
@@ -106,7 +106,7 @@
     </a-marker>
 
     <!-- 2. FALLBACK UNIVERSAL HIRO -->
-    <a-marker preset="hiro" emitsEvents="true" smooth="true" smoothCount="5" id="hiro-target">
+    <a-marker preset="hiro" emitsEvents="true" smooth="true" smoothCount="3" id="hiro-target">
       <a-box position="0.1 0.02 0" width="0.65" height="0.04" depth="0.4" color="#1e293b" metalness="0.8" roughness="0.2"></a-box>
       <a-cylinder position="0.32 0.75 0" radius="0.02" height="1.5" color="#94a3b8" metalness="0.9" roughness="0.1"></a-cylinder>
       <a-box position="0.32 1.48 0" width="0.07" height="0.07" depth="0.07" color="#00f2fe"></a-box>
