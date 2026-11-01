@@ -55,9 +55,9 @@
     .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
   </style>
 
-  <!-- Auto Cache-Buster Revision 5 -->
+  <!-- Auto Cache-Buster Revision 6 -->
   <script>
-    const CURRENT_REV = "rev5_natex_sync";
+    const CURRENT_REV = "rev6_natex_calibrated";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -68,12 +68,12 @@
   <!-- UI FLOTANTE -->
   <div class="ar-ui-container">
     <div class="top-bar">
-      <div class="badge">VLAB_N • 100% SINCRONIZADO</div>
+      <div class="badge">VLAB_N • CALIBRADO NATEX</div>
       <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Diana Natex</a>
     </div>
 
     <div class="status-toast" id="tracking-status">
-      🔍 Apunta la cámara a la Diana Natex (Círculo, Triángulo, Diamante, Cuadrado)
+      🔍 Apunta la cámara a la Diana Natex (o a Hiro como respaldo)
     </div>
 
     <div class="bottom-hud">
@@ -84,11 +84,11 @@
     </div>
   </div>
 
-  <!-- ESCENA AR CON DOBLE COMPATIBILIDAD (NATEX + HIRO) -->
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
+  <!-- ESCENA AR CON DOBLE COMPATIBILIDAD (NATEX RATIO 0.5 + HIRO) -->
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; patternRatio: 0.5;">
     
     <!-- 1. DIANA OFICIAL NATEX (Círculo, Triángulo, Diamante, Cuadrado y N) -->
-    <a-marker type="pattern" url="pattern-natex.patt" id="natex-target">
+    <a-marker type="pattern" url="pattern-natex.patt" patternRatio="0.5" id="natex-target">
       <!-- Base de Metal -->
       <a-box position="0.1 0.02 0" width="0.65" height="0.04" depth="0.4" color="#1e293b" metalness="0.8" roughness="0.2"></a-box>
       <!-- Mástil Vertical -->
