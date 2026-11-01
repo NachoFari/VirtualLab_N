@@ -55,9 +55,9 @@
     .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
   </style>
 
-  <!-- Auto Cache-Buster Revision 8 -->
+  <!-- Auto Cache-Buster Revision 9 -->
   <script>
-    const CURRENT_REV = "rev8_svg_calibrated";
+    const CURRENT_REV = "rev9_bright_apparatus";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -68,52 +68,73 @@
   <!-- UI FLOTANTE -->
   <div class="ar-ui-container">
     <div class="top-bar">
-      <div class="badge">VLAB_N • CALIBRADO NATEX V7</div>
+      <div class="badge">VLAB_N • CALIBRADO V9</div>
       <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Diana Natex</a>
     </div>
 
     <div class="status-toast" id="tracking-status">
-      🔍 Apunta la cámara a la Diana Natex (o a Hiro como respaldo)
+      🔍 Apunta la cámara a la Diana Natex
     </div>
 
     <div class="bottom-hud">
       <div class="hud-line"><span>Anclaje Mesa:</span> <span id="ar-track">Buscando Diana...</span></div>
       <div class="hud-line"><span>Sincronización Docente:</span> <span id="sync-rate" style="color:#10b981;">30 FPS En Vivo</span></div>
-      <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">1.00 m</span></div>
-      <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">0.0°</span></div>
+      <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">0.80 m</span></div>
+      <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">25.0°</span></div>
     </div>
   </div>
 
-  <!-- ESCENA AR CON DOBLE COMPATIBILIDAD (NATEX RATIO 0.5 + HIRO) -->
+  <!-- ESCENA AR CON ILUMINACIÓN Y MODELOS DE ALTO CONTRASTE -->
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
     
-    <!-- 1. DIANA OFICIAL NATEX (Círculo, Triángulo, Diamante, Cuadrado y N) -->
-    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt" patternRatio="0.5" emitsEvents="true" smooth="true" smoothCount="3" id="natex-target">
-      <!-- Base de Metal -->
-      <a-box position="0.1 0.02 0" width="0.65" height="0.04" depth="0.4" color="#1e293b" metalness="0.8" roughness="0.2"></a-box>
-      <!-- Mástil Vertical -->
-      <a-cylinder position="0.32 0.75 0" radius="0.02" height="1.5" color="#94a3b8" metalness="0.9" roughness="0.1"></a-cylinder>
-      <!-- Mordaza -->
-      <a-box position="0.32 1.48 0" width="0.07" height="0.07" depth="0.07" color="#00f2fe"></a-box>
-      <!-- Brazo Horizontal -->
-      <a-cylinder position="0.15 1.48 0" rotation="0 0 90" radius="0.015" height="0.38" color="#94a3b8"></a-cylinder>
+    <!-- Luces para asegurar que los modelos sean ultra-visibles -->
+    <a-entity light="type: ambient; color: #ffffff; intensity: 1.2;"></a-entity>
+    <a-entity light="type: directional; color: #00f2fe; intensity: 1.5; position: 1 3 2;"></a-entity>
 
-      <!-- Péndulo Sincronizado en Vivo -->
-      <a-entity id="pendulum-pivot-natex" position="0 1.48 0">
-        <a-cylinder id="pendulum-rod-natex" position="0 -0.4 0" radius="0.008" height="0.8" color="#ffffff"></a-cylinder>
-        <a-sphere id="pendulum-bob-natex" position="0 -0.8 0" radius="0.11" color="#00f2fe" material="metalness: 0.5; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.4;"></a-sphere>
+    <!-- 1. DIANA OFICIAL NATEX -->
+    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt" patternRatio="0.5" emitsEvents="true" smooth="true" smoothCount="2" id="natex-target">
+      
+      <!-- Anillo Cian Brillante que rodea la diana en la superficie -->
+      <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
+      
+      <!-- APARATO COMPLETO DE LABORATORIO (Escala calibrada para no salirse de pantalla) -->
+      <a-entity position="0 0 0" scale="0.5 0.5 0.5">
+        <!-- Base de Soporte Pesada -->
+        <a-box position="0.15 0.05 0" width="0.7" height="0.08" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
+        <!-- Borde Cian en la base -->
+        <a-box position="0.15 0.05 0" width="0.72" height="0.02" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
+
+        <!-- Mástil Vertical de Acero -->
+        <a-cylinder position="0.38 0.65 0" radius="0.03" height="1.2" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
+
+        <!-- Brazo Horizontal con Mordaza -->
+        <a-box position="0.38 1.2 0" width="0.09" height="0.09" depth="0.09" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
+        <a-cylinder position="0.18 1.2 0" rotation="0 0 90" radius="0.02" height="0.45" color="#94a3b8"></a-cylinder>
+
+        <!-- PÉNDULO FÍSICO 3D OSCILANTE -->
+        <a-entity id="pendulum-pivot-natex" position="0 1.2 0">
+          <a-cylinder id="pendulum-rod-natex" position="0 -0.35 0" radius="0.012" height="0.7" color="#ffffff"></a-cylinder>
+          <!-- Esfera de Alto Brillo Cian -->
+          <a-sphere id="pendulum-bob-natex" position="0 -0.7 0" radius="0.16" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.8;"></a-sphere>
+        </a-entity>
       </a-entity>
     </a-marker>
 
-    <!-- 2. FALLBACK UNIVERSAL HIRO -->
-    <a-marker preset="hiro" emitsEvents="true" smooth="true" smoothCount="3" id="hiro-target">
-      <a-box position="0.1 0.02 0" width="0.65" height="0.04" depth="0.4" color="#1e293b" metalness="0.8" roughness="0.2"></a-box>
-      <a-cylinder position="0.32 0.75 0" radius="0.02" height="1.5" color="#94a3b8" metalness="0.9" roughness="0.1"></a-cylinder>
-      <a-box position="0.32 1.48 0" width="0.07" height="0.07" depth="0.07" color="#00f2fe"></a-box>
-      <a-cylinder position="0.15 1.48 0" rotation="0 0 90" radius="0.015" height="0.38" color="#94a3b8"></a-cylinder>
-      <a-entity id="pendulum-pivot-hiro" position="0 1.48 0">
-        <a-cylinder id="pendulum-rod-hiro" position="0 -0.4 0" radius="0.008" height="0.8" color="#ffffff"></a-cylinder>
-        <a-sphere id="pendulum-bob-hiro" position="0 -0.8 0" radius="0.11" color="#00f2fe" material="metalness: 0.5; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.4;"></a-sphere>
+    <!-- 2. FALLBACK UNIVERSAL HIRO (IDÉNTICO) -->
+    <a-marker preset="hiro" emitsEvents="true" smooth="true" smoothCount="2" id="hiro-target">
+      <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
+      
+      <a-entity position="0 0 0" scale="0.5 0.5 0.5">
+        <a-box position="0.15 0.05 0" width="0.7" height="0.08" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
+        <a-box position="0.15 0.05 0" width="0.72" height="0.02" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
+        <a-cylinder position="0.38 0.65 0" radius="0.03" height="1.2" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
+        <a-box position="0.38 1.2 0" width="0.09" height="0.09" depth="0.09" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
+        <a-cylinder position="0.18 1.2 0" rotation="0 0 90" radius="0.02" height="0.45" color="#94a3b8"></a-cylinder>
+
+        <a-entity id="pendulum-pivot-hiro" position="0 1.2 0">
+          <a-cylinder id="pendulum-rod-hiro" position="0 -0.35 0" radius="0.012" height="0.7" color="#ffffff"></a-cylinder>
+          <a-sphere id="pendulum-bob-hiro" position="0 -0.7 0" radius="0.16" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.8;"></a-sphere>
+        </a-entity>
       </a-entity>
     </a-marker>
 
@@ -155,10 +176,13 @@
     hiroMarker.addEventListener('markerFound', () => onMarkerDetected("Marcador Hiro"));
     hiroMarker.addEventListener('markerLost', onMarkerLost);
 
-    // SINCRONIZACIÓN 100% EN TIEMPO REAL CON EL PROFESOR
-    let currentLength = 0.8;
+    // FÍSICA Y SINCRONIZACIÓN EN TIEMPO REAL
+    let state = { theta: Math.PI / 6, omega: 0.0 };
+    let params = { length: 0.7, gravity: 9.8, friction: 0.05, paused: false };
+    let hasRemoteSync = false;
+
+    // Sincronización MQTT
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
-    
     client.on('connect', () => {
       client.subscribe("vlab-n/sala-natex");
     });
@@ -167,29 +191,58 @@
       try {
         const payload = JSON.parse(message.toString());
         if (payload.type === 'SYNC') {
-          // El ángulo del alumno es un espejo idéntico del ángulo del profesor
+          hasRemoteSync = true;
+          state.theta = payload.theta;
+          state.omega = payload.omega;
+          params.length = payload.length;
+          params.gravity = payload.gravity;
+          params.paused = payload.paused;
+
           let deg = payload.theta * 180 / Math.PI;
-          pivotNatex.setAttribute('rotation', `0 0 ${deg}`);
-          pivotHiro.setAttribute('rotation', `0 0 ${deg}`);
-
-          // Si el profesor cambió la longitud, actualiza la cuerda y la esfera
-          if (payload.length !== currentLength) {
-            currentLength = payload.length;
-            rodNatex.setAttribute('height', currentLength);
-            rodNatex.setAttribute('position', `0 ${-currentLength / 2} 0`);
-            bobNatex.setAttribute('position', `0 ${-currentLength} 0`);
-
-            rodHiro.setAttribute('height', currentLength);
-            rodHiro.setAttribute('position', `0 ${-currentLength / 2} 0`);
-            bobHiro.setAttribute('position', `0 ${-currentLength} 0`);
-
-            document.getElementById('ar-l').innerText = currentLength.toFixed(2) + ' m';
-          }
-
-          document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
+          updateVisuals(deg, params.length);
         }
       } catch (e) {}
     });
+
+    function updateVisuals(deg, len) {
+      pivotNatex.setAttribute('rotation', `0 0 ${deg}`);
+      pivotHiro.setAttribute('rotation', `0 0 ${deg}`);
+
+      rodNatex.setAttribute('height', len);
+      rodNatex.setAttribute('position', `0 ${-len / 2} 0`);
+      bobNatex.setAttribute('position', `0 ${-len} 0`);
+
+      rodHiro.setAttribute('height', len);
+      rodHiro.setAttribute('position', `0 ${-len / 2} 0`);
+      bobHiro.setAttribute('position', `0 ${-len} 0`);
+
+      document.getElementById('ar-l').innerText = len.toFixed(2) + ' m';
+      document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
+    }
+
+    // Bucle de Física Local Autónomo (si el profesor no está transmitiendo)
+    let lastT = performance.now();
+    function tick() {
+      requestAnimationFrame(tick);
+      let now = performance.now();
+      let dt = (now - lastT) / 1000;
+      lastT = now;
+      if (dt > 0.1) dt = 0.1;
+
+      if (!hasRemoteSync && !params.paused) {
+        let gL = params.gravity / Math.max(0.2, params.length);
+        let k1_th = state.omega;
+        let k1_om = -gL * Math.sin(state.theta) - params.friction * state.omega;
+        let k2_th = state.omega + 0.5 * dt * k1_om;
+        let k2_om = -gL * Math.sin(state.theta + 0.5 * dt * k1_th) - params.friction * (state.omega + 0.5 * dt * k1_om);
+        state.theta += dt * k2_th;
+        state.omega += dt * k2_om;
+
+        let deg = state.theta * 180 / Math.PI;
+        updateVisuals(deg, params.length);
+      }
+    }
+    requestAnimationFrame(tick);
   </script>
 </body>
 </html>
