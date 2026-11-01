@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cámara AR | VirtualLab_N</title>
+  <title>Cámara AR HD | VirtualLab_N</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   
@@ -40,7 +40,7 @@
     /* Retícula de Enfoque Visual */
     .focus-reticle {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.4);
-      width: 110px; height: 110px; border: 2px dashed #00f2fe; border-radius: 16px;
+      width: 120px; height: 120px; border: 2px dashed #00f2fe; border-radius: 16px;
       pointer-events: none; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       box-shadow: 0 0 25px rgba(0, 242, 254, 0.6); z-index: 99998;
     }
@@ -65,21 +65,11 @@
       display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #fff;
     }
     .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
-
-    /* Botón de Empujón Físico */
-    .btn-push {
-      width: 100%; background: linear-gradient(135deg, #00f2fe, #4facfe);
-      border: none; color: #000; font-family: 'JetBrains Mono', monospace; font-weight: 800;
-      padding: 0.7rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin-top: 0.3rem;
-      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-      box-shadow: 0 0 15px rgba(0,242,254,0.3);
-    }
-    .btn-push:active { transform: scale(0.98); filter: brightness(1.2); }
   </style>
 
-  <!-- Auto Cache-Buster Revision 13 -->
+  <!-- Auto Cache-Buster Revision 15 -->
   <script>
-    const CURRENT_REV = "rev13_telescopic_orient";
+    const CURRENT_REV = "rev15_hdcam_permissive_lerp";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -93,7 +83,7 @@
   <!-- UI FLOTANTE -->
   <div class="ar-ui-container">
     <div class="top-bar">
-      <div class="badge">VLAB_N • CALIBRADO V13</div>
+      <div class="badge">VLAB_N • HD CALIBRADO V15</div>
       <div style="display:flex; gap:0.35rem;">
         <button class="btn-marker-help" id="btn-orient-toggle" style="cursor:pointer; background:rgba(0,242,254,0.25);">🖥️ Mesa</button>
         <button class="btn-marker-help" id="btn-focus-top" style="cursor:pointer; background:rgba(0,242,254,0.2);">🎯 Enfocar</button>
@@ -102,93 +92,73 @@
     </div>
 
     <div class="status-toast" id="tracking-status">
-      🔍 Apunta la cámara a la Diana Natex
+      🔍 Apunta la cámara a la Diana Natex o Hiro
     </div>
 
     <div class="bottom-hud">
-      <div class="hud-line"><span>Anclaje:</span> <span id="ar-track">Buscando Diana...</span></div>
+      <div class="hud-line"><span>Anclaje Diana:</span> <span id="ar-track">Buscando Diana...</span></div>
+      <div class="hud-line"><span>Estabilidad:</span> <span id="ar-stability" style="color:#10b981;">Filtro LERP + Sensor Activo</span></div>
       <div class="hud-line"><span>Proyección:</span> <span id="ar-orient-val">Mesa (Horizontal)</span></div>
       <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">0.70 m</span></div>
       <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">25.0°</span></div>
-      
-      <!-- Botón para revivir / darle un empujón -->
-      <button class="btn-push" id="btn-push-action">
-        ⚡ Dar Empujón al Péndulo
-      </button>
     </div>
   </div>
 
-  <!-- ESCENA AR -->
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
+  <!-- ESCENA AR ULTRA-HD CON ALTA SENSIBILIDAD -->
+  <a-scene embedded 
+           arjs="sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best; maxDetectionRate: 60; patternRatio: 0.5;">
     
     <a-entity light="type: ambient; color: #ffffff; intensity: 1.2;"></a-entity>
     <a-entity light="type: directional; color: #00f2fe; intensity: 1.5; position: 1 3 2;"></a-entity>
 
-    <!-- 1. DIANA OFICIAL NATEX -->
-    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt" patternRatio="0.5" emitsEvents="true" smooth="true" smoothCount="2" id="natex-target">
-      
-      <!-- Anillo Neón Cian en la Base -->
+    <!-- 1. DIANA OFICIAL NATEX (Baja tolerancia: minConfidence 0.1 para detección instantánea) -->
+    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt" patternRatio="0.5" 
+              minConfidence="0.1" emitsEvents="true" smooth="true" smoothCount="8" 
+              smoothTolerance="0.01" smoothThreshold="3" id="natex-target">
       <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
-      
-      <!-- CONTENEDOR DEL APARATO CON ORIENTACIÓN DINÁMICA -->
-      <a-entity id="apparatus-natex" position="0 0 0" rotation="0 0 0" scale="0.45 0.45 0.45">
+    </a-marker>
+
+    <!-- 2. FALLBACK UNIVERSAL HIRO (minConfidence 0.1) -->
+    <a-marker preset="hiro" minConfidence="0.1" emitsEvents="true" smooth="true" 
+              smoothCount="8" smoothTolerance="0.01" smoothThreshold="3" id="hiro-target">
+      <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
+    </a-marker>
+
+    <!-- ANCLADO ULTRA-ESTABLE FILTRADO CON LERP/SLERP Y PERSISTENCIA -->
+    <a-entity id="stabilized-anchor" visible="false">
+      <a-entity id="apparatus-container" position="0 0 0" rotation="0 0 0" scale="0.45 0.45 0.45">
         <!-- Base de Soporte -->
-        <a-box id="base-natex" position="0 0.03 0" width="0.7" height="0.06" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
+        <a-box id="base-plate" position="0 0.03 0" width="0.7" height="0.06" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
         <a-box position="0 0.03 0" width="0.72" height="0.015" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
 
-        <!-- Mástil Vertical al Fondo (Z = -0.20) para despejar la oscilación lateral -->
-        <a-cylinder id="stand-mast-natex" position="0 0.5 -0.2" radius="0.025" height="1.0" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
+        <!-- Mástil Vertical al Fondo (Z = -0.20) -->
+        <a-cylinder id="stand-mast" position="0 0.5 -0.2" radius="0.025" height="1.0" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
 
-        <!-- Mordaza y Brazo Horizontal hacia el frente (de Z = -0.20 a Z = 0) -->
-        <a-box id="stand-clamp-natex" position="0 1.0 -0.2" width="0.08" height="0.08" depth="0.08" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
-        <a-cylinder id="stand-arm-natex" position="0 1.0 -0.1" rotation="90 0 0" radius="0.018" height="0.22" color="#94a3b8"></a-cylinder>
+        <!-- Mordaza y Brazo Horizontal hacia el frente -->
+        <a-box id="stand-clamp" position="0 1.0 -0.2" width="0.08" height="0.08" depth="0.08" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
+        <a-cylinder id="stand-arm" position="0 1.0 -0.1" rotation="90 0 0" radius="0.018" height="0.22" color="#94a3b8"></a-cylinder>
 
-        <!-- PIVOTE Y PÉNDULO (Oscilación lateral izquierda-derecha sobre X sin obstáculos) -->
-        <a-entity id="pendulum-pivot-natex" position="0 1.0 0">
-          <a-cylinder id="pendulum-rod-natex" position="0 -0.35 0" radius="0.012" height="0.7" color="#ffffff"></a-cylinder>
-          <a-sphere id="pendulum-bob-natex" position="0 -0.7 0" radius="0.15" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.85;"></a-sphere>
+        <!-- PIVOTE Y PÉNDULO (Oscilación lateral izquierda-derecha) -->
+        <a-entity id="pendulum-pivot" position="0 1.0 0">
+          <a-cylinder id="pendulum-rod" position="0 -0.35 0" radius="0.012" height="0.7" color="#ffffff"></a-cylinder>
+          <a-sphere id="pendulum-bob" position="0 -0.7 0" radius="0.15" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.85;"></a-sphere>
         </a-entity>
       </a-entity>
-    </a-marker>
-
-    <!-- 2. FALLBACK UNIVERSAL HIRO -->
-    <a-marker preset="hiro" emitsEvents="true" smooth="true" smoothCount="2" id="hiro-target">
-      <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
-      
-      <a-entity id="apparatus-hiro" position="0 0 0" rotation="0 0 0" scale="0.45 0.45 0.45">
-        <a-box id="base-hiro" position="0 0.03 0" width="0.7" height="0.06" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
-        <a-box position="0 0.03 0" width="0.72" height="0.015" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
-
-        <a-cylinder id="stand-mast-hiro" position="0 0.5 -0.2" radius="0.025" height="1.0" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
-        <a-box id="stand-clamp-hiro" position="0 1.0 -0.2" width="0.08" height="0.08" depth="0.08" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
-        <a-cylinder id="stand-arm-hiro" position="0 1.0 -0.1" rotation="90 0 0" radius="0.018" height="0.22" color="#94a3b8"></a-cylinder>
-
-        <a-entity id="pendulum-pivot-hiro" position="0 1.0 0">
-          <a-cylinder id="pendulum-rod-hiro" position="0 -0.35 0" radius="0.012" height="0.7" color="#ffffff"></a-cylinder>
-          <a-sphere id="pendulum-bob-hiro" position="0 -0.7 0" radius="0.15" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.85;"></a-sphere>
-        </a-entity>
-      </a-entity>
-    </a-marker>
+    </a-entity>
 
     <a-entity camera></a-entity>
   </a-scene>
 
   <script>
-    const apparatusNatex = document.getElementById('apparatus-natex');
-    const standMastNatex = document.getElementById('stand-mast-natex');
-    const standClampNatex = document.getElementById('stand-clamp-natex');
-    const standArmNatex = document.getElementById('stand-arm-natex');
-    const pivotNatex = document.getElementById('pendulum-pivot-natex');
-    const rodNatex = document.getElementById('pendulum-rod-natex');
-    const bobNatex = document.getElementById('pendulum-bob-natex');
-
-    const apparatusHiro = document.getElementById('apparatus-hiro');
-    const standMastHiro = document.getElementById('stand-mast-hiro');
-    const standClampHiro = document.getElementById('stand-clamp-hiro');
-    const standArmHiro = document.getElementById('stand-arm-hiro');
-    const pivotHiro = document.getElementById('pendulum-pivot-hiro');
-    const rodHiro = document.getElementById('pendulum-rod-hiro');
-    const bobHiro = document.getElementById('pendulum-bob-hiro');
+    // ELEMENTOS DEL DOM Y ESCENA 3D
+    const stabilizedAnchor = document.getElementById('stabilized-anchor');
+    const apparatusContainer = document.getElementById('apparatus-container');
+    const standMast = document.getElementById('stand-mast');
+    const standClamp = document.getElementById('stand-clamp');
+    const standArm = document.getElementById('stand-arm');
+    const pendulumPivot = document.getElementById('pendulum-pivot');
+    const pendulumRod = document.getElementById('pendulum-rod');
+    const pendulumBob = document.getElementById('pendulum-bob');
 
     const natexMarker = document.getElementById('natex-target');
     const hiroMarker = document.getElementById('hiro-target');
@@ -217,23 +187,17 @@
       clearTimeout(toastTimer);
       trackStatus.style.display = "block";
       trackStatus.style.opacity = "1";
-      trackStatus.innerText = "🔍 Apunta la cámara a la Diana Natex";
+      trackStatus.innerText = "🔍 Apunta la cámara a la Diana Natex o Hiro";
       trackStatus.style.borderColor = "#00f2fe";
       trackStatus.style.color = "#00f2fe";
       arTrackText.innerText = "Buscando Diana...";
       arTrackText.style.color = "#00f2fe";
     }
 
-    natexMarker.addEventListener('markerFound', () => onMarkerDetected("Diana Natex"));
-    natexMarker.addEventListener('markerLost', onMarkerLost);
-    hiroMarker.addEventListener('markerFound', () => onMarkerDetected("Marcador Hiro"));
-    hiroMarker.addEventListener('markerLost', onMarkerLost);
-
-    // FÍSICA Y SINCRONIZACIÓN POR EVENTOS
+    // FÍSICA AUTÓNOMA DETERMINISTA Y SINCRONIZACIÓN POR EVENTOS
     const myClientId = 'student_' + Math.random().toString(36).substring(2, 9);
     let state = { theta: Math.PI / 5, omega: 0.0 };
     let params = { length: 0.7, gravity: 9.8, friction: 0.03, paused: false };
-    let isMarkerPresent = false;
 
     // Toast flotante dinámico
     function flashStatus(text) {
@@ -249,9 +213,9 @@
       }, 2000);
     }
 
-    // CONTROL DE ENFOQUE DE CÁMARA (W3C Image Capture & MediaStreamTrack)
+    // CONTROL DE ALTA RESOLUCIÓN Y ENFOQUE CONTINUO DE CÁMARA (W3C MediaStreamTrack)
     let currentVideoTrack = null;
-    function setupCameraAutofocus() {
+    function setupCameraHD() {
       let attempts = 0;
       const checkVideo = setInterval(() => {
         attempts++;
@@ -262,14 +226,14 @@
           if (tracks.length > 0) {
             currentVideoTrack = tracks[0];
             clearInterval(checkVideo);
-            applyContinuousFocus();
+            applyCameraHDConstraints();
           }
         }
         if (attempts > 30) clearInterval(checkVideo);
       }, 400);
     }
 
-    function applyContinuousFocus() {
+    function applyCameraHDConstraints() {
       if (!currentVideoTrack || !currentVideoTrack.applyConstraints) return;
       try {
         const caps = currentVideoTrack.getCapabilities ? currentVideoTrack.getCapabilities() : {};
@@ -283,9 +247,18 @@
         if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) {
           adv.whiteBalanceMode = 'continuous';
         }
+
+        const constraints = {
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 }
+        };
         if (Object.keys(adv).length > 0) {
-          currentVideoTrack.applyConstraints({ advanced: [adv] }).catch(() => {});
+          constraints.advanced = [adv];
         }
+
+        currentVideoTrack.applyConstraints(constraints)
+          .then(() => console.log("Cámara: Calidad HD y autoenfoque continuo activados"))
+          .catch(() => {});
       } catch (e) {}
     }
 
@@ -318,7 +291,7 @@
         } catch (e) {}
       }
 
-      flashStatus("🎯 Re-enfocando cámara en el símbolo...");
+      flashStatus("🎯 Re-enfocando cámara en alta definición...");
     }
 
     document.getElementById('btn-focus-top').onclick = (e) => {
@@ -326,68 +299,39 @@
       triggerCameraRefocus();
     };
 
-    window.addEventListener('load', setupCameraAutofocus);
+    window.addEventListener('load', setupCameraHD);
 
-    // Actualizar estado de detección
-    const origMarkerFound = onMarkerDetected;
-    onMarkerDetected = function(name) {
-      isMarkerPresent = true;
-      origMarkerFound(name);
-    };
-    const origMarkerLost = onMarkerLost;
-    onMarkerLost = function() {
-      isMarkerPresent = false;
-      origMarkerLost();
-    };
-
-    // Función para "Dar un Empujón" y revivir el péndulo
-    function givePush(external = false) {
-      if (Math.abs(state.theta) < 0.1 && Math.abs(state.omega) < 0.1) {
-        state.theta = Math.PI / 4.5; // Relanzar a unos 40 grados
-        state.omega = 1.2;
-      } else {
-        let dir = (state.omega >= 0) ? 1 : -1;
-        state.omega += dir * 2.2; // Empujón en la dirección del movimiento
-      }
-      if (!external && navigator.vibrate) navigator.vibrate(35);
-
-      // Si fue local y estamos en red MQTT, avisar a la sala
-      if (!external && client && client.connected) {
-        try {
-          client.publish("vlab-n/sala-natex", JSON.stringify({ type: 'PUSH', sender: myClientId }));
-        } catch (e) {}
+    // GIROSCOPIO Y SENSORES
+    let gyroActive = false;
+    function initGyro() {
+      if (gyroActive) return;
+      if (window.DeviceOrientationEvent) {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          DeviceOrientationEvent.requestPermission().then(r => {
+            if (r === 'granted') {
+              gyroActive = true;
+            }
+          }).catch(() => {});
+        } else {
+          gyroActive = true;
+        }
       }
     }
 
-    document.getElementById('btn-push-action').onclick = () => givePush(false);
+    // Al tocar la pantalla: enfocar cámara e inicializar sensores
     window.addEventListener('click', (e) => {
-      // Si toca la pantalla fuera de botones:
       if (!e.target.closest('button') && !e.target.closest('a')) {
-        if (!isMarkerPresent) {
-          // Si aún no encuentra el marcador, el toque ayuda a enfocar
-          triggerCameraRefocus();
-        } else {
-          // Si ya está anclado, el toque da empujón físico
-          givePush(false);
-        }
+        initGyro();
+        triggerCameraRefocus();
       }
-    });
-
-    // MQTT Sincronización por Eventos (Solo cuando el profesor cambia algo)
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
-    client.on('connect', () => {
-      client.subscribe("vlab-n/sala-natex");
-      document.getElementById('sync-mode').innerText = "Conectado al Docente";
     });
 
     // Orientación de Proyección (Mesa horizontal vs Pared/Monitor vertical)
     let currentOrientation = 'desk';
     function applyOrientation(mode) {
       currentOrientation = mode;
-      // En modo pared, se rota -90 deg sobre X para que la base quede en la parte inferior y el mástil suba por la pared
       const rot = (mode === 'wall') ? "-90 0 0" : "0 0 0";
-      if (apparatusNatex) apparatusNatex.setAttribute('rotation', rot);
-      if (apparatusHiro) apparatusHiro.setAttribute('rotation', rot);
+      if (apparatusContainer) apparatusContainer.setAttribute('rotation', rot);
 
       const btn = document.getElementById('btn-orient-toggle');
       if (btn) btn.innerText = (mode === 'wall') ? "🧱 Pared" : "🖥️ Mesa";
@@ -401,23 +345,26 @@
       flashStatus("Proyección: " + (currentOrientation === 'wall' ? "Pared / Monitor" : "Mesa"));
     };
 
+    // Sincronización MQTT por Eventos con el Profesor
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
+    client.on('connect', () => {
+      client.subscribe("vlab-n/sala-natex");
+    });
+
     client.on('message', (topic, message) => {
       try {
         const payload = JSON.parse(message.toString());
         
-        // Cambio de parámetros emitido por el docente
         if (payload.type === 'PARAM_CHANGE' || payload.type === 'SYNC') {
           if (payload.length !== undefined) params.length = payload.length;
           if (payload.gravity !== undefined) params.gravity = payload.gravity;
           if (payload.friction !== undefined) params.friction = payload.friction;
           if (payload.paused !== undefined) params.paused = payload.paused;
 
-          // Cambio de orientación (Mesa o Pared) sincronizado desde el docente
           if (payload.orientation && payload.orientation !== currentOrientation) {
             applyOrientation(payload.orientation);
           }
 
-          // Si el docente dio Reset, Paso manual, Empujón o Sincronización completa:
           if (payload.action === 'RESET' || payload.action === 'PUSH' || payload.action === 'STEP' || payload.action === 'SYNC_ALL' || payload.action === 'INIT') {
             if (payload.theta !== undefined) state.theta = payload.theta;
             if (payload.omega !== undefined) state.omega = payload.omega;
@@ -426,55 +373,61 @@
           let deg = state.theta * 180 / Math.PI;
           updateVisuals(deg, params.length);
 
-          if (payload.action !== 'INIT') {
+          if (payload.action === 'PUSH') {
+            flashStatus("⚡ ¡Empujón del Docente!");
+          } else if (payload.action !== 'INIT') {
             flashStatus("⚡ Docente actualizó parámetros físicos");
           }
-        } else if (payload.type === 'PUSH' && payload.sender !== myClientId) {
-          givePush(true);
-          flashStatus("⚡ ¡Empujón recibido de la sala!");
         }
       } catch (e) {}
     });
 
     function updateVisuals(deg, len) {
-      // Ajuste telescópico dinámico: la altura del mástil crece automáticamente
-      // manteniendo un margen constante de 0.35m para que la esfera NUNCA atraviese la base
+      // Ajuste telescópico dinámico: la altura del soporte crece con la longitud
+      // dejando un margen de seguridad de 0.35m sobre la base para que nunca la atraviese
       const H = len + 0.35;
 
       // 1. Mástil Vertical al fondo (Z = -0.2)
-      standMastNatex.setAttribute('height', H);
-      standMastNatex.setAttribute('position', `0 ${H / 2} -0.2`);
-      standMastHiro.setAttribute('height', H);
-      standMastHiro.setAttribute('position', `0 ${H / 2} -0.2`);
+      standMast.setAttribute('height', H);
+      standMast.setAttribute('position', `0 ${H / 2} -0.2`);
 
       // 2. Mordaza y Brazo Horizontal hacia el frente
-      standClampNatex.setAttribute('position', `0 ${H} -0.2`);
-      standClampHiro.setAttribute('position', `0 ${H} -0.2`);
-      standArmNatex.setAttribute('position', `0 ${H} -0.1`);
-      standArmHiro.setAttribute('position', `0 ${H} -0.1`);
+      standClamp.setAttribute('position', `0 ${H} -0.2`);
+      standArm.setAttribute('position', `0 ${H} -0.1`);
 
-      // 3. Posición del Pivote en el extremo del brazo
-      pivotNatex.setAttribute('position', `0 ${H} 0`);
-      pivotHiro.setAttribute('position', `0 ${H} 0`);
+      // 3. Pivote en el extremo del brazo
+      pendulumPivot.setAttribute('position', `0 ${H} 0`);
+      pendulumPivot.setAttribute('rotation', `0 0 ${deg}`);
 
-      // 4. Oscilación lateral izquierda-derecha (rotación pura en Z en el plano frontal)
-      pivotNatex.setAttribute('rotation', `0 0 ${deg}`);
-      pivotHiro.setAttribute('rotation', `0 0 ${deg}`);
-
-      // 5. Cuerda y Esfera
-      rodNatex.setAttribute('height', len);
-      rodNatex.setAttribute('position', `0 ${-len / 2} 0`);
-      bobNatex.setAttribute('position', `0 ${-len} 0`);
-
-      rodHiro.setAttribute('height', len);
-      rodHiro.setAttribute('position', `0 ${-len / 2} 0`);
-      bobHiro.setAttribute('position', `0 ${-len} 0`);
+      // 4. Cuerda y Esfera
+      pendulumRod.setAttribute('height', len);
+      pendulumRod.setAttribute('position', `0 ${-len / 2} 0`);
+      pendulumBob.setAttribute('position', `0 ${-len} 0`);
 
       document.getElementById('ar-l').innerText = len.toFixed(2) + ' m';
       document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
     }
 
-    // Bucle de Física RK4 Local Autónomo (60 FPS puros, sin lag de red)
+    // VARIABLES DE SUAVIZADO LERP/SLERP Y PERSISTENCIA
+    let activeMarkerObj = null;
+    let lastSeenTime = 0;
+    const GRACE_PERIOD_MS = 600; // 600ms de persistencia para eliminar todo parpadeo
+    const currentPos = new THREE.Vector3();
+    const targetPos = new THREE.Vector3();
+    const currentQuat = new THREE.Quaternion();
+    const targetQuat = new THREE.Quaternion();
+    let isPoseInitialized = false;
+
+    natexMarker.addEventListener('markerFound', () => {
+      activeMarkerObj = natexMarker.object3D;
+      onMarkerDetected("Diana Natex");
+    });
+    hiroMarker.addEventListener('markerFound', () => {
+      activeMarkerObj = hiroMarker.object3D;
+      onMarkerDetected("Marcador Hiro");
+    });
+
+    // Bucle de Renderizado y Física RK4 (60 FPS puros)
     let lastT = performance.now();
     function tick() {
       requestAnimationFrame(tick);
@@ -483,6 +436,47 @@
       lastT = now;
       if (dt > 0.1) dt = 0.1;
 
+      // GESTIÓN DE POSE SUAVIZADA (LERP / SLERP + PERSISTENCIA)
+      let isVisibleNow = false;
+      if (natexMarker.object3D && natexMarker.object3D.visible) {
+        activeMarkerObj = natexMarker.object3D;
+        isVisibleNow = true;
+      } else if (hiroMarker.object3D && hiroMarker.object3D.visible) {
+        activeMarkerObj = hiroMarker.object3D;
+        isVisibleNow = true;
+      }
+
+      if (isVisibleNow && activeMarkerObj) {
+        lastSeenTime = now;
+        targetPos.copy(activeMarkerObj.position);
+        targetQuat.copy(activeMarkerObj.quaternion);
+
+        if (!isPoseInitialized) {
+          currentPos.copy(targetPos);
+          currentQuat.copy(targetQuat);
+          isPoseInitialized = true;
+        } else {
+          // Filtro de amortiguamiento LERP/SLERP a 0.22 (elimina el temblor de mano)
+          currentPos.lerp(targetPos, 0.22);
+          currentQuat.slerp(targetQuat, 0.22);
+        }
+
+        stabilizedAnchor.object3D.position.copy(currentPos);
+        stabilizedAnchor.object3D.quaternion.copy(currentQuat);
+        stabilizedAnchor.setAttribute('visible', true);
+      } else {
+        // Si se perdió momentáneamente la visión óptica (por sombra o giro leve), sostener pose
+        if (now - lastSeenTime < GRACE_PERIOD_MS && isPoseInitialized) {
+          stabilizedAnchor.setAttribute('visible', true);
+        } else {
+          if (stabilizedAnchor.getAttribute('visible') !== false) {
+            stabilizedAnchor.setAttribute('visible', false);
+            onMarkerLost();
+          }
+        }
+      }
+
+      // FÍSICA RK4 DETERMINISTA
       if (!params.paused) {
         let gL = params.gravity / Math.max(0.2, params.length);
         let k1_th = state.omega;
@@ -496,7 +490,8 @@
         updateVisuals(deg, params.length);
       }
     }
-    // Inicialización de escala y orientación
+
+    // Inicialización al cargar
     updateVisuals(state.theta * 180 / Math.PI, params.length);
     applyOrientation('desk');
     requestAnimationFrame(tick);

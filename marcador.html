@@ -3,46 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marcador AR para Pantalla o Imprimir | VirtualLab_N</title>
+  <title>Marcador AR Calibrado | VirtualLab_N</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #07090e; color: #fff; font-family: 'Inter', sans-serif;
       min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 1.5rem; text-align: center; margin: 0;
+      padding: 1.5rem; text-align: center;
     }
     .card {
-      background: #0f141c; border: 1px solid rgba(0,242,254,0.3); padding: 2rem; border-radius: 16px;
-      max-width: 500px; box-shadow: 0 0 30px rgba(0,242,254,0.15);
+      background: #0f141c; border: 1px solid rgba(0,242,254,0.3); padding: 1.8rem; border-radius: 16px;
+      max-width: 560px; width: 100%; box-shadow: 0 0 35px rgba(0,242,254,0.15);
     }
-    h1 { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; color: #00f2fe; margin-bottom: 0.5rem; }
-    p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    h1 { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; color: #00f2fe; margin-bottom: 0.4rem; }
+    p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.2rem; line-height: 1.4; }
+
+    /* Pestañas de Selección de Marcador */
+    .tab-bar {
+      display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.2rem;
+    }
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 242, 254, 0.3);
+      color: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700;
+      padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #00f2fe; color: #000; border-color: #00f2fe; box-shadow: 0 0 15px rgba(0,242,254,0.4);
+    }
+
     .marker-frame {
-      background: #fff; padding: 1.5rem; border-radius: 12px; display: inline-block; margin-bottom: 1.5rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      background: #fff; padding: 2rem; border-radius: 12px; display: inline-block; margin-bottom: 1.2rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.8); transition: padding 0.2s;
     }
-    .marker-img { width: 260px; height: 260px; display: block; }
+    .marker-img {
+      width: 320px; height: 320px; display: block; object-fit: contain;
+      image-rendering: pixelated; margin: 0 auto;
+    }
+
+    .size-control {
+      display: flex; align-items: center; justify-content: center; gap: 0.8rem;
+      margin-bottom: 1.2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #94a3b8;
+    }
+    .size-control input[type="range"] {
+      width: 160px; accent-color: #00f2fe;
+    }
+
+    .btn-group {
+      display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;
+    }
     .btn {
       display: inline-block; background: #00f2fe; color: #000; font-family: 'JetBrains Mono', monospace;
-      font-weight: 700; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-size: 0.85rem;
+      font-weight: 700; padding: 0.65rem 1.2rem; border-radius: 8px; text-decoration: none; font-size: 0.8rem;
+    }
+    .btn-secondary {
+      background: #1e293b; color: #fff; border: 1px solid #00f2fe;
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Diana Oficial Natex (AR 6DoF)</h1>
-    <p>Apunta con la cámara de tu teléfono móvil a este marcador con las 4 figuras geométricas (Círculo, Triángulo, Diamante, Cuadrado y logo "N"). El soporte de física se anclará exactamente a él.</p>
+    <h1>Dianas Ópticas AR Calibradas</h1>
+    <p>Apunta tu cámara hacia esta pantalla. Si la detección tarda, agranda el tamaño del marcador con el deslizador inferior.</p>
     
-    <div class="marker-frame">
-      <!-- Marcador Vectorial SVG Calibrado Oficial -->
-      <img src="marcador.svg" alt="Diana Natex Oficial" class="marker-img" style="width:320px; height:320px;">
+    <!-- Selector entre Natex y Hiro -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-natex" onclick="setMarker('natex')">🎯 Diana Natex</button>
+      <button class="tab-btn" id="tab-hiro" onclick="setMarker('hiro')">⚡ Hiro Universal</button>
     </div>
 
-    <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
-      <a href="alumno.html" class="btn">Abrir Cámara AR</a>
-      <a href="marcador.svg" download="marcador_VirtualLab_N.svg" class="btn" style="background:#1e293b; color:#fff; border:1px solid #00f2fe;">📥 Descargar Marcador SVG</a>
+    <!-- Contenedor del Marcador -->
+    <div class="marker-frame" id="frame">
+      <img id="marker-img" src="marcador.svg" alt="Diana AR" class="marker-img">
+    </div>
+
+    <!-- Ajuste de Escala en Pantalla -->
+    <div class="size-control">
+      <span>Tamaño:</span>
+      <input type="range" id="size-slider" min="220" max="480" step="10" value="320" oninput="changeSize(this.value)">
+      <span id="size-val">320px</span>
+    </div>
+
+    <div class="btn-group">
+      <a href="alumno.html" class="btn">📱 Abrir Cámara AR</a>
+      <a id="btn-download" href="marcador.svg" download="marcador_VirtualLab_N.svg" class="btn btn-secondary">📥 Descargar Archivo</a>
     </div>
   </div>
+
+  <script>
+    let currentType = 'natex';
+
+    function setMarker(type) {
+      currentType = type;
+      const img = document.getElementById('marker-img');
+      const tabNatex = document.getElementById('tab-natex');
+      const tabHiro = document.getElementById('tab-hiro');
+      const btnDl = document.getElementById('btn-download');
+
+      if (type === 'natex') {
+        img.src = 'marcador.svg';
+        btnDl.href = 'marcador.svg';
+        btnDl.download = 'marcador_VirtualLab_N.svg';
+        tabNatex.classList.add('active');
+        tabHiro.classList.remove('active');
+      } else {
+        img.src = 'marcador_hiro.png';
+        btnDl.href = 'marcador_hiro.png';
+        btnDl.download = 'marcador_hiro.png';
+        tabHiro.classList.add('active');
+        tabNatex.classList.remove('active');
+      }
+    }
+
+    function changeSize(val) {
+      const img = document.getElementById('marker-img');
+      img.style.width = val + 'px';
+      img.style.height = val + 'px';
+      document.getElementById('size-val').innerText = val + 'px';
+    }
+  </script>
 </body>
 </html>
