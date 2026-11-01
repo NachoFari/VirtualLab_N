@@ -37,6 +37,17 @@
       padding: 0.4rem 0.8rem; border-radius: 20px; text-decoration: none; pointer-events: auto;
     }
     
+    /* Retícula de Enfoque Visual */
+    .focus-reticle {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.4);
+      width: 110px; height: 110px; border: 2px dashed #00f2fe; border-radius: 16px;
+      pointer-events: none; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.6); z-index: 99998;
+    }
+    .focus-reticle.active {
+      opacity: 1; transform: translate(-50%, -50%) scale(1.0);
+    }
+
     /* Toast con desaparición suave automática */
     .status-toast {
       align-self: center; background: rgba(7, 9, 14, 0.92); border: 1px solid #00f2fe;
@@ -66,9 +77,9 @@
     .btn-push:active { transform: scale(0.98); filter: brightness(1.2); }
   </style>
 
-  <!-- Auto Cache-Buster Revision 10 -->
+  <!-- Auto Cache-Buster Revision 12 -->
   <script>
-    const CURRENT_REV = "rev10_autohide_push";
+    const CURRENT_REV = "rev12_eventsync_autofocus";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -76,11 +87,17 @@
 </head>
 <body>
 
+  <!-- Retícula de Enfoque en Pantalla -->
+  <div class="focus-reticle" id="focus-reticle"></div>
+
   <!-- UI FLOTANTE -->
   <div class="ar-ui-container">
     <div class="top-bar">
-      <div class="badge">VLAB_N • INTERACTIVO V10</div>
-      <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Diana</a>
+      <div class="badge">VLAB_N • EVENT-SYNC V12</div>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="btn-marker-help" id="btn-focus-top" style="cursor:pointer; background:rgba(0,242,254,0.2);">🎯 Enfocar</button>
+        <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Diana</a>
+      </div>
     </div>
 
     <div class="status-toast" id="tracking-status">
@@ -88,7 +105,8 @@
     </div>
 
     <div class="bottom-hud">
-      <div class="hud-line"><span>Anclaje:</span> <span id="ar-track">Buscando Diana...</span></div>
+      <div class="hud-line"><span>Anclaje Mesa:</span> <span id="ar-track">Buscando Diana...</span></div>
+      <div class="hud-line"><span>Física:</span> <span id="sync-mode" style="color:#10b981;">60 FPS Autónomo</span></div>
       <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">0.70 m</span></div>
       <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">25.0°</span></div>
       
@@ -195,15 +213,119 @@
     hiroMarker.addEventListener('markerFound', () => onMarkerDetected("Marcador Hiro"));
     hiroMarker.addEventListener('markerLost', onMarkerLost);
 
-    // FÍSICA Y SINCRONIZACIÓN
+    // FÍSICA Y SINCRONIZACIÓN POR EVENTOS
     const myClientId = 'student_' + Math.random().toString(36).substring(2, 9);
     let state = { theta: Math.PI / 5, omega: 0.0 };
     let params = { length: 0.7, gravity: 9.8, friction: 0.03, paused: false };
-    let hasRemoteSync = false;
-    let lastRemoteSyncTime = 0;
+    let isMarkerPresent = false;
+
+    // Toast flotante dinámico
+    function flashStatus(text) {
+      clearTimeout(toastTimer);
+      trackStatus.style.display = "block";
+      trackStatus.style.opacity = "1";
+      trackStatus.innerText = text;
+      trackStatus.style.borderColor = "#00f2fe";
+      trackStatus.style.color = "#00f2fe";
+      toastTimer = setTimeout(() => {
+        trackStatus.style.opacity = "0";
+        setTimeout(() => { trackStatus.style.display = "none"; }, 500);
+      }, 2000);
+    }
+
+    // CONTROL DE ENFOQUE DE CÁMARA (W3C Image Capture & MediaStreamTrack)
+    let currentVideoTrack = null;
+    function setupCameraAutofocus() {
+      let attempts = 0;
+      const checkVideo = setInterval(() => {
+        attempts++;
+        const video = document.getElementById('arjs-video') || document.querySelector('video');
+        if (video && video.srcObject) {
+          const stream = video.srcObject;
+          const tracks = stream.getVideoTracks();
+          if (tracks.length > 0) {
+            currentVideoTrack = tracks[0];
+            clearInterval(checkVideo);
+            applyContinuousFocus();
+          }
+        }
+        if (attempts > 30) clearInterval(checkVideo);
+      }, 400);
+    }
+
+    function applyContinuousFocus() {
+      if (!currentVideoTrack || !currentVideoTrack.applyConstraints) return;
+      try {
+        const caps = currentVideoTrack.getCapabilities ? currentVideoTrack.getCapabilities() : {};
+        const adv = {};
+        if (caps.focusMode && caps.focusMode.includes('continuous')) {
+          adv.focusMode = 'continuous';
+        }
+        if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
+          adv.exposureMode = 'continuous';
+        }
+        if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) {
+          adv.whiteBalanceMode = 'continuous';
+        }
+        if (Object.keys(adv).length > 0) {
+          currentVideoTrack.applyConstraints({ advanced: [adv] }).catch(() => {});
+        }
+      } catch (e) {}
+    }
+
+    // Forzar barrido de enfoque sobre el símbolo
+    function triggerCameraRefocus() {
+      const reticle = document.getElementById('focus-reticle');
+      if (reticle) {
+        reticle.classList.add('active');
+        setTimeout(() => reticle.classList.remove('active'), 750);
+      }
+      if (navigator.vibrate) navigator.vibrate(40);
+
+      if (currentVideoTrack && currentVideoTrack.applyConstraints) {
+        try {
+          const caps = currentVideoTrack.getCapabilities ? currentVideoTrack.getCapabilities() : {};
+          if (caps.focusMode) {
+            if (caps.focusMode.includes('single-shot')) {
+              currentVideoTrack.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] })
+                .then(() => {
+                  setTimeout(() => {
+                    if (caps.focusMode.includes('continuous')) {
+                      currentVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+                    }
+                  }, 600);
+                }).catch(() => {});
+            } else if (caps.focusMode.includes('continuous')) {
+              currentVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+            }
+          }
+        } catch (e) {}
+      }
+
+      flashStatus("🎯 Re-enfocando cámara en el símbolo...");
+    }
+
+    document.getElementById('btn-focus-top').onclick = (e) => {
+      e.stopPropagation();
+      triggerCameraRefocus();
+    };
+
+    window.addEventListener('load', setupCameraAutofocus);
+
+    // Actualizar estado de detección
+    const origMarkerFound = onMarkerDetected;
+    onMarkerDetected = function(name) {
+      isMarkerPresent = true;
+      origMarkerFound(name);
+    };
+    const origMarkerLost = onMarkerLost;
+    onMarkerLost = function() {
+      isMarkerPresent = false;
+      origMarkerLost();
+    };
 
     // Función para "Dar un Empujón" y revivir el péndulo
-    function givePush() {
+    function givePush(external = false) {
       if (Math.abs(state.theta) < 0.1 && Math.abs(state.omega) < 0.1) {
         state.theta = Math.PI / 4.5; // Relanzar a unos 40 grados
         state.omega = 1.2;
@@ -211,54 +333,63 @@
         let dir = (state.omega >= 0) ? 1 : -1;
         state.omega += dir * 2.2; // Empujón en la dirección del movimiento
       }
-      if (navigator.vibrate) navigator.vibrate(40);
+      if (!external && navigator.vibrate) navigator.vibrate(35);
 
-      // Si estamos en red MQTT, avisar a la sala docente
-      if (client && client.connected) {
+      // Si fue local y estamos en red MQTT, avisar a la sala
+      if (!external && client && client.connected) {
         try {
           client.publish("vlab-n/sala-natex", JSON.stringify({ type: 'PUSH', sender: myClientId }));
         } catch (e) {}
       }
     }
 
-    document.getElementById('btn-push-action').onclick = givePush;
+    document.getElementById('btn-push-action').onclick = () => givePush(false);
     window.addEventListener('click', (e) => {
-      // Si toca la pantalla fuera de botones, también da empujón
+      // Si toca la pantalla fuera de botones:
       if (!e.target.closest('button') && !e.target.closest('a')) {
-        givePush();
+        if (!isMarkerPresent) {
+          // Si aún no encuentra el marcador, el toque ayuda a enfocar
+          triggerCameraRefocus();
+        } else {
+          // Si ya está anclado, el toque da empujón físico
+          givePush(false);
+        }
       }
     });
 
-    // MQTT Sincronización
+    // MQTT Sincronización por Eventos (Solo cuando el profesor cambia algo)
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
     client.on('connect', () => {
       client.subscribe("vlab-n/sala-natex");
+      document.getElementById('sync-mode').innerText = "Conectado al Docente";
     });
 
     client.on('message', (topic, message) => {
       try {
         const payload = JSON.parse(message.toString());
-        if (payload.type === 'SYNC') {
-          hasRemoteSync = true;
-          lastRemoteSyncTime = performance.now();
-          state.theta = payload.theta;
-          state.omega = payload.omega;
-          params.length = payload.length;
-          params.gravity = payload.gravity;
-          params.paused = payload.paused;
+        
+        // Cambio de parámetros emitido por el docente
+        if (payload.type === 'PARAM_CHANGE' || payload.type === 'SYNC') {
+          if (payload.length !== undefined) params.length = payload.length;
+          if (payload.gravity !== undefined) params.gravity = payload.gravity;
+          if (payload.friction !== undefined) params.friction = payload.friction;
+          if (payload.paused !== undefined) params.paused = payload.paused;
 
-          let deg = payload.theta * 180 / Math.PI;
-          updateVisuals(deg, params.length);
-        } else if (payload.type === 'PUSH' && payload.sender !== myClientId) {
-          if (!hasRemoteSync) {
-            if (Math.abs(state.theta) < 0.1 && Math.abs(state.omega) < 0.1) {
-              state.theta = Math.PI / 4.5;
-              state.omega = 1.2;
-            } else {
-              let dir = (state.omega >= 0) ? 1 : -1;
-              state.omega += dir * 2.2;
-            }
+          // Si el docente dio Reset, Paso manual, Empujón o Sincronización completa:
+          if (payload.action === 'RESET' || payload.action === 'PUSH' || payload.action === 'STEP' || payload.action === 'SYNC_ALL' || payload.action === 'INIT') {
+            if (payload.theta !== undefined) state.theta = payload.theta;
+            if (payload.omega !== undefined) state.omega = payload.omega;
           }
+
+          let deg = state.theta * 180 / Math.PI;
+          updateVisuals(deg, params.length);
+
+          if (payload.action !== 'INIT') {
+            flashStatus("⚡ Docente actualizó parámetros físicos");
+          }
+        } else if (payload.type === 'PUSH' && payload.sender !== myClientId) {
+          givePush(true);
+          flashStatus("⚡ ¡Empujón recibido de la sala!");
         }
       } catch (e) {}
     });
@@ -279,7 +410,7 @@
       document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
     }
 
-    // Bucle de Física RK4 Local Autónomo
+    // Bucle de Física RK4 Local Autónomo (60 FPS puros, sin lag de red)
     let lastT = performance.now();
     function tick() {
       requestAnimationFrame(tick);
@@ -288,12 +419,7 @@
       lastT = now;
       if (dt > 0.1) dt = 0.1;
 
-      // Watchdog: si no hay paquetes del profesor por 1.5s, retomar física local autónoma
-      if (hasRemoteSync && (now - lastRemoteSyncTime > 1500)) {
-        hasRemoteSync = false;
-      }
-
-      if (!hasRemoteSync && !params.paused) {
+      if (!params.paused) {
         let gL = params.gravity / Math.max(0.2, params.length);
         let k1_th = state.omega;
         let k1_om = -gL * Math.sin(state.theta) - params.friction * state.omega;

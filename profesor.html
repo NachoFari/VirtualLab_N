@@ -207,6 +207,7 @@
         <button class="btn-control" id="btn-step">Paso (+1)</button>
         <button class="btn-control" id="btn-slow">0.5x</button>
         <button class="btn-control" id="btn-reset">Reset</button>
+        <button class="btn-control" id="btn-sync-all" title="Sincronizar parámetros a toda la clase">🔄 Sincronizar Clase</button>
       </div>
     </div>
 
@@ -309,26 +310,40 @@
 
     client.on('connect', () => {
       document.getElementById('conn-status').innerText = "En Vivo (Sincronizado)";
-      broadcastState();
+      client.subscribe(room);
+      broadcastChange('INIT');
     });
 
-    let lastBroadcastTime = 0;
-    function broadcastState(force = false) {
-      if (!client.connected) return;
-      let now = performance.now();
-      // Transmite a 30 FPS o inmediato si es forzado (slider/pausa)
-      if (force || now - lastBroadcastTime > 33) {
-        lastBroadcastTime = now;
-        client.publish(room, JSON.stringify({
-          type: 'SYNC',
-          theta: state.theta,
-          omega: state.omega,
-          length: params.length,
-          mass: params.mass,
-          gravity: params.gravity,
-          paused: params.paused
-        }));
-      }
+    client.on('message', (topic, message) => {
+      try {
+        const payload = JSON.parse(message.toString());
+        if (payload.type === 'PUSH') {
+          if (Math.abs(state.theta) < 0.1 && Math.abs(state.omega) < 0.1) {
+            state.theta = Math.PI / 4.5;
+            state.omega = 1.2;
+          } else {
+            let dir = (state.omega >= 0) ? 1 : -1;
+            state.omega += dir * 2.2;
+          }
+        }
+      } catch (e) {}
+    });
+
+    function broadcastChange(action = 'PARAM_CHANGE') {
+      if (!client || !client.connected) return;
+      client.publish(room, JSON.stringify({
+        type: 'PARAM_CHANGE',
+        action: action,
+        theta: state.theta,
+        omega: state.omega,
+        length: params.length,
+        mass: params.mass,
+        gravity: params.gravity,
+        friction: params.friction,
+        paused: params.paused,
+        timeScale: params.timeScale,
+        timestamp: Date.now()
+      }));
     }
 
     // Configuración Three.js
@@ -429,9 +444,6 @@
       let Ep = params.mass * params.gravity * params.length * (1 - Math.cos(state.theta));
       document.getElementById('hud-energy').innerText = (Ek + Ep).toFixed(2) + ' J';
 
-      // Transmitir sincronización en tiempo real
-      broadcastState();
-
       renderer.render(scene, camera);
     }
     requestAnimationFrame(animate);
@@ -446,17 +458,17 @@
     document.getElementById('slider-length').oninput = (e) => {
       params.length = parseFloat(e.target.value);
       document.getElementById('val-length').innerText = params.length.toFixed(2) + ' m';
-      broadcastState(true);
+      broadcastChange('LENGTH');
     };
     document.getElementById('slider-mass').oninput = (e) => {
       params.mass = parseFloat(e.target.value);
       document.getElementById('val-mass').innerText = params.mass.toFixed(2) + ' kg';
-      broadcastState(true);
+      broadcastChange('MASS');
     };
     document.getElementById('slider-friction').oninput = (e) => {
       params.friction = parseFloat(e.target.value);
       document.getElementById('val-friction').innerText = params.friction.toFixed(2);
-      broadcastState(true);
+      broadcastChange('FRICTION');
     };
     document.getElementById('slider-gravity').oninput = (e) => {
       setGravity(parseFloat(e.target.value));
@@ -465,7 +477,7 @@
       params.gravity = g;
       document.getElementById('slider-gravity').value = g;
       document.getElementById('val-gravity').innerText = g.toFixed(2) + ' m/s²';
-      broadcastState(true);
+      broadcastChange('GRAVITY');
     }
 
     const btnPause = document.getElementById('btn-pause');
@@ -473,12 +485,12 @@
       params.paused = !params.paused;
       btnPause.innerText = params.paused ? 'Reanudar' : 'Pausar';
       btnPause.classList.toggle('active', params.paused);
-      broadcastState(true);
+      broadcastChange('PAUSE');
     };
     document.getElementById('btn-reset').onclick = () => {
       state.theta = Math.PI / 4;
       state.omega = 0;
-      broadcastState(true);
+      broadcastChange('RESET');
     };
     document.getElementById('btn-push').onclick = () => {
       if (Math.abs(state.theta) < 0.1 && Math.abs(state.omega) < 0.1) {
@@ -488,19 +500,23 @@
         let dir = (state.omega >= 0) ? 1 : -1;
         state.omega += dir * 2.2;
       }
-      broadcastState(true);
+      broadcastChange('PUSH');
     };
     document.getElementById('btn-step').onclick = () => {
       let step = rk4Step(state.theta, state.omega, 0.05);
       state.theta = step.theta;
       state.omega = step.omega;
-      broadcastState(true);
+      broadcastChange('STEP');
     };
     document.getElementById('btn-slow').onclick = (e) => {
       params.timeScale = params.timeScale === 1.0 ? 0.25 : 1.0;
       e.target.innerText = params.timeScale === 1.0 ? '0.5x' : '1.0x (Normal)';
       e.target.classList.toggle('active', params.timeScale !== 1.0);
-      broadcastState(true);
+      broadcastChange('TIMESCALE');
+    };
+    document.getElementById('btn-sync-all').onclick = () => {
+      broadcastChange('SYNC_ALL');
+      alert("¡Parámetros y estado sincronizados con toda la clase!");
     };
 
     // Quiz y Excel
