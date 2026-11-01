@@ -77,9 +77,9 @@
     .btn-push:active { transform: scale(0.98); filter: brightness(1.2); }
   </style>
 
-  <!-- Auto Cache-Buster Revision 12 -->
+  <!-- Auto Cache-Buster Revision 13 -->
   <script>
-    const CURRENT_REV = "rev12_eventsync_autofocus";
+    const CURRENT_REV = "rev13_telescopic_orient";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -93,10 +93,11 @@
   <!-- UI FLOTANTE -->
   <div class="ar-ui-container">
     <div class="top-bar">
-      <div class="badge">VLAB_N • EVENT-SYNC V12</div>
-      <div style="display:flex; gap:0.4rem;">
+      <div class="badge">VLAB_N • CALIBRADO V13</div>
+      <div style="display:flex; gap:0.35rem;">
+        <button class="btn-marker-help" id="btn-orient-toggle" style="cursor:pointer; background:rgba(0,242,254,0.25);">🖥️ Mesa</button>
         <button class="btn-marker-help" id="btn-focus-top" style="cursor:pointer; background:rgba(0,242,254,0.2);">🎯 Enfocar</button>
-        <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Diana</a>
+        <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Diana</a>
       </div>
     </div>
 
@@ -105,8 +106,8 @@
     </div>
 
     <div class="bottom-hud">
-      <div class="hud-line"><span>Anclaje Mesa:</span> <span id="ar-track">Buscando Diana...</span></div>
-      <div class="hud-line"><span>Física:</span> <span id="sync-mode" style="color:#10b981;">60 FPS Autónomo</span></div>
+      <div class="hud-line"><span>Anclaje:</span> <span id="ar-track">Buscando Diana...</span></div>
+      <div class="hud-line"><span>Proyección:</span> <span id="ar-orient-val">Mesa (Horizontal)</span></div>
       <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">0.70 m</span></div>
       <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">25.0°</span></div>
       
@@ -129,17 +130,23 @@
       <!-- Anillo Neón Cian en la Base -->
       <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
       
-      <!-- APARATO COMPLETO DE LABORATORIO -->
-      <a-entity position="0 0 0" scale="0.5 0.5 0.5">
-        <a-box position="0.15 0.05 0" width="0.7" height="0.08" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
-        <a-box position="0.15 0.05 0" width="0.72" height="0.02" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
-        <a-cylinder position="0.38 0.65 0" radius="0.03" height="1.2" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
-        <a-box position="0.38 1.2 0" width="0.09" height="0.09" depth="0.09" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
-        <a-cylinder position="0.18 1.2 0" rotation="0 0 90" radius="0.02" height="0.45" color="#94a3b8"></a-cylinder>
+      <!-- CONTENEDOR DEL APARATO CON ORIENTACIÓN DINÁMICA -->
+      <a-entity id="apparatus-natex" position="0 0 0" rotation="0 0 0" scale="0.45 0.45 0.45">
+        <!-- Base de Soporte -->
+        <a-box id="base-natex" position="0 0.03 0" width="0.7" height="0.06" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
+        <a-box position="0 0.03 0" width="0.72" height="0.015" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
 
-        <a-entity id="pendulum-pivot-natex" position="0 1.2 0">
+        <!-- Mástil Vertical al Fondo (Z = -0.20) para despejar la oscilación lateral -->
+        <a-cylinder id="stand-mast-natex" position="0 0.5 -0.2" radius="0.025" height="1.0" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
+
+        <!-- Mordaza y Brazo Horizontal hacia el frente (de Z = -0.20 a Z = 0) -->
+        <a-box id="stand-clamp-natex" position="0 1.0 -0.2" width="0.08" height="0.08" depth="0.08" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
+        <a-cylinder id="stand-arm-natex" position="0 1.0 -0.1" rotation="90 0 0" radius="0.018" height="0.22" color="#94a3b8"></a-cylinder>
+
+        <!-- PIVOTE Y PÉNDULO (Oscilación lateral izquierda-derecha sobre X sin obstáculos) -->
+        <a-entity id="pendulum-pivot-natex" position="0 1.0 0">
           <a-cylinder id="pendulum-rod-natex" position="0 -0.35 0" radius="0.012" height="0.7" color="#ffffff"></a-cylinder>
-          <a-sphere id="pendulum-bob-natex" position="0 -0.7 0" radius="0.16" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.8;"></a-sphere>
+          <a-sphere id="pendulum-bob-natex" position="0 -0.7 0" radius="0.15" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.85;"></a-sphere>
         </a-entity>
       </a-entity>
     </a-marker>
@@ -148,16 +155,17 @@
     <a-marker preset="hiro" emitsEvents="true" smooth="true" smoothCount="2" id="hiro-target">
       <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
       
-      <a-entity position="0 0 0" scale="0.5 0.5 0.5">
-        <a-box position="0.15 0.05 0" width="0.7" height="0.08" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
-        <a-box position="0.15 0.05 0" width="0.72" height="0.02" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
-        <a-cylinder position="0.38 0.65 0" radius="0.03" height="1.2" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
-        <a-box position="0.38 1.2 0" width="0.09" height="0.09" depth="0.09" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
-        <a-cylinder position="0.18 1.2 0" rotation="0 0 90" radius="0.02" height="0.45" color="#94a3b8"></a-cylinder>
+      <a-entity id="apparatus-hiro" position="0 0 0" rotation="0 0 0" scale="0.45 0.45 0.45">
+        <a-box id="base-hiro" position="0 0.03 0" width="0.7" height="0.06" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
+        <a-box position="0 0.03 0" width="0.72" height="0.015" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
 
-        <a-entity id="pendulum-pivot-hiro" position="0 1.2 0">
+        <a-cylinder id="stand-mast-hiro" position="0 0.5 -0.2" radius="0.025" height="1.0" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
+        <a-box id="stand-clamp-hiro" position="0 1.0 -0.2" width="0.08" height="0.08" depth="0.08" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
+        <a-cylinder id="stand-arm-hiro" position="0 1.0 -0.1" rotation="90 0 0" radius="0.018" height="0.22" color="#94a3b8"></a-cylinder>
+
+        <a-entity id="pendulum-pivot-hiro" position="0 1.0 0">
           <a-cylinder id="pendulum-rod-hiro" position="0 -0.35 0" radius="0.012" height="0.7" color="#ffffff"></a-cylinder>
-          <a-sphere id="pendulum-bob-hiro" position="0 -0.7 0" radius="0.16" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.8;"></a-sphere>
+          <a-sphere id="pendulum-bob-hiro" position="0 -0.7 0" radius="0.15" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.85;"></a-sphere>
         </a-entity>
       </a-entity>
     </a-marker>
@@ -166,10 +174,18 @@
   </a-scene>
 
   <script>
+    const apparatusNatex = document.getElementById('apparatus-natex');
+    const standMastNatex = document.getElementById('stand-mast-natex');
+    const standClampNatex = document.getElementById('stand-clamp-natex');
+    const standArmNatex = document.getElementById('stand-arm-natex');
     const pivotNatex = document.getElementById('pendulum-pivot-natex');
     const rodNatex = document.getElementById('pendulum-rod-natex');
     const bobNatex = document.getElementById('pendulum-bob-natex');
 
+    const apparatusHiro = document.getElementById('apparatus-hiro');
+    const standMastHiro = document.getElementById('stand-mast-hiro');
+    const standClampHiro = document.getElementById('stand-clamp-hiro');
+    const standArmHiro = document.getElementById('stand-arm-hiro');
     const pivotHiro = document.getElementById('pendulum-pivot-hiro');
     const rodHiro = document.getElementById('pendulum-rod-hiro');
     const bobHiro = document.getElementById('pendulum-bob-hiro');
@@ -364,6 +380,27 @@
       document.getElementById('sync-mode').innerText = "Conectado al Docente";
     });
 
+    // Orientación de Proyección (Mesa horizontal vs Pared/Monitor vertical)
+    let currentOrientation = 'desk';
+    function applyOrientation(mode) {
+      currentOrientation = mode;
+      // En modo pared, se rota -90 deg sobre X para que la base quede en la parte inferior y el mástil suba por la pared
+      const rot = (mode === 'wall') ? "-90 0 0" : "0 0 0";
+      if (apparatusNatex) apparatusNatex.setAttribute('rotation', rot);
+      if (apparatusHiro) apparatusHiro.setAttribute('rotation', rot);
+
+      const btn = document.getElementById('btn-orient-toggle');
+      if (btn) btn.innerText = (mode === 'wall') ? "🧱 Pared" : "🖥️ Mesa";
+      const lbl = document.getElementById('ar-orient-val');
+      if (lbl) lbl.innerText = (mode === 'wall') ? "Pared / Monitor" : "Mesa (Horizontal)";
+    }
+
+    document.getElementById('btn-orient-toggle').onclick = (e) => {
+      e.stopPropagation();
+      applyOrientation(currentOrientation === 'desk' ? 'wall' : 'desk');
+      flashStatus("Proyección: " + (currentOrientation === 'wall' ? "Pared / Monitor" : "Mesa"));
+    };
+
     client.on('message', (topic, message) => {
       try {
         const payload = JSON.parse(message.toString());
@@ -374,6 +411,11 @@
           if (payload.gravity !== undefined) params.gravity = payload.gravity;
           if (payload.friction !== undefined) params.friction = payload.friction;
           if (payload.paused !== undefined) params.paused = payload.paused;
+
+          // Cambio de orientación (Mesa o Pared) sincronizado desde el docente
+          if (payload.orientation && payload.orientation !== currentOrientation) {
+            applyOrientation(payload.orientation);
+          }
 
           // Si el docente dio Reset, Paso manual, Empujón o Sincronización completa:
           if (payload.action === 'RESET' || payload.action === 'PUSH' || payload.action === 'STEP' || payload.action === 'SYNC_ALL' || payload.action === 'INIT') {
@@ -395,9 +437,31 @@
     });
 
     function updateVisuals(deg, len) {
+      // Ajuste telescópico dinámico: la altura del mástil crece automáticamente
+      // manteniendo un margen constante de 0.35m para que la esfera NUNCA atraviese la base
+      const H = len + 0.35;
+
+      // 1. Mástil Vertical al fondo (Z = -0.2)
+      standMastNatex.setAttribute('height', H);
+      standMastNatex.setAttribute('position', `0 ${H / 2} -0.2`);
+      standMastHiro.setAttribute('height', H);
+      standMastHiro.setAttribute('position', `0 ${H / 2} -0.2`);
+
+      // 2. Mordaza y Brazo Horizontal hacia el frente
+      standClampNatex.setAttribute('position', `0 ${H} -0.2`);
+      standClampHiro.setAttribute('position', `0 ${H} -0.2`);
+      standArmNatex.setAttribute('position', `0 ${H} -0.1`);
+      standArmHiro.setAttribute('position', `0 ${H} -0.1`);
+
+      // 3. Posición del Pivote en el extremo del brazo
+      pivotNatex.setAttribute('position', `0 ${H} 0`);
+      pivotHiro.setAttribute('position', `0 ${H} 0`);
+
+      // 4. Oscilación lateral izquierda-derecha (rotación pura en Z en el plano frontal)
       pivotNatex.setAttribute('rotation', `0 0 ${deg}`);
       pivotHiro.setAttribute('rotation', `0 0 ${deg}`);
 
+      // 5. Cuerda y Esfera
       rodNatex.setAttribute('height', len);
       rodNatex.setAttribute('position', `0 ${-len / 2} 0`);
       bobNatex.setAttribute('position', `0 ${-len} 0`);
@@ -432,6 +496,9 @@
         updateVisuals(deg, params.length);
       }
     }
+    // Inicialización de escala y orientación
+    updateVisuals(state.theta * 180 / Math.PI, params.length);
+    applyOrientation('desk');
     requestAnimationFrame(tick);
   </script>
 </body>

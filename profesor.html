@@ -259,6 +259,26 @@
         </div>
       </div>
 
+      <!-- Modo de Proyección AR -->
+      <div class="panel-section">
+        <div class="section-title">
+          <span>Proyección AR en Aula</span>
+          <span id="val-orientation" style="color:var(--cyan-glow); font-size:0.75rem;">Mesa (Horizontal)</span>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+          <button class="btn-control active" id="btn-orient-desk" onclick="setOrientation('desk')">
+            🖥️ Modo Mesa
+          </button>
+          <button class="btn-control" id="btn-orient-wall" onclick="setOrientation('wall')">
+            🧱 Modo Pared / Monitor
+          </button>
+        </div>
+        <small style="color:var(--text-muted); font-size:0.75rem; margin-top:0.4rem; display:block; line-height:1.3;">
+          • <strong>Mesa:</strong> La diana reposa en el banco del alumno.<br>
+          • <strong>Pared / Monitor:</strong> La diana está vertical en la pizarra o pantalla.
+        </small>
+      </div>
+
       <!-- Evaluación y Excel -->
       <div class="panel-section">
         <div class="section-title">Evaluación en Clase</div>
@@ -297,7 +317,7 @@
   <script>
     // Parámetros Físicos
     let state = { theta: Math.PI / 4, omega: 0.0 };
-    let params = { length: 1.0, mass: 1.0, gravity: 9.8, friction: 0.05, paused: false, timeScale: 1.0 };
+    let params = { length: 1.0, mass: 1.0, gravity: 9.8, friction: 0.05, paused: false, timeScale: 1.0, orientation: 'desk' };
     let studentResponses = [
       { id: 1, alumno: "Camila Soto", respuesta: "B", puntaje: "1.0", fecha: new Date().toLocaleTimeString() },
       { id: 2, alumno: "Matías Gómez", respuesta: "B", puntaje: "1.0", fecha: new Date().toLocaleTimeString() },
@@ -342,8 +362,17 @@
         friction: params.friction,
         paused: params.paused,
         timeScale: params.timeScale,
+        orientation: params.orientation,
         timestamp: Date.now()
       }));
+    }
+
+    function setOrientation(mode) {
+      params.orientation = mode;
+      document.getElementById('val-orientation').innerText = mode === 'desk' ? 'Mesa (Horizontal)' : 'Pared / Monitor';
+      document.getElementById('btn-orient-desk').classList.toggle('active', mode === 'desk');
+      document.getElementById('btn-orient-wall').classList.toggle('active', mode === 'wall');
+      broadcastChange('ORIENTATION');
     }
 
     // Configuración Three.js
@@ -427,7 +456,9 @@
         state.omega = step.omega;
       }
 
-      // Actualizar Gráficos 3D
+      // Actualizar Gráficos 3D (Telescópico para mantener la esfera siempre centrada)
+      let H_pivot = params.length * 0.45 + 0.65;
+      pivot.position.y = H_pivot;
       pivot.rotation.z = state.theta;
       rod.scale.set(1, params.length, 1);
       rod.position.y = -params.length / 2;
