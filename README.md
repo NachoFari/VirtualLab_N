@@ -16,6 +16,7 @@ VirtualLab_N/
 ├── profesor.html     <-- Panel maestro con sliders, sincronización en vivo y Excel
 ├── alumno.html       <-- Cámara WebAR para teléfonos móviles (Android e iOS)
 ├── marcador.svg      <-- Diana de calibración geométrica de 4 esquinas para imprimir
+├── ROADMAP.md        <-- Plan maestro de 35 experimentos, Visor de Funciones 3D y Prompts IA
 └── README.md         <-- Documentación oficial
 ```
 
