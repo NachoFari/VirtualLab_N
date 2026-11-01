@@ -37,27 +37,38 @@
       padding: 0.4rem 0.8rem; border-radius: 20px; text-decoration: none; pointer-events: auto;
     }
     
+    /* Toast con desaparición suave automática */
     .status-toast {
-      align-self: center; background: rgba(7, 9, 14, 0.9); border: 1px solid #00f2fe;
+      align-self: center; background: rgba(7, 9, 14, 0.92); border: 1px solid #00f2fe;
       color: #00f2fe; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
-      padding: 0.4rem 1rem; border-radius: 20px; box-shadow: 0 0 15px rgba(0,242,254,0.3);
-      text-align: center;
+      padding: 0.45rem 1.1rem; border-radius: 20px; box-shadow: 0 0 15px rgba(0,242,254,0.3);
+      text-align: center; transition: opacity 0.5s ease; pointer-events: none;
     }
 
     .bottom-hud {
-      background: rgba(15, 20, 28, 0.9); border: 1px solid rgba(0, 242, 254, 0.3);
-      border-radius: 12px; padding: 0.75rem 1rem; backdrop-filter: blur(10px);
-      display: flex; flex-direction: column; gap: 0.25rem; pointer-events: auto;
+      background: rgba(15, 20, 28, 0.92); border: 1px solid rgba(0, 242, 254, 0.35);
+      border-radius: 14px; padding: 0.75rem 1rem; backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; gap: 0.35rem; pointer-events: auto;
     }
     .hud-line {
       display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #fff;
     }
     .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
+
+    /* Botón de Empujón Físico */
+    .btn-push {
+      width: 100%; background: linear-gradient(135deg, #00f2fe, #4facfe);
+      border: none; color: #000; font-family: 'JetBrains Mono', monospace; font-weight: 800;
+      padding: 0.7rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin-top: 0.3rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      box-shadow: 0 0 15px rgba(0,242,254,0.3);
+    }
+    .btn-push:active { transform: scale(0.98); filter: brightness(1.2); }
   </style>
 
-  <!-- Auto Cache-Buster Revision 9 -->
+  <!-- Auto Cache-Buster Revision 10 -->
   <script>
-    const CURRENT_REV = "rev9_bright_apparatus";
+    const CURRENT_REV = "rev10_autohide_push";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -68,8 +79,8 @@
   <!-- UI FLOTANTE -->
   <div class="ar-ui-container">
     <div class="top-bar">
-      <div class="badge">VLAB_N • CALIBRADO V9</div>
-      <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Diana Natex</a>
+      <div class="badge">VLAB_N • INTERACTIVO V10</div>
+      <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Ver Diana</a>
     </div>
 
     <div class="status-toast" id="tracking-status">
@@ -77,50 +88,45 @@
     </div>
 
     <div class="bottom-hud">
-      <div class="hud-line"><span>Anclaje Mesa:</span> <span id="ar-track">Buscando Diana...</span></div>
-      <div class="hud-line"><span>Sincronización Docente:</span> <span id="sync-rate" style="color:#10b981;">30 FPS En Vivo</span></div>
-      <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">0.80 m</span></div>
+      <div class="hud-line"><span>Anclaje:</span> <span id="ar-track">Buscando Diana...</span></div>
+      <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">0.70 m</span></div>
       <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">25.0°</span></div>
+      
+      <!-- Botón para revivir / darle un empujón -->
+      <button class="btn-push" id="btn-push-action">
+        ⚡ Dar Empujón al Péndulo
+      </button>
     </div>
   </div>
 
-  <!-- ESCENA AR CON ILUMINACIÓN Y MODELOS DE ALTO CONTRASTE -->
+  <!-- ESCENA AR -->
   <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
     
-    <!-- Luces para asegurar que los modelos sean ultra-visibles -->
     <a-entity light="type: ambient; color: #ffffff; intensity: 1.2;"></a-entity>
     <a-entity light="type: directional; color: #00f2fe; intensity: 1.5; position: 1 3 2;"></a-entity>
 
     <!-- 1. DIANA OFICIAL NATEX -->
     <a-marker type="pattern" preset="custom" url="./pattern-natex.patt" patternRatio="0.5" emitsEvents="true" smooth="true" smoothCount="2" id="natex-target">
       
-      <!-- Anillo Cian Brillante que rodea la diana en la superficie -->
+      <!-- Anillo Neón Cian en la Base -->
       <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
       
-      <!-- APARATO COMPLETO DE LABORATORIO (Escala calibrada para no salirse de pantalla) -->
+      <!-- APARATO COMPLETO DE LABORATORIO -->
       <a-entity position="0 0 0" scale="0.5 0.5 0.5">
-        <!-- Base de Soporte Pesada -->
         <a-box position="0.15 0.05 0" width="0.7" height="0.08" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
-        <!-- Borde Cian en la base -->
         <a-box position="0.15 0.05 0" width="0.72" height="0.02" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
-
-        <!-- Mástil Vertical de Acero -->
         <a-cylinder position="0.38 0.65 0" radius="0.03" height="1.2" color="#94a3b8" material="metalness: 0.9; roughness: 0.1;"></a-cylinder>
-
-        <!-- Brazo Horizontal con Mordaza -->
         <a-box position="0.38 1.2 0" width="0.09" height="0.09" depth="0.09" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.5;"></a-box>
         <a-cylinder position="0.18 1.2 0" rotation="0 0 90" radius="0.02" height="0.45" color="#94a3b8"></a-cylinder>
 
-        <!-- PÉNDULO FÍSICO 3D OSCILANTE -->
         <a-entity id="pendulum-pivot-natex" position="0 1.2 0">
           <a-cylinder id="pendulum-rod-natex" position="0 -0.35 0" radius="0.012" height="0.7" color="#ffffff"></a-cylinder>
-          <!-- Esfera de Alto Brillo Cian -->
           <a-sphere id="pendulum-bob-natex" position="0 -0.7 0" radius="0.16" color="#00f2fe" material="metalness: 0.3; roughness: 0.1; emissive: #00f2fe; emissiveIntensity: 0.8;"></a-sphere>
         </a-entity>
       </a-entity>
     </a-marker>
 
-    <!-- 2. FALLBACK UNIVERSAL HIRO (IDÉNTICO) -->
+    <!-- 2. FALLBACK UNIVERSAL HIRO -->
     <a-marker preset="hiro" emitsEvents="true" smooth="true" smoothCount="2" id="hiro-target">
       <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
       
@@ -155,15 +161,28 @@
     const trackStatus = document.getElementById('tracking-status');
     const arTrackText = document.getElementById('ar-track');
 
+    // Desaparición Automática del Texto de Alerta tras 2.5 Segundos
+    let toastTimer = null;
     function onMarkerDetected(name) {
+      clearTimeout(toastTimer);
+      trackStatus.style.display = "block";
+      trackStatus.style.opacity = "1";
       trackStatus.innerText = "🎯 ¡" + name + " Detectado! Anclado en 3D";
       trackStatus.style.borderColor = "#10b981";
       trackStatus.style.color = "#10b981";
       arTrackText.innerText = "ANCLADO EN 3D";
       arTrackText.style.color = "#10b981";
+
+      toastTimer = setTimeout(() => {
+        trackStatus.style.opacity = "0";
+        setTimeout(() => { trackStatus.style.display = "none"; }, 500);
+      }, 2500);
     }
 
     function onMarkerLost() {
+      clearTimeout(toastTimer);
+      trackStatus.style.display = "block";
+      trackStatus.style.opacity = "1";
       trackStatus.innerText = "🔍 Apunta la cámara a la Diana Natex";
       trackStatus.style.borderColor = "#00f2fe";
       trackStatus.style.color = "#00f2fe";
@@ -176,12 +195,41 @@
     hiroMarker.addEventListener('markerFound', () => onMarkerDetected("Marcador Hiro"));
     hiroMarker.addEventListener('markerLost', onMarkerLost);
 
-    // FÍSICA Y SINCRONIZACIÓN EN TIEMPO REAL
-    let state = { theta: Math.PI / 6, omega: 0.0 };
-    let params = { length: 0.7, gravity: 9.8, friction: 0.05, paused: false };
+    // FÍSICA Y SINCRONIZACIÓN
+    const myClientId = 'student_' + Math.random().toString(36).substring(2, 9);
+    let state = { theta: Math.PI / 5, omega: 0.0 };
+    let params = { length: 0.7, gravity: 9.8, friction: 0.03, paused: false };
     let hasRemoteSync = false;
+    let lastRemoteSyncTime = 0;
 
-    // Sincronización MQTT
+    // Función para "Dar un Empujón" y revivir el péndulo
+    function givePush() {
+      if (Math.abs(state.theta) < 0.1 && Math.abs(state.omega) < 0.1) {
+        state.theta = Math.PI / 4.5; // Relanzar a unos 40 grados
+        state.omega = 1.2;
+      } else {
+        let dir = (state.omega >= 0) ? 1 : -1;
+        state.omega += dir * 2.2; // Empujón en la dirección del movimiento
+      }
+      if (navigator.vibrate) navigator.vibrate(40);
+
+      // Si estamos en red MQTT, avisar a la sala docente
+      if (client && client.connected) {
+        try {
+          client.publish("vlab-n/sala-natex", JSON.stringify({ type: 'PUSH', sender: myClientId }));
+        } catch (e) {}
+      }
+    }
+
+    document.getElementById('btn-push-action').onclick = givePush;
+    window.addEventListener('click', (e) => {
+      // Si toca la pantalla fuera de botones, también da empujón
+      if (!e.target.closest('button') && !e.target.closest('a')) {
+        givePush();
+      }
+    });
+
+    // MQTT Sincronización
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
     client.on('connect', () => {
       client.subscribe("vlab-n/sala-natex");
@@ -192,6 +240,7 @@
         const payload = JSON.parse(message.toString());
         if (payload.type === 'SYNC') {
           hasRemoteSync = true;
+          lastRemoteSyncTime = performance.now();
           state.theta = payload.theta;
           state.omega = payload.omega;
           params.length = payload.length;
@@ -200,6 +249,16 @@
 
           let deg = payload.theta * 180 / Math.PI;
           updateVisuals(deg, params.length);
+        } else if (payload.type === 'PUSH' && payload.sender !== myClientId) {
+          if (!hasRemoteSync) {
+            if (Math.abs(state.theta) < 0.1 && Math.abs(state.omega) < 0.1) {
+              state.theta = Math.PI / 4.5;
+              state.omega = 1.2;
+            } else {
+              let dir = (state.omega >= 0) ? 1 : -1;
+              state.omega += dir * 2.2;
+            }
+          }
         }
       } catch (e) {}
     });
@@ -220,7 +279,7 @@
       document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
     }
 
-    // Bucle de Física Local Autónomo (si el profesor no está transmitiendo)
+    // Bucle de Física RK4 Local Autónomo
     let lastT = performance.now();
     function tick() {
       requestAnimationFrame(tick);
@@ -228,6 +287,11 @@
       let dt = (now - lastT) / 1000;
       lastT = now;
       if (dt > 0.1) dt = 0.1;
+
+      // Watchdog: si no hay paquetes del profesor por 1.5s, retomar física local autónoma
+      if (hasRemoteSync && (now - lastRemoteSyncTime > 1500)) {
+        hasRemoteSync = false;
+      }
 
       if (!hasRemoteSync && !params.paused) {
         let gL = params.gravity / Math.max(0.2, params.length);

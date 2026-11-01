@@ -203,6 +203,7 @@
       <!-- Barra de Reproducción -->
       <div class="playback-bar">
         <button class="btn-control" id="btn-pause">Pausar</button>
+        <button class="btn-control" id="btn-push" title="Dar empujón al péndulo">⚡ Empujón</button>
         <button class="btn-control" id="btn-step">Paso (+1)</button>
         <button class="btn-control" id="btn-slow">0.5x</button>
         <button class="btn-control" id="btn-reset">Reset</button>
@@ -477,6 +478,16 @@
     document.getElementById('btn-reset').onclick = () => {
       state.theta = Math.PI / 4;
       state.omega = 0;
+      broadcastState(true);
+    };
+    document.getElementById('btn-push').onclick = () => {
+      if (Math.abs(state.theta) < 0.1 && Math.abs(state.omega) < 0.1) {
+        state.theta = Math.PI / 4.5;
+        state.omega = 1.2;
+      } else {
+        let dir = (state.omega >= 0) ? 1 : -1;
+        state.omega += dir * 2.2;
+      }
       broadcastState(true);
     };
     document.getElementById('btn-step').onclick = () => {
