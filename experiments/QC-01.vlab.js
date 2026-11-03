@@ -128,11 +128,9 @@ window.VLabExperiments['QC-01'] = {
     group.add(beamGroup);
 
     const coreBeamMat = new THREE.MeshStandardMaterial({
-      color: 0x00f2fe,
-      emissive: 0x00f2fe,
-      emissiveIntensity: 0.8,
+      color: 0x3b82f6,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.75
     });
     const coreBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.68, 16), coreBeamMat);
     coreBeam.rotation.z = Math.PI / 2;
