@@ -1,36 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
-  <!-- Fondo Blanco de la Hoja -->
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" shape-rendering="crispEdges">
   <rect width="1000" height="1000" fill="#ffffff" />
-  
-  <!-- MARCO NEGRO SÓLIDO OBLIGATORIO DE ARTOOLKIT (PatternRatio 0.5) -->
-  <!-- Tamaño exterior: 700x700 centrado en (150, 150) -->
   <rect x="150" y="150" width="700" height="700" fill="#000000" />
-  
-  <!-- HUECO BLANCO INTERIOR (Exactamente 50% = 350x350 centrado en 325, 325) -->
   <rect x="325" y="325" width="350" height="350" fill="#ffffff" />
-
-  <!-- SÍMBOLOS INTERIORES DE ALTO CONTRASTE -->
-  
-  <!-- 1. CÍRCULO CON PUNTO (Top-Left) -->
-  <circle cx="380" cy="380" r="32" fill="none" stroke="#000000" stroke-width="12" />
-  <circle cx="380" cy="380" r="10" fill="#000000" />
-
-  <!-- 2. TRIÁNGULO (Top-Right) -->
-  <polygon points="620,348 658,412 582,412" fill="#000000" />
-
-  <!-- 3. DIAMANTE (Bottom-Left) -->
-  <polygon points="380,588 416,624 380,660 344,624" fill="#000000" />
-
-  <!-- 4. CUADRADO CON CRUZ (Bottom-Right) -->
-  <rect x="590" y="590" width="60" height="60" fill="#000000" />
-  <line x1="620" y1="590" x2="620" y2="650" stroke="#ffffff" stroke-width="8" />
-  <line x1="590" y1="620" x2="650" y2="620" stroke="#ffffff" stroke-width="8" />
-
-  <!-- 5. GLIFO CENTRAL "N" DE NATEX -->
-  <path d="M 445,575 L 445,425 L 485,425 L 515,505 L 515,425 L 555,425 L 555,575 L 515,575 L 485,495 L 485,575 Z" fill="#000000" />
-
-  <!-- TEXTOS PEDAGÓGICOS EXTERIORES -->
-  <text x="500" y="100" font-family="'JetBrains Mono', monospace" font-size="28" font-weight="900" letter-spacing="4" text-anchor="middle" fill="#000000">▲ HACIA LA PIZARRA</text>
-  <text x="500" y="910" font-family="'JetBrains Mono', monospace" font-size="34" font-weight="900" letter-spacing="6" text-anchor="middle" fill="#000000">VIRTUALLAB_N</text>
-  <text x="500" y="950" font-family="'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="3" text-anchor="middle" fill="#000000">DIANA ÓPTICA OFICIAL • PATTERN RATIO 0.5</text>
+  <rect x="346.88" y="346.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="368.75" y="346.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="390.63" y="346.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="609.38" y="346.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="631.25" y="346.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="346.88" y="368.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="368.75" y="368.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="390.63" y="368.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="609.38" y="368.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="631.25" y="368.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="346.88" y="390.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="368.75" y="390.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="390.63" y="390.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="390.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="390.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="390.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="390.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="412.50" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="412.50" width="22.18" height="22.18" fill="#000000" />
+  <rect x="478.13" y="412.50" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="412.50" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="412.50" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="434.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="434.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="478.13" y="434.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="500.00" y="434.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="434.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="434.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="456.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="456.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="478.13" y="456.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="500.00" y="456.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="456.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="456.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="478.13" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="478.13" width="22.18" height="22.18" fill="#000000" />
+  <rect x="500.00" y="478.13" width="22.18" height="22.18" fill="#000000" />
+  <rect x="521.88" y="478.13" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="478.13" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="478.13" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="500.00" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="500.00" width="22.18" height="22.18" fill="#000000" />
+  <rect x="500.00" y="500.00" width="22.18" height="22.18" fill="#000000" />
+  <rect x="521.88" y="500.00" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="500.00" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="500.00" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="521.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="521.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="521.88" y="521.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="521.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="521.88" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="543.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="543.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="521.88" y="543.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="543.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="543.75" width="22.18" height="22.18" fill="#000000" />
+  <rect x="434.38" y="565.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="456.25" y="565.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="543.75" y="565.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="565.63" y="565.63" width="22.18" height="22.18" fill="#000000" />
+  <rect x="587.50" y="587.50" width="22.18" height="22.18" fill="#000000" />
+  <rect x="609.38" y="587.50" width="22.18" height="22.18" fill="#000000" />
+  <rect x="631.25" y="587.50" width="22.18" height="22.18" fill="#000000" />
+  <rect x="346.88" y="609.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="368.75" y="609.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="587.50" y="609.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="631.25" y="609.38" width="22.18" height="22.18" fill="#000000" />
+  <rect x="346.88" y="631.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="368.75" y="631.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="587.50" y="631.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="609.38" y="631.25" width="22.18" height="22.18" fill="#000000" />
+  <rect x="631.25" y="631.25" width="22.18" height="22.18" fill="#000000" />
+  <text x="500" y="105" font-family="monospace" font-size="28" font-weight="bold" text-anchor="middle" fill="#000000">▲ ARRIBA / TOP (NATEX 6DoF)</text>
+  <text x="500" y="915" font-family="monospace" font-size="34" font-weight="bold" text-anchor="middle" fill="#000000">VIRTUALLAB_N • DIANA SÓLIDA</text>
 </svg>

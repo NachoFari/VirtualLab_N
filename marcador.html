@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marcador AR Calibrado | VirtualLab_N</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Marcador AR Calibrado V16 | VirtualLab_N</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
@@ -22,7 +25,7 @@
 
     /* Pestañas de Selección de Marcador */
     .tab-bar {
-      display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.2rem;
+      display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.2rem; flex-wrap: wrap;
     }
     .tab-btn {
       background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 242, 254, 0.3);
@@ -33,13 +36,14 @@
       background: #00f2fe; color: #000; border-color: #00f2fe; box-shadow: 0 0 15px rgba(0,242,254,0.4);
     }
 
+    /* Zona silenciosa blanca amplia (Quiet Zone) obligatoria para contraste óptico perfecto */
     .marker-frame {
-      background: #fff; padding: 2rem; border-radius: 12px; display: inline-block; margin-bottom: 1.2rem;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.8); transition: padding 0.2s;
+      background: #ffffff; padding: 2.2rem; border-radius: 12px; display: inline-block; margin-bottom: 1.2rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.85); transition: padding 0.2s;
     }
     .marker-img {
       width: 320px; height: 320px; display: block; object-fit: contain;
-      image-rendering: pixelated; margin: 0 auto;
+      image-rendering: pixelated; image-rendering: crisp-edges; margin: 0 auto;
     }
 
     .size-control {
@@ -64,30 +68,30 @@
 </head>
 <body>
   <div class="card">
-    <h1>Dianas Ópticas AR Calibradas</h1>
-    <p>Apunta tu cámara hacia esta pantalla. Si la detección tarda, agranda el tamaño del marcador con el deslizador inferior.</p>
+    <h1>Dianas Ópticas AR • Turbo-Lock V16</h1>
+    <p>Matriz 16×16 de bloques sólidos sin antialiasing + detección directa del cuadro negro exterior. Apunta tu celular a la pantalla o impreso.</p>
     
     <!-- Selector entre Natex y Hiro -->
     <div class="tab-bar">
-      <button class="tab-btn active" id="tab-natex" onclick="setMarker('natex')">🎯 Diana Natex</button>
+      <button class="tab-btn active" id="tab-natex" onclick="setMarker('natex')">🎯 Diana Natex (Bloques 16×16)</button>
       <button class="tab-btn" id="tab-hiro" onclick="setMarker('hiro')">⚡ Hiro Universal</button>
     </div>
 
-    <!-- Contenedor del Marcador -->
+    <!-- Contenedor del Marcador con Quiet Zone Blanca -->
     <div class="marker-frame" id="frame">
-      <img id="marker-img" src="marcador.svg" alt="Diana AR" class="marker-img">
+      <img id="marker-img" src="marcador.svg?v=rev16" alt="Diana AR" class="marker-img">
     </div>
 
     <!-- Ajuste de Escala en Pantalla -->
     <div class="size-control">
       <span>Tamaño:</span>
-      <input type="range" id="size-slider" min="220" max="480" step="10" value="320" oninput="changeSize(this.value)">
+      <input type="range" id="size-slider" min="200" max="480" step="10" value="320" oninput="changeSize(this.value)">
       <span id="size-val">320px</span>
     </div>
 
     <div class="btn-group">
-      <a href="alumno.html" class="btn">📱 Abrir Cámara AR</a>
-      <a id="btn-download" href="marcador.svg" download="marcador_VirtualLab_N.svg" class="btn btn-secondary">📥 Descargar Archivo</a>
+      <a href="alumno.html?v=rev16_instant_square_lock" class="btn">📱 Abrir Cámara AR (V16)</a>
+      <a id="btn-download" href="marcador.svg?v=rev16" download="marcador_VirtualLab_N.svg" class="btn btn-secondary">📥 Descargar SVG</a>
     </div>
   </div>
 
@@ -102,14 +106,14 @@
       const btnDl = document.getElementById('btn-download');
 
       if (type === 'natex') {
-        img.src = 'marcador.svg';
-        btnDl.href = 'marcador.svg';
+        img.src = 'marcador.svg?v=rev16';
+        btnDl.href = 'marcador.svg?v=rev16';
         btnDl.download = 'marcador_VirtualLab_N.svg';
         tabNatex.classList.add('active');
         tabHiro.classList.remove('active');
       } else {
-        img.src = 'marcador_hiro.png';
-        btnDl.href = 'marcador_hiro.png';
+        img.src = 'marcador_hiro.png?v=rev16';
+        btnDl.href = 'marcador_hiro.png?v=rev16';
         btnDl.download = 'marcador_hiro.png';
         tabHiro.classList.add('active');
         tabNatex.classList.remove('active');

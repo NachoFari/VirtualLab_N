@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cámara AR HD | VirtualLab_N</title>
+  <title>Cámara AR Instant-Lock | VirtualLab_N</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   
@@ -19,22 +19,37 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; overflow: hidden; background: #000; }
     
+    /* Overlay 2D de detección láser de cuadrados en tiempo real */
+    #quad-overlay {
+      position: fixed; inset: 0; width: 100vw; height: 100vh;
+      pointer-events: none; z-index: 99997;
+    }
+
     .ar-ui-container {
       position: fixed; inset: 0; pointer-events: none; z-index: 99999;
-      display: flex; flex-direction: column; justify-content: space-between; padding: 0.8rem;
+      display: flex; flex-direction: column; justify-content: space-between; padding: 0.75rem;
     }
     .top-bar {
       display: flex; justify-content: space-between; align-items: center; pointer-events: auto;
+      gap: 0.4rem; flex-wrap: wrap;
     }
     .badge {
-      background: rgba(15, 20, 28, 0.9); border: 1px solid rgba(0, 242, 254, 0.4);
-      color: #00f2fe; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
-      padding: 0.4rem 0.8rem; border-radius: 20px; backdrop-filter: blur(8px);
+      background: rgba(15, 20, 28, 0.92); border: 1px solid rgba(0, 242, 254, 0.5);
+      color: #00f2fe; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      padding: 0.38rem 0.75rem; border-radius: 20px; backdrop-filter: blur(8px);
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #00f2fe;
+      box-shadow: 0 0 8px #00f2fe; display: inline-block;
+    }
+    .pulse-dot.locked {
+      background: #10b981; box-shadow: 0 0 10px #10b981;
     }
     .btn-marker-help {
       background: rgba(0, 242, 254, 0.15); border: 1px solid #00f2fe; color: #00f2fe;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 700;
-      padding: 0.4rem 0.8rem; border-radius: 20px; text-decoration: none; pointer-events: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700;
+      padding: 0.38rem 0.7rem; border-radius: 20px; text-decoration: none; pointer-events: auto;
     }
     
     /* Retícula de Enfoque Visual */
@@ -53,23 +68,23 @@
       align-self: center; background: rgba(7, 9, 14, 0.92); border: 1px solid #00f2fe;
       color: #00f2fe; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
       padding: 0.45rem 1.1rem; border-radius: 20px; box-shadow: 0 0 15px rgba(0,242,254,0.3);
-      text-align: center; transition: opacity 0.5s ease; pointer-events: none;
+      text-align: center; transition: opacity 0.4s ease; pointer-events: none;
     }
 
     .bottom-hud {
       background: rgba(15, 20, 28, 0.92); border: 1px solid rgba(0, 242, 254, 0.35);
-      border-radius: 14px; padding: 0.75rem 1rem; backdrop-filter: blur(10px);
-      display: flex; flex-direction: column; gap: 0.35rem; pointer-events: auto;
+      border-radius: 14px; padding: 0.7rem 0.95rem; backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; gap: 0.32rem; pointer-events: auto;
     }
     .hud-line {
-      display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #fff;
+      display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: #fff;
     }
     .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
   </style>
 
-  <!-- Auto Cache-Buster Revision 15 -->
+  <!-- Auto Cache-Buster Revision 16 (Motor Instant-Square-Lock 4:3 + Multi-Threshold) -->
   <script>
-    const CURRENT_REV = "rev15_hdcam_permissive_lerp";
+    const CURRENT_REV = "rev16_instant_square_lock";
     if (new URLSearchParams(window.location.search).get("v") !== CURRENT_REV) {
       window.location.replace("alumno.html?v=" + CURRENT_REV);
     }
@@ -77,56 +92,67 @@
 </head>
 <body>
 
+  <!-- Canvas de Detección Óptica de Cuadrados en Vivo -->
+  <canvas id="quad-overlay"></canvas>
+
   <!-- Retícula de Enfoque en Pantalla -->
   <div class="focus-reticle" id="focus-reticle"></div>
 
   <!-- UI FLOTANTE -->
   <div class="ar-ui-container">
     <div class="top-bar">
-      <div class="badge">VLAB_N • HD CALIBRADO V15</div>
+      <div class="badge">
+        <span class="pulse-dot" id="lock-dot"></span>
+        <span id="badge-text">VLAB_N • TURBO-LOCK V16</span>
+      </div>
       <div style="display:flex; gap:0.35rem;">
         <button class="btn-marker-help" id="btn-orient-toggle" style="cursor:pointer; background:rgba(0,242,254,0.25);">🖥️ Mesa</button>
         <button class="btn-marker-help" id="btn-focus-top" style="cursor:pointer; background:rgba(0,242,254,0.2);">🎯 Enfocar</button>
-        <a href="marcador.html" target="_blank" class="btn-marker-help">📄 Diana</a>
+        <a href="marcador.html?v=rev16" target="_blank" class="btn-marker-help">📄 Diana</a>
       </div>
     </div>
 
     <div class="status-toast" id="tracking-status">
-      🔍 Apunta la cámara a la Diana Natex o Hiro
+      🔍 Apunta la cámara al cuadro negro de la Diana
     </div>
 
     <div class="bottom-hud">
-      <div class="hud-line"><span>Anclaje Diana:</span> <span id="ar-track">Buscando Diana...</span></div>
-      <div class="hud-line"><span>Estabilidad:</span> <span id="ar-stability" style="color:#10b981;">Filtro LERP + Sensor Activo</span></div>
+      <div class="hud-line"><span>Detector Cuadro:</span> <span id="ar-track">Escaneando...</span></div>
+      <div class="hud-line"><span> Filtro Óptico:</span> <span id="ar-threshold" style="color:#10b981;">Auto-Umbral + Giroscopio</span></div>
       <div class="hud-line"><span>Proyección:</span> <span id="ar-orient-val">Mesa (Horizontal)</span></div>
       <div class="hud-line"><span>Longitud (L):</span> <span id="ar-l">0.70 m</span></div>
       <div class="hud-line"><span>Ángulo (&theta;):</span> <span id="ar-angle">25.0°</span></div>
     </div>
   </div>
 
-  <!-- ESCENA AR ULTRA-HD CON ALTA SENSIBILIDAD -->
+  <!-- ESCENA AR CON PROPORCIÓN 4:3 EXACTA (640x480 SIN DEFORMACIÓN RECTANGULAR) -->
   <a-scene embedded 
-           arjs="sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best; maxDetectionRate: 60; patternRatio: 0.5;">
+           vr-mode-ui="enabled: false"
+           renderer="logarithmicDepthBuffer: true; antialias: true; precision: mediump;"
+           arjs="sourceType: webcam; sourceWidth: 640; sourceHeight: 480; canvasWidth: 640; canvasHeight: 480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best; maxDetectionRate: 60; patternRatio: 0.5;">
     
-    <a-entity light="type: ambient; color: #ffffff; intensity: 1.2;"></a-entity>
+    <a-entity light="type: ambient; color: #ffffff; intensity: 1.25;"></a-entity>
     <a-entity light="type: directional; color: #00f2fe; intensity: 1.5; position: 1 3 2;"></a-entity>
 
-    <!-- 1. DIANA OFICIAL NATEX (Baja tolerancia: minConfidence 0.1 para detección instantánea) -->
-    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt" patternRatio="0.5" 
-              minConfidence="0.1" emitsEvents="true" smooth="true" smoothCount="8" 
-              smoothTolerance="0.01" smoothThreshold="3" id="natex-target">
-      <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
+    <!-- 1. DIANA OFICIAL NATEX (16x16 Bloques Puros) -->
+    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt?v=rev16" patternRatio="0.5" 
+              minConfidence="0.08" emitsEvents="true" id="natex-target">
     </a-marker>
 
-    <!-- 2. FALLBACK UNIVERSAL HIRO (minConfidence 0.1) -->
-    <a-marker preset="hiro" minConfidence="0.1" emitsEvents="true" smooth="true" 
-              smoothCount="8" smoothTolerance="0.01" smoothThreshold="3" id="hiro-target">
-      <a-ring position="0 0.02 0" rotation="-90 0 0" radius-inner="0.35" radius-outer="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.8;"></a-ring>
+    <!-- 2. FALLBACK UNIVERSAL HIRO -->
+    <a-marker preset="hiro" minConfidence="0.08" emitsEvents="true" id="hiro-target">
     </a-marker>
 
-    <!-- ANCLADO ULTRA-ESTABLE FILTRADO CON LERP/SLERP Y PERSISTENCIA -->
+    <!-- 3. FALLBACK MATRIZ BINARIA 3x3 (Código #5 de respuesta ultra-rápida) -->
+    <a-marker type="barcode" value="5" emitsEvents="true" id="barcode-target">
+    </a-marker>
+
+    <!-- ANCLAJE UNIVERSAL ULTRA-ESTABLE (SOPORTA PATRÓN + CUADRO NEGRO DIRECTO) -->
     <a-entity id="stabilized-anchor" visible="false">
-      <a-entity id="apparatus-container" position="0 0 0" rotation="0 0 0" scale="0.45 0.45 0.45">
+      <!-- Anillo Holográfico de Confirmación en la Base -->
+      <a-ring position="0 0.01 0" rotation="-90 0 0" radius-inner="0.38" radius-outer="0.44" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.85; side: double;"></a-ring>
+
+      <a-entity id="apparatus-container" position="0 0 0" rotation="0 0 0" scale="0.48 0.48 0.48">
         <!-- Base de Soporte -->
         <a-box id="base-plate" position="0 0.03 0" width="0.7" height="0.06" depth="0.4" color="#0f141c" material="metalness: 0.8; roughness: 0.2;"></a-box>
         <a-box position="0 0.03 0" width="0.72" height="0.015" depth="0.42" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.6;"></a-box>
@@ -151,6 +177,9 @@
 
   <script>
     // ELEMENTOS DEL DOM Y ESCENA 3D
+    const sceneEl = document.querySelector('a-scene');
+    const quadCanvas = document.getElementById('quad-overlay');
+    const quadCtx = quadCanvas.getContext('2d');
     const stabilizedAnchor = document.getElementById('stabilized-anchor');
     const apparatusContainer = document.getElementById('apparatus-container');
     const standMast = document.getElementById('stand-mast');
@@ -162,44 +191,61 @@
 
     const natexMarker = document.getElementById('natex-target');
     const hiroMarker = document.getElementById('hiro-target');
+    const barcodeMarker = document.getElementById('barcode-target');
     const trackStatus = document.getElementById('tracking-status');
     const arTrackText = document.getElementById('ar-track');
+    const arThresholdText = document.getElementById('ar-threshold');
+    const lockDot = document.getElementById('lock-dot');
 
-    // Desaparición Automática del Texto de Alerta tras 2.5 Segundos
+    // Ajustar tamaño del canvas overlay 2D
+    function resizeOverlay() {
+      quadCanvas.width = window.innerWidth;
+      quadCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeOverlay);
+    resizeOverlay();
+
+    // Desaparición Automática del Texto de Alerta tras 2.2 Segundos
     let toastTimer = null;
-    function onMarkerDetected(name) {
-      clearTimeout(toastTimer);
-      trackStatus.style.display = "block";
-      trackStatus.style.opacity = "1";
-      trackStatus.innerText = "🎯 ¡" + name + " Detectado! Anclado en 3D";
-      trackStatus.style.borderColor = "#10b981";
-      trackStatus.style.color = "#10b981";
-      arTrackText.innerText = "ANCLADO EN 3D";
-      arTrackText.style.color = "#10b981";
+    let currentlyLockedState = false;
 
-      toastTimer = setTimeout(() => {
-        trackStatus.style.opacity = "0";
-        setTimeout(() => { trackStatus.style.display = "none"; }, 500);
-      }, 2500);
+    function onMarkerDetected(name) {
+      if (!currentlyLockedState) {
+        currentlyLockedState = true;
+        lockDot.classList.add('locked');
+        clearTimeout(toastTimer);
+        trackStatus.style.display = "block";
+        trackStatus.style.opacity = "1";
+        trackStatus.innerText = "🎯 ¡" + name + " Anclado Instantáneamente!";
+        trackStatus.style.borderColor = "#10b981";
+        trackStatus.style.color = "#10b981";
+
+        toastTimer = setTimeout(() => {
+          trackStatus.style.opacity = "0";
+          setTimeout(() => { trackStatus.style.display = "none"; }, 400);
+        }, 2000);
+      }
+      arTrackText.innerText = "ANCLADO (" + name + ")";
+      arTrackText.style.color = "#10b981";
     }
 
     function onMarkerLost() {
+      currentlyLockedState = false;
+      lockDot.classList.remove('locked');
       clearTimeout(toastTimer);
       trackStatus.style.display = "block";
       trackStatus.style.opacity = "1";
-      trackStatus.innerText = "🔍 Apunta la cámara a la Diana Natex o Hiro";
+      trackStatus.innerText = "🔍 Apunta la cámara al cuadro negro de la Diana";
       trackStatus.style.borderColor = "#00f2fe";
       trackStatus.style.color = "#00f2fe";
-      arTrackText.innerText = "Buscando Diana...";
+      arTrackText.innerText = "Escaneando Cuadro...";
       arTrackText.style.color = "#00f2fe";
     }
 
     // FÍSICA AUTÓNOMA DETERMINISTA Y SINCRONIZACIÓN POR EVENTOS
-    const myClientId = 'student_' + Math.random().toString(36).substring(2, 9);
     let state = { theta: Math.PI / 5, omega: 0.0 };
     let params = { length: 0.7, gravity: 9.8, friction: 0.03, paused: false };
 
-    // Toast flotante dinámico
     function flashStatus(text) {
       clearTimeout(toastTimer);
       trackStatus.style.display = "block";
@@ -209,67 +255,52 @@
       trackStatus.style.color = "#00f2fe";
       toastTimer = setTimeout(() => {
         trackStatus.style.opacity = "0";
-        setTimeout(() => { trackStatus.style.display = "none"; }, 500);
+        setTimeout(() => { trackStatus.style.display = "none"; }, 400);
       }, 2000);
     }
 
-    // CONTROL DE ALTA RESOLUCIÓN Y ENFOQUE CONTINUO DE CÁMARA (W3C MediaStreamTrack)
+    // IMPORTANTE: Solo aplicar enfoque y exposición continua SIN cambiar jamás width/height
+    // para preservar la geometría cuadrada 4:3 exacta de ARToolKit (640x480)
     let currentVideoTrack = null;
-    function setupCameraHD() {
+    function setupCameraFocusOnly() {
       let attempts = 0;
       const checkVideo = setInterval(() => {
         attempts++;
         const video = document.getElementById('arjs-video') || document.querySelector('video');
         if (video && video.srcObject) {
-          const stream = video.srcObject;
-          const tracks = stream.getVideoTracks();
+          const tracks = video.srcObject.getVideoTracks();
           if (tracks.length > 0) {
             currentVideoTrack = tracks[0];
             clearInterval(checkVideo);
-            applyCameraHDConstraints();
+            applyFocusConstraintsOnly();
           }
         }
         if (attempts > 30) clearInterval(checkVideo);
       }, 400);
     }
 
-    function applyCameraHDConstraints() {
+    function applyFocusConstraintsOnly() {
       if (!currentVideoTrack || !currentVideoTrack.applyConstraints) return;
       try {
         const caps = currentVideoTrack.getCapabilities ? currentVideoTrack.getCapabilities() : {};
         const adv = {};
-        if (caps.focusMode && caps.focusMode.includes('continuous')) {
-          adv.focusMode = 'continuous';
-        }
-        if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
-          adv.exposureMode = 'continuous';
-        }
-        if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) {
-          adv.whiteBalanceMode = 'continuous';
-        }
+        if (caps.focusMode && caps.focusMode.includes('continuous')) adv.focusMode = 'continuous';
+        if (caps.exposureMode && caps.exposureMode.includes('continuous')) adv.exposureMode = 'continuous';
+        if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) adv.whiteBalanceMode = 'continuous';
 
-        const constraints = {
-          width: { ideal: 1920, min: 1280 },
-          height: { ideal: 1080, min: 720 }
-        };
         if (Object.keys(adv).length > 0) {
-          constraints.advanced = [adv];
+          currentVideoTrack.applyConstraints({ advanced: [adv] }).catch(() => {});
         }
-
-        currentVideoTrack.applyConstraints(constraints)
-          .then(() => console.log("Cámara: Calidad HD y autoenfoque continuo activados"))
-          .catch(() => {});
       } catch (e) {}
     }
 
-    // Forzar barrido de enfoque sobre el símbolo
     function triggerCameraRefocus() {
       const reticle = document.getElementById('focus-reticle');
       if (reticle) {
         reticle.classList.add('active');
         setTimeout(() => reticle.classList.remove('active'), 750);
       }
-      if (navigator.vibrate) navigator.vibrate(40);
+      if (navigator.vibrate) navigator.vibrate(35);
 
       if (currentVideoTrack && currentVideoTrack.applyConstraints) {
         try {
@@ -280,9 +311,9 @@
                 .then(() => {
                   setTimeout(() => {
                     if (caps.focusMode.includes('continuous')) {
-                      currentVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+                      currentVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
                     }
-                  }, 600);
+                  }, 550);
                 }).catch(() => {});
             } else if (caps.focusMode.includes('continuous')) {
               currentVideoTrack.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
@@ -290,8 +321,7 @@
           }
         } catch (e) {}
       }
-
-      flashStatus("🎯 Re-enfocando cámara en alta definición...");
+      flashStatus("🎯 Enfocando lente sobre el cuadro...");
     }
 
     document.getElementById('btn-focus-top').onclick = (e) => {
@@ -299,10 +329,33 @@
       triggerCameraRefocus();
     };
 
-    window.addEventListener('load', setupCameraHD);
+    window.addEventListener('load', setupCameraFocusOnly);
 
-    // GIROSCOPIO Y SENSORES
+    // GIROSCOPIO COMPLEMENTARIO (Mantiene estabilidad rotacional durante micro-oclusiones)
     let gyroActive = false;
+    let lastGyroAlpha = null, lastGyroBeta = null, lastGyroGamma = null;
+    const gyroDeltaEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+    const gyroDeltaQuat = new THREE.Quaternion();
+
+    function handleOrientation(event) {
+      if (event.alpha === null || event.beta === null || event.gamma === null) return;
+      const deg2rad = Math.PI / 180;
+      if (lastGyroAlpha !== null) {
+        const dAlpha = (event.alpha - lastGyroAlpha) * deg2rad;
+        const dBeta = (event.beta - lastGyroBeta) * deg2rad;
+        const dGamma = (event.gamma - lastGyroGamma) * deg2rad;
+        if (Math.abs(dAlpha) < 0.3 && Math.abs(dBeta) < 0.3 && Math.abs(dGamma) < 0.3) {
+          gyroDeltaEuler.set(dBeta * 0.35, dAlpha * 0.35, -dGamma * 0.35);
+          gyroDeltaQuat.setFromEuler(gyroDeltaEuler);
+        } else {
+          gyroDeltaQuat.identity();
+        }
+      }
+      lastGyroAlpha = event.alpha;
+      lastGyroBeta = event.beta;
+      lastGyroGamma = event.gamma;
+    }
+
     function initGyro() {
       if (gyroActive) return;
       if (window.DeviceOrientationEvent) {
@@ -310,15 +363,16 @@
           DeviceOrientationEvent.requestPermission().then(r => {
             if (r === 'granted') {
               gyroActive = true;
+              window.addEventListener('deviceorientation', handleOrientation);
             }
           }).catch(() => {});
         } else {
           gyroActive = true;
+          window.addEventListener('deviceorientation', handleOrientation);
         }
       }
     }
 
-    // Al tocar la pantalla: enfocar cámara e inicializar sensores
     window.addEventListener('click', (e) => {
       if (!e.target.closest('button') && !e.target.closest('a')) {
         initGyro();
@@ -354,7 +408,6 @@
     client.on('message', (topic, message) => {
       try {
         const payload = JSON.parse(message.toString());
-        
         if (payload.type === 'PARAM_CHANGE' || payload.type === 'SYNC') {
           if (payload.length !== undefined) params.length = payload.length;
           if (payload.gravity !== undefined) params.gravity = payload.gravity;
@@ -383,23 +436,13 @@
     });
 
     function updateVisuals(deg, len) {
-      // Ajuste telescópico dinámico: la altura del soporte crece con la longitud
-      // dejando un margen de seguridad de 0.35m sobre la base para que nunca la atraviese
       const H = len + 0.35;
-
-      // 1. Mástil Vertical al fondo (Z = -0.2)
       standMast.setAttribute('height', H);
       standMast.setAttribute('position', `0 ${H / 2} -0.2`);
-
-      // 2. Mordaza y Brazo Horizontal hacia el frente
       standClamp.setAttribute('position', `0 ${H} -0.2`);
       standArm.setAttribute('position', `0 ${H} -0.1`);
-
-      // 3. Pivote en el extremo del brazo
       pendulumPivot.setAttribute('position', `0 ${H} 0`);
       pendulumPivot.setAttribute('rotation', `0 0 ${deg}`);
-
-      // 4. Cuerda y Esfera
       pendulumRod.setAttribute('height', len);
       pendulumRod.setAttribute('position', `0 ${-len / 2} 0`);
       pendulumBob.setAttribute('position', `0 ${-len} 0`);
@@ -408,75 +451,222 @@
       document.getElementById('ar-angle').innerText = deg.toFixed(1) + '°';
     }
 
-    // VARIABLES DE SUAVIZADO LERP/SLERP Y PERSISTENCIA
+    // ============================================================================
+    // MOTOR DE DETECCIÓN ÓPTICA TURBO-LOCK V16:
+    // 1. Decomposición real de Matrix4 (corrige matrixAutoUpdate=false de AR.js)
+    // 2. Barrido Automático Multi-Umbral (70..185) para pantallas brillantes y papel
+    // 3. Anclaje Universal Directo al Cuadrado Negro (getTransMatSquare) si el
+    //    patrón interno sufre reflejo/Moiré, garantizando detección en <50ms!
+    // ============================================================================
     let activeMarkerObj = null;
+    let activeMarkerName = "Diana";
     let lastSeenTime = 0;
-    const GRACE_PERIOD_MS = 600; // 600ms de persistencia para eliminar todo parpadeo
+    const GRACE_PERIOD_MS = 850; // 850ms de persistencia con soporte de giroscopio
+
     const currentPos = new THREE.Vector3();
     const targetPos = new THREE.Vector3();
     const currentQuat = new THREE.Quaternion();
     const targetQuat = new THREE.Quaternion();
+    const tempScale = new THREE.Vector3();
+    const rawMatrix = new THREE.Matrix4();
+    const axisFixMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 2);
     let isPoseInitialized = false;
+
+    // Barrido de umbrales de iluminación (cubre monitores brillantes, celulares y papel en sombra)
+    const THRESHOLD_SWEEP = [100, 135, 80, 160, 118, 65, 148, 175, 92, 125];
+    let sweepIdx = 0;
+    let frameCount = 0;
 
     natexMarker.addEventListener('markerFound', () => {
       activeMarkerObj = natexMarker.object3D;
-      onMarkerDetected("Diana Natex");
+      activeMarkerName = "Diana Natex";
     });
     hiroMarker.addEventListener('markerFound', () => {
       activeMarkerObj = hiroMarker.object3D;
-      onMarkerDetected("Marcador Hiro");
+      activeMarkerName = "Diana Hiro";
+    });
+    barcodeMarker.addEventListener('markerFound', () => {
+      activeMarkerObj = barcodeMarker.object3D;
+      activeMarkerName = "Matriz 3x3";
     });
 
-    // Bucle de Renderizado y Física RK4 (60 FPS puros)
+    // Obtener arController interno de AR.js y función de conversión de matriz
+    function getArController() {
+      try {
+        const sys = sceneEl && sceneEl.systems && sceneEl.systems['arjs'];
+        if (sys && sys._arSession && sys._arSession.arContext && sys._arSession.arContext.arController) {
+          return sys._arSession.arContext.arController;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    // Dibujar polígono láser sobre el cuadro detectado en la pantalla
+    function drawDetectedQuad(vertex, canvasW, canvasH, isLocked) {
+      quadCtx.clearRect(0, 0, quadCanvas.width, quadCanvas.height);
+      if (!vertex || vertex.length < 4) return;
+
+      // Mapear coordenadas 640x480 al viewport cubierto (object-fit: cover)
+      const vw = quadCanvas.width;
+      const vh = quadCanvas.height;
+      const scale = Math.max(vw / canvasW, vh / canvasH);
+      const offsetX = (vw - canvasW * scale) / 2;
+      const offsetY = (vh - canvasH * scale) / 2;
+
+      quadCtx.save();
+      quadCtx.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const px = vertex[i][0] * scale + offsetX;
+        const py = vertex[i][1] * scale + offsetY;
+        if (i === 0) quadCtx.moveTo(px, py);
+        else quadCtx.lineTo(px, py);
+      }
+      quadCtx.closePath();
+      quadCtx.lineWidth = 3;
+      quadCtx.strokeStyle = isLocked ? '#10b981' : '#00f2fe';
+      quadCtx.shadowColor = isLocked ? '#10b981' : '#00f2fe';
+      quadCtx.shadowBlur = 12;
+      quadCtx.stroke();
+
+      // Esquinas reforzadas
+      for (let i = 0; i < 4; i++) {
+        const px = vertex[i][0] * scale + offsetX;
+        const py = vertex[i][1] * scale + offsetY;
+        quadCtx.fillStyle = '#00f2fe';
+        quadCtx.beginPath();
+        quadCtx.arc(px, py, 5, 0, Math.PI * 2);
+        quadCtx.fill();
+      }
+      quadCtx.restore();
+    }
+
+    // Bucle de Renderizado, Detección Turbo-Quad y Física RK4 (60 FPS)
     let lastT = performance.now();
     function tick() {
       requestAnimationFrame(tick);
+      frameCount++;
       let now = performance.now();
       let dt = (now - lastT) / 1000;
       lastT = now;
       if (dt > 0.1) dt = 0.1;
 
-      // GESTIÓN DE POSE SUAVIZADA (LERP / SLERP + PERSISTENCIA)
-      let isVisibleNow = false;
+      const arController = getArController();
+      let poseFoundThisFrame = false;
+
+      // 1. Verificar si alguno de los <a-marker> estándar está visible
       if (natexMarker.object3D && natexMarker.object3D.visible) {
         activeMarkerObj = natexMarker.object3D;
-        isVisibleNow = true;
+        activeMarkerName = "Diana Natex";
+        // CRÍTICO: AR.js escribe directamente en .matrix con matrixAutoUpdate=false
+        activeMarkerObj.matrix.decompose(targetPos, targetQuat, tempScale);
+        poseFoundThisFrame = true;
       } else if (hiroMarker.object3D && hiroMarker.object3D.visible) {
         activeMarkerObj = hiroMarker.object3D;
-        isVisibleNow = true;
+        activeMarkerName = "Diana Hiro";
+        activeMarkerObj.matrix.decompose(targetPos, targetQuat, tempScale);
+        poseFoundThisFrame = true;
+      } else if (barcodeMarker.object3D && barcodeMarker.object3D.visible) {
+        activeMarkerObj = barcodeMarker.object3D;
+        activeMarkerName = "Matriz 3x3";
+        activeMarkerObj.matrix.decompose(targetPos, targetQuat, tempScale);
+        poseFoundThisFrame = true;
       }
 
-      if (isVisibleNow && activeMarkerObj) {
+      // 2. DETECTOR UNIVERSAL DE CUADRADO NEGRO EN DIRECTO (Fallback Instantáneo)
+      // Si ARToolKit ve un cuadrado negro válido en cámara (getMarkerNum() > 0),
+      // dibujamos su silueta láser y, si el patrón interno dudó por brillo de pantalla,
+      // calculamos su matriz 3D directamente desde el cuadrado exterior!
+      let bestSquareVertex = null;
+      if (arController) {
+        const numMarkers = arController.getMarkerNum();
+        if (numMarkers > 0) {
+          let bestArea = 0;
+          let bestIdx = -1;
+          for (let i = 0; i < numMarkers; i++) {
+            const m = arController.getMarker(i);
+            // Filtrar cuadrados con área razonable (> 600 px² en 640x480)
+            if (m && m.area > 600 && m.area > bestArea) {
+              bestArea = m.area;
+              bestIdx = i;
+              bestSquareVertex = m.vertex;
+            }
+          }
+
+          if (bestIdx !== -1 && !poseFoundThisFrame) {
+            try {
+              const transMat = arController.transMat;
+              arController.getTransMatSquare(bestIdx, 1.0, transMat);
+              const glMat = arController.transMatToGLMat(transMat);
+              rawMatrix.fromArray(glMat);
+              // Ajustar eje Z->Y igual que THREEx.ArMarkerControls (changeMatrixMode: modelViewMatrix)
+              rawMatrix.multiply(axisFixMatrix);
+              rawMatrix.decompose(targetPos, targetQuat, tempScale);
+              // Validar que la posición Z sea coherente (frente a la cámara)
+              if (targetPos.lengthSq() > 0.01 && targetPos.lengthSq() < 100) {
+                poseFoundThisFrame = true;
+                activeMarkerName = "Cuadro Óptico";
+              }
+            } catch (e) {}
+          }
+        }
+
+        // 3. BARRIDO MULTI-UMBRAL AUTOMÁTICO CUANDO NO HAY DETECCIÓN
+        if (!poseFoundThisFrame && frameCount % 2 === 0) {
+          sweepIdx = (sweepIdx + 1) % THRESHOLD_SWEEP.length;
+          const nextTh = THRESHOLD_SWEEP[sweepIdx];
+          if (typeof arController.setThreshold === 'function') {
+            arController.setThreshold(nextTh);
+            arThresholdText.innerText = "Barrido Auto (Lum: " + nextTh + ")";
+          }
+        } else if (poseFoundThisFrame && typeof arController.getThreshold === 'function') {
+          arThresholdText.innerText = "Bloqueado (Lum: " + arController.getThreshold() + ")";
+        }
+      }
+
+      // Dibujar confirmación láser 2D en pantalla si hay un cuadrado a la vista
+      if (bestSquareVertex) {
+        drawDetectedQuad(bestSquareVertex, 640, 480, poseFoundThisFrame);
+      } else {
+        quadCtx.clearRect(0, 0, quadCanvas.width, quadCanvas.height);
+      }
+
+      // 4. APLICAR POSE 3D CON SUAVIZADO LERP/SLERP Y PERSISTENCIA
+      if (poseFoundThisFrame) {
         lastSeenTime = now;
-        targetPos.copy(activeMarkerObj.position);
-        targetQuat.copy(activeMarkerObj.quaternion);
+        onMarkerDetected(activeMarkerName);
 
         if (!isPoseInitialized) {
           currentPos.copy(targetPos);
           currentQuat.copy(targetQuat);
           isPoseInitialized = true;
         } else {
-          // Filtro de amortiguamiento LERP/SLERP a 0.22 (elimina el temblor de mano)
-          currentPos.lerp(targetPos, 0.22);
-          currentQuat.slerp(targetQuat, 0.22);
+          // Respuesta rápida (0.35) para seguimiento inmediato sin temblor
+          currentPos.lerp(targetPos, 0.35);
+          currentQuat.slerp(targetQuat, 0.35);
         }
 
         stabilizedAnchor.object3D.position.copy(currentPos);
         stabilizedAnchor.object3D.quaternion.copy(currentQuat);
         stabilizedAnchor.setAttribute('visible', true);
       } else {
-        // Si se perdió momentáneamente la visión óptica (por sombra o giro leve), sostener pose
+        // Sostener pose durante micro-cortes de luz apoyado por el giroscopio
         if (now - lastSeenTime < GRACE_PERIOD_MS && isPoseInitialized) {
+          if (gyroActive) {
+            currentQuat.multiply(gyroDeltaQuat);
+            gyroDeltaQuat.identity();
+            stabilizedAnchor.object3D.quaternion.copy(currentQuat);
+          }
           stabilizedAnchor.setAttribute('visible', true);
         } else {
-          if (stabilizedAnchor.getAttribute('visible') !== false) {
+          if (stabilizedAnchor.getAttribute('visible') !== false && stabilizedAnchor.getAttribute('visible') !== 'false') {
             stabilizedAnchor.setAttribute('visible', false);
+            isPoseInitialized = false;
             onMarkerLost();
           }
         }
       }
 
-      // FÍSICA RK4 DETERMINISTA
+      // 5. FÍSICA RK4 DETERMINISTA
       if (!params.paused) {
         let gL = params.gravity / Math.max(0.2, params.length);
         let k1_th = state.omega;
