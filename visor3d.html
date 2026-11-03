@@ -83,7 +83,10 @@
     .exp-bar {
       display: flex; gap: 0.4rem; overflow-x: auto; padding: 0.5rem 1.25rem;
       background: #0d1017; border-bottom: 1px solid var(--border-subtle);
-      z-index: 20; scrollbar-width: none;
+      z-index: 20; scrollbar-width: none; transition: opacity 0.25s ease, filter 0.25s ease;
+    }
+    .exp-bar.locked {
+      opacity: 0.52; pointer-events: none; filter: grayscale(0.6);
     }
     .exp-bar::-webkit-scrollbar { display: none; }
     .exp-pill {
@@ -231,8 +234,12 @@
       <div style="display:inline-flex; align-items:center; gap:0.35rem; background:#1a1e29; border:1px solid #262b3a; border-radius:6px; padding:0.25rem 0.55rem;">
         <span style="font-size:0.72rem; color:var(--text-secondary);">🔑 Sala:</span>
         <input type="text" id="room-code-input" maxlength="6" value="NATEX" style="width:58px; background:#090a0f; border:1px solid #3b82f6; border-radius:4px; color:#f1f5f9; font-family:'JetBrains Mono',monospace; font-size:0.76rem; font-weight:600; text-transform:uppercase; text-align:center; padding:0.18rem 0.2rem; outline:none;" title="Escribe el código de sala del profesor y pulsa Enter">
-        <button class="nav-btn" style="padding:0.2rem 0.45rem; font-size:0.70rem;" onclick="applyStudentRoomCode()" title="Conectarse a la sala">Unirse</button>
+        <button class="nav-btn" id="btn-room-toggle" style="padding:0.2rem 0.45rem; font-size:0.70rem;" onclick="toggleStudentRoomCode()" title="Conectarse a la sala">Unirse</button>
       </div>
+
+      <span id="room-lock-pill" style="display:none; font-size:0.72rem; background:rgba(59,130,246,0.15); border:1px solid #3b82f6; color:#93c5fd; padding:0.25rem 0.55rem; border-radius:6px; font-weight:600; align-items:center; gap:0.35rem;">
+        🔒 Control Docente
+      </span>
 
       <button class="nav-btn" onclick="window.VLabComponents.UIModals.openGallery()">🗂️ Galería (11)</button>
       <button class="nav-btn" onclick="window.VLabComponents.UIModals.openMarker()">📄 Marcador AR</button>
@@ -526,14 +533,51 @@
     }
 
     // Código de Sala de Alumno
+    let initialUrlParam = null;
+    try {
+      initialUrlParam = new URLSearchParams(window.location.search).get('sala');
+    } catch (e) {}
+
     let studentRoomCode = window.VLabComponents.RoomManager.getRoomCode({ isTeacher: false });
+    let isRoomConnected = Boolean(initialUrlParam || (studentRoomCode && studentRoomCode !== 'SOLO'));
     let roomTopic = window.VLabComponents.RoomManager.getTopic(studentRoomCode);
+
+    function updateRoomLockUI() {
+      const expBar = document.getElementById('exp-bar');
+      const lockPill = document.getElementById('room-lock-pill');
+      const btnToggle = document.getElementById('btn-room-toggle');
+      const input = document.getElementById('room-code-input');
+
+      if (isRoomConnected && studentRoomCode && studentRoomCode !== 'SOLO') {
+        if (expBar) expBar.classList.add('locked');
+        if (lockPill) {
+          lockPill.style.display = 'inline-flex';
+          lockPill.innerText = `🔒 Sala ${studentRoomCode} (Control Docente)`;
+        }
+        if (btnToggle) {
+          btnToggle.innerText = 'Salir';
+          btnToggle.style.color = '#ef4444';
+        }
+        if (input) {
+          input.value = studentRoomCode;
+          input.style.borderColor = '#10b981';
+        }
+      } else {
+        if (expBar) expBar.classList.remove('locked');
+        if (lockPill) lockPill.style.display = 'none';
+        if (btnToggle) {
+          btnToggle.innerText = 'Unirse';
+          btnToggle.style.color = 'var(--text-primary)';
+        }
+        if (input) input.style.borderColor = '#3b82f6';
+      }
+    }
 
     const roomInput = document.getElementById('room-code-input');
     if (roomInput) {
-      roomInput.value = studentRoomCode;
+      roomInput.value = (studentRoomCode && studentRoomCode !== 'SOLO') ? studentRoomCode : '';
       roomInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') applyStudentRoomCode();
+        if (e.key === 'Enter') toggleStudentRoomCode();
       });
     }
 
@@ -542,27 +586,52 @@
       if (linkAr) linkAr.href = `alumno.html?sala=${studentRoomCode}&exp=${currentExpId}`;
     }
 
-    function applyStudentRoomCode() {
-      const input = document.getElementById('room-code-input');
-      const raw = input ? input.value : 'NATEX';
-      const clean = window.VLabComponents.RoomManager.setRoomCode(raw, { isTeacher: false }) || 'NATEX';
-      if (input) input.value = clean;
-      if (client && client.connected) {
-        client.unsubscribe(roomTopic);
+    function toggleStudentRoomCode() {
+      if (isRoomConnected) {
+        // Desconectar al alumno de la sala (activar exploración autónoma)
+        if (client && client.connected) {
+          client.unsubscribe(roomTopic);
+        }
+        isRoomConnected = false;
+        studentRoomCode = 'SOLO';
+        try {
+          localStorage.removeItem('vlab_student_room');
+          const url = new URL(window.location.href);
+          url.searchParams.delete('sala');
+          window.history.replaceState(null, '', url.toString());
+        } catch (e) {}
+        updateRoomLockUI();
+        updateARLink();
+        showSyncToast('🔓 Modo Libre activado: Puedes explorar cualquier experimento.');
+      } else {
+        // Conectar a la sala del profesor
+        const input = document.getElementById('room-code-input');
+        const raw = input && input.value ? input.value : 'NATEX';
+        const clean = window.VLabComponents.RoomManager.setRoomCode(raw, { isTeacher: false }) || 'NATEX';
+        if (input) input.value = clean;
+        if (client && client.connected) {
+          client.unsubscribe(roomTopic);
+        }
+        studentRoomCode = clean;
+        isRoomConnected = true;
+        roomTopic = window.VLabComponents.RoomManager.getTopic(clean);
+        if (client && client.connected) {
+          client.subscribe(roomTopic);
+        }
+        updateRoomLockUI();
+        updateARLink();
+        showSyncToast(`🔒 Conectado a Sala ${clean}: El profesor controla la práctica.`);
       }
-      studentRoomCode = clean;
-      roomTopic = window.VLabComponents.RoomManager.getTopic(clean);
-      if (client && client.connected) {
-        client.subscribe(roomTopic);
-      }
-      updateARLink();
-      showSyncToast(`Conectado a Sala ${clean}`);
     }
 
     const expRootGroup = new THREE.Group();
     scene.add(expRootGroup);
 
-    function selectExperiment(expId) {
+    function selectExperiment(expId, forceByTeacher = false) {
+      if (isRoomConnected && !forceByTeacher) {
+        showSyncToast(`🔒 Solo el profesor puede cambiar el experimento en la Sala ${studentRoomCode}`);
+        return;
+      }
       const expDef = window.VLabExperiments[expId];
       if (!expDef) return;
       currentExpId = expId;
@@ -741,7 +810,7 @@
         if (payload.type === 'PARAM_CHANGE' || payload.type === 'SYNC') {
           showSyncToast(`Sincronizado con docente (${studentRoomCode})`);
           if (payload.expId && payload.expId !== currentExpId && window.VLabExperiments[payload.expId]) {
-            selectExperiment(payload.expId);
+            selectExperiment(payload.expId, true); // Control exclusivo del profesor
           }
           if (payload.params) {
             Object.keys(payload.params).forEach(k => {
@@ -784,7 +853,8 @@
       renderer.render(scene, camera);
     }
 
-    selectExperiment(currentExpId);
+    selectExperiment(currentExpId, true);
+    updateRoomLockUI();
     requestAnimationFrame(animate);
   </script>
 </body>

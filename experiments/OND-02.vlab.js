@@ -204,15 +204,25 @@ window.VLabExperiments['OND-02'] = {
       return;
     }
 
-    // Normalización de amplitud total
-    let normScale = 0;
-    for (let k = 0; k < numModes; k++) {
-      normScale += Math.abs(modes[k].a) + Math.abs(modes[k].b);
-    }
-    const ampMult = normScale > 0.001 ? 1.4 / normScale : 1.0;
+    // Umbral físico de aceleración gravitatoria (Criterio de fluidización de Faraday/Chladni: a = ω²·W ≥ g)
+    // En la física real, si la frecuencia no coincide con un modo propio (fuera de resonancia), la amplitud
+    // cae drásticamente y la aceleración es menor que la gravedad (a < g): los granos NO despegan ni migran a ningún nodo.
+    const maxLorentz = dominant ? dominant.H : 0.0;
+    const resonanceFactor = Math.max(0, (maxLorentz - 0.26) / 0.74);
+    const isAboveFaradayThreshold = resonanceFactor > 0.03;
 
-    const alpha = 0.0125; // Tasa de migración al gradiente descendente de W²
-    const beta = 0.0160;  // Agitación estocástica en zonas de vientre/antinodo
+    // Amplitud física modulada por la curva de resonancia lorentziana real (sin forzado artificial)
+    const ampMult = Math.pow(resonanceFactor, 1.25) * 1.55;
+    const alpha = isAboveFaradayThreshold ? 0.0135 * resonanceFactor : 0.0; // Migración a nodos nula si a < g
+    const beta = isAboveFaradayThreshold ? 0.0170 * resonanceFactor : 0.0006; // Pequeña vibración térmica o nula
+
+    if (!isAboveFaradayThreshold) {
+      // Fuera de resonancia: la arena se mantiene en su estado previo disperso/desordenado
+      for (let i = 0; i < N; i++) {
+        hop[i] *= 0.88;
+      }
+      return;
+    }
 
     // Simulación de transporte de partículas sobre la placa libre [0, 1] × [0, 1]
     for (let i = 0; i < N; i++) {
@@ -504,20 +514,25 @@ window.VLabExperiments['OND-02'] = {
     const v0 = params.driveY !== undefined ? params.driveY : 0.0;
 
     let modeDesc;
-    if (dominant.H > 0.35) {
-      modeDesc = `(${dominant.n}, ${dominant.m})${dominant.branch || ''} [Resonancia]`;
-    } else if (dominant.H > 0.10) {
-      modeDesc = `(${dominant.n}, ${dominant.m})${dominant.branch || ''} [Parcial]`;
+    let estadoAcustico;
+    if (dominant.H >= 0.40) {
+      modeDesc = `(${dominant.n}, ${dominant.m})${dominant.branch || ''} [Resonancia Nodal Nítida]`;
+      estadoAcustico = `Figura Nodal Activa (a > g, ${couplingPct}%)`;
+    } else if (dominant.H >= 0.26) {
+      modeDesc = `(${dominant.n}, ${dominant.m})${dominant.branch || ''} [Aproximación]`;
+      estadoAcustico = `Patrón Débil / En Formación (${couplingPct}%)`;
     } else {
-      modeDesc = 'Fuera de Banda Resonante';
+      modeDesc = 'Fuera de Resonancia';
+      estadoAcustico = `Sub-umbral Faraday (a < g, sin figura)`;
     }
 
     return [
-      { label: 'Modo Predominante', value: modeDesc },
+      { label: 'Estado Acústico', value: estadoAcustico },
+      { label: 'Modo Próximo', value: modeDesc },
       { label: 'Frecuencia Propia (fₙₘ)', value: `${dominant.fnm.toFixed(1)} Hz (Δf: ${df > 0 ? '+' : ''}${(f - dominant.fnm).toFixed(1)} Hz)` },
       { label: 'Velocidad Onda (cₚ)', value: `${mat.cp.toFixed(0)} m/s` },
       { label: 'Rigidez Flexural (D)', value: `${mat.D.toFixed(1)} N·m` },
-      { label: 'Acoplamiento / Q', value: `Q ≈ ${Q.toFixed(0)} (${couplingPct}%)` },
+      { label: 'Respuesta Lorentz (Q)', value: `Q ≈ ${Q.toFixed(0)} (${couplingPct}%)` },
       { label: 'Material Placa', value: `${mat.name} (ν = ${mat.nu})` },
       { label: 'Punto Excitación (x₀, y₀)', value: `(${u0.toFixed(2)}, ${v0.toFixed(2)})` }
     ];
