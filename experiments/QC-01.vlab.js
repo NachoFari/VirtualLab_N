@@ -29,21 +29,17 @@ window.VLabExperiments['QC-01'] = {
   createScene(THREE, components, params) {
     const group = new THREE.Group();
 
-    const matBase = new THREE.MeshStandardMaterial({ color: 0x0f141c, metalness: 0.8, roughness: 0.25 });
-    const matCyan = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.55, metalness: 0.3, roughness: 0.2 });
-    const matBlue = new THREE.MeshStandardMaterial({ color: 0x4facfe, emissive: 0x4facfe, emissiveIntensity: 0.35, metalness: 0.4, roughness: 0.3 });
-    const matPurple = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 0.5, metalness: 0.4, roughness: 0.25 });
-    const matAmber = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.5, metalness: 0.3, roughness: 0.25 });
-    const matGreen = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 0.45, metalness: 0.3, roughness: 0.25 });
+    const matBase = new THREE.MeshStandardMaterial({ color: 0x18181b, metalness: 0.6, roughness: 0.4 });
+    const matCyan = new THREE.MeshStandardMaterial({ color: 0x3b82f6, metalness: 0.35, roughness: 0.25 });
+    const matBlue = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.4, roughness: 0.3 });
+    const matPurple = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, metalness: 0.4, roughness: 0.3 });
+    const matAmber = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.35, roughness: 0.25 });
+    const matGreen = new THREE.MeshStandardMaterial({ color: 0x10b981, metalness: 0.35, roughness: 0.25 });
 
-    // Base óptica Natex
-    const base = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.06, 0.68), matBase);
-    base.position.set(0, 0.03, 0);
+    // Base sobria de laboratorio
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.04, 0.68), matBase);
+    base.position.set(0, 0.02, 0);
     group.add(base);
-
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(1.14, 0.015, 0.70), matCyan);
-    trim.position.set(0, 0.062, 0);
-    group.add(trim);
 
     // Pedestales para Qubit A (Alice) y Qubit B (Bob)
     function createBlochStation(xPos, accentMat) {
