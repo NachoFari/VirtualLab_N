@@ -14,18 +14,18 @@ window.VLabExperiments['OND-01'] = {
   description: 'Generador Melde de ondas estacionarias en una cuerda tensada entre dos soportes mecánicos. Visualiza los modos armónicos n = 1 a 6 con nodos inmóviles marcados con esferas ámbar, antinodos vibratorios (vientres) y envolventes teóricas de máxima elongación. Puedes arrastrar verticalmente los antinodos para variar la amplitud A o pulsar Impulso.',
   hasImpulse: true,
   params: [
+    { key: 'freq', label: 'Frecuencia del Oscilador (f)', unit: 'Hz', min: 10, max: 240, step: 1, default: 60 },
     { key: 'harmonic', label: 'Modo Armónico (n)', unit: '', min: 1, max: 6, step: 1, default: 2 },
     { key: 'tension', label: 'Tensión de Cuerda (T)', unit: 'N', min: 10, max: 100, step: 5, default: 40 },
     { key: 'amp', label: 'Amplitud de Onda (A)', unit: 'm', min: 0.05, max: 0.25, step: 0.01, default: 0.14 },
     { key: 'mu', label: 'Densidad Lineal (μ)', unit: 'g/m', min: 1.0, max: 10.0, step: 0.5, default: 2.0 }
   ],
   presets: [
-    { label: 'Modo Fundamental (n=1, T=40N)', values: { harmonic: 1, tension: 40, amp: 0.16, mu: 2.0 } },
-    { label: 'Segundo Armónico (n=2, 1 Nodo)', values: { harmonic: 2, tension: 40, amp: 0.14, mu: 2.0 } },
-    { label: 'Tercer Armónico (n=3, 2 Nodos)', values: { harmonic: 3, tension: 45, amp: 0.13, mu: 2.0 } },
-    { label: 'Cuarto Armónico (n=4, 3 Nodos)', values: { harmonic: 4, tension: 50, amp: 0.11, mu: 2.0 } },
-    { label: 'Quinto Armónico (n=5, 4 Nodos)', values: { harmonic: 5, tension: 65, amp: 0.10, mu: 2.0 } },
-    { label: 'Cuerda Densa / Tensión Alta', values: { harmonic: 2, tension: 85, amp: 0.15, mu: 6.0 } }
+    { label: 'Modo Fundamental (n=1, f=54 Hz)', values: { freq: 54, harmonic: 1, tension: 40, amp: 0.16, mu: 2.0 } },
+    { label: 'Segundo Armónico (n=2, f=109 Hz)', values: { freq: 109, harmonic: 2, tension: 40, amp: 0.14, mu: 2.0 } },
+    { label: 'Tercer Armónico (n=3, f=163 Hz)', values: { freq: 163, harmonic: 3, tension: 45, amp: 0.13, mu: 2.0 } },
+    { label: 'Cuarto Armónico (n=4, f=218 Hz)', values: { freq: 218, harmonic: 4, tension: 50, amp: 0.11, mu: 2.0 } },
+    { label: 'Cuerda Densa / Tensión Alta (n=2)', values: { freq: 65, harmonic: 2, tension: 85, amp: 0.15, mu: 6.0 } }
   ],
 
   initState(params) {
@@ -33,6 +33,9 @@ window.VLabExperiments['OND-01'] = {
       t: 0,
       phase: 0,
       boost: 1.0,
+      resonance: 1.0,
+      activeN: 2,
+      fn: 109.0,
       isDraggingObject: false
     };
   },
@@ -41,13 +44,28 @@ window.VLabExperiments['OND-01'] = {
     if (state.isDraggingObject) return;
     state.t += dt;
 
-    const n = Math.max(1, Math.min(6, Math.round(params.harmonic || 2)));
+    const L = 1.30;
     const T = Math.max(5, params.tension || 40);
     const muKg = Math.max(0.0001, (params.mu || 2.0) * 1e-3);
+    const vWave = Math.sqrt(T / muKg);
+    const fFund = vWave / (2 * L);
 
-    // Frecuencia visual ajustada armónicamente para observación didáctica fluida
+    const fOsc = Math.max(5, params.freq || 60);
+    const nFromF = Math.max(1, Math.min(6, Math.round(fOsc / fFund)));
+    const n = params.harmonic !== undefined ? Math.max(1, Math.min(6, Math.round(params.harmonic))) : nFromF;
+
+    const fn = n * fFund;
+    const df = Math.abs(fOsc - fn);
+    const halfG = Math.max(3.5, fn * 0.045);
+    const resonance = (halfG * halfG) / (df * df + halfG * halfG);
+
+    state.activeN = n;
+    state.fn = fn;
+    state.resonance = resonance;
+
+    // Frecuencia visual didáctica continua
     const speedRatio = Math.sqrt(T / (muKg * 20000));
-    const omegaVis = 3.6 * Math.sqrt(n) * speedRatio;
+    const omegaVis = 3.6 * Math.sqrt(n) * speedRatio * (fOsc / Math.max(10, fn));
 
     state.phase += omegaVis * dt;
 
@@ -221,9 +239,10 @@ window.VLabExperiments['OND-01'] = {
         return { paramChanged: 'amp', value: newAmp };
       },
       update(state, p) {
-        const n = Math.max(1, Math.min(6, Math.round(p.harmonic || 2)));
+        const n = state.activeN || Math.max(1, Math.min(6, Math.round(p.harmonic || 2)));
         const tension = Math.max(10, p.tension || 40);
-        const amp = (p.amp || 0.14) * (state.boost || 1.0);
+        const resFactor = (0.30 + 0.70 * (state.resonance !== undefined ? state.resonance : 1.0));
+        const amp = (p.amp || 0.14) * (state.boost || 1.0) * resFactor;
         const phase = state.phase || 0;
 
         // Escalar la pila de pesas según la tensión T
@@ -291,22 +310,26 @@ window.VLabExperiments['OND-01'] = {
   },
 
   getMetrics(state, params) {
-    const n = Math.max(1, Math.min(6, Math.round(params.harmonic || 2)));
+    const L = 1.30; // m
     const T = Math.max(10, params.tension || 40);
     const muVal = params.mu || 2.0; // g/m
     const muKg = muVal * 1e-3; // kg/m
-    const L = 1.30; // m
-
     const vWave = Math.sqrt(T / muKg);
-    const fn = (n / (2 * L)) * vWave;
+    const fOsc = Math.max(5, params.freq || 60);
+
+    const n = state.activeN || Math.max(1, Math.min(6, Math.round(params.harmonic || 2)));
+    const fn = state.fn || (n / (2 * L)) * vWave;
     const lambda = (2 * L) / n;
     const numNodes = n - 1;
+    const resPct = Math.round((state.resonance !== undefined ? state.resonance : 1.0) * 100);
 
     return [
+      { label: 'Frecuencia Oscilador (f)', value: `${fOsc.toFixed(0)} Hz` },
       { label: 'Modo Armónico (n)', value: `${n} (${numNodes} nodo${numNodes !== 1 ? 's' : ''} int.)` },
-      { label: 'Frecuencia Propia (fₙ)', value: fn.toFixed(1) + ' Hz' },
-      { label: 'Longitud de Onda (λ)', value: lambda.toFixed(3) + ' m' },
-      { label: 'Velocidad de Fase (v)', value: vWave.toFixed(1) + ' m/s' }
+      { label: 'Frecuencia Resonancia (fₙ)', value: `${fn.toFixed(1)} Hz (Δf: ${(fOsc - fn).toFixed(1)} Hz)` },
+      { label: 'Sintonía / Resonancia', value: `${resPct}%` },
+      { label: 'Longitud de Onda (λ)', value: `${lambda.toFixed(3)} m` },
+      { label: 'Velocidad de Fase (v)', value: `${vWave.toFixed(1)} m/s` }
     ];
   }
 };

@@ -10,35 +10,42 @@ window.VLabExperiments['OND-02'] = {
   title: 'Placa de Chladni y Patrones Nodales 2D',
   block: 'C',
   category: 'Acústica y Vibraciones',
-  formula: 'z(x,y) = a·cos(nπx/L)·cos(mπy/L) + b·cos(mπx/L)·cos(nπy/L) = 0  ;  fₙₘ ∝ (c_mat / L²)·(n² + m²)',
-  description: 'Placa elástica excitada por un transductor acústico. Modifica la frecuencia (Hz), el tamaño de la placa (L), el material (Acero, Latón, Aluminio, Vidrio) y arrastra directamente con el mouse el punto de excitación (x₀, y₀) para ver cómo miles de granos de arena migran hacia las líneas nodales de Chladni.',
+  formula: 'z(ξ,η) = A·cos(nπξ)·cos(mπη) + B·cos(mπξ)·cos(nπη) = 0   ;   fₙₘ ∝ (cₚ·h / L²)·(n² + m² ± ν·n·m)',
+  description: 'Placa elástica de borde libre excitada por un transductor acústico (ecuación de Kirchhoff-Love con autofunciones de Rayleigh-Ritz). Modifica la frecuencia (Hz), el tamaño L, el material y arrastra con el cursor el punto de excitación (x₀, y₀) para ver la migración browniana de 4,500 partículas de arena hacia las curvas nodales z = 0.',
   hasImpulse: true,
 
   params: [
-    { key: 'freq', label: 'Frecuencia de Excitación (f)', unit: 'Hz', min: 80, max: 2400, step: 5, default: 440 },
+    { key: 'freq', label: 'Frecuencia de Excitación (f)', unit: 'Hz', min: 80, max: 2400, step: 1, default: 189 },
     { key: 'plateSize', label: 'Tamaño de la Placa (L)', unit: 'cm', min: 18, max: 45, step: 1, default: 28 },
     { key: 'material', label: 'Material (1:Acero, 2:Latón, 3:Alum, 4:Vidrio)', unit: '', min: 1, max: 4, step: 1, default: 2 },
     { key: 'driveX', label: 'Punto Excitación X (x₀)', unit: '', min: -0.85, max: 0.85, step: 0.05, default: 0.0 },
     { key: 'driveY', label: 'Punto Excitación Y (y₀)', unit: '', min: -0.85, max: 0.85, step: 0.05, default: 0.0 },
-    { key: 'damping', label: 'Amortiguamiento / Q Inverso', unit: '', min: 0.02, max: 0.30, step: 0.01, default: 0.06 }
+    { key: 'damping', label: 'Amortiguamiento / Q Inverso', unit: '', min: 0.02, max: 0.30, step: 0.01, default: 0.05 }
   ],
 
   presets: [
-    { label: 'Cruz Diagonal (Baja Frecuencia)', values: { freq: 185, plateSize: 28, material: 2, driveX: 0.0, driveY: 0.0, damping: 0.05 } },
-    { label: 'Estrella de Chladni (Modo 3,2)', values: { freq: 520, plateSize: 28, material: 2, driveX: 0.25, driveY: 0.0, damping: 0.05 } },
-    { label: 'Roseta Acústica en Acero (Alta f)', values: { freq: 1280, plateSize: 26, material: 1, driveX: 0.35, driveY: 0.20, damping: 0.04 } },
-    { label: 'Malla Cuántica Compleja (Modo 5,4)', values: { freq: 1950, plateSize: 30, material: 3, driveX: -0.40, driveY: 0.30, damping: 0.05 } }
+    { label: 'Cruz Diagonal (Modo 1, 1)', values: { freq: 95, plateSize: 28, material: 2, driveX: 0.0, driveY: 0.0, damping: 0.05 } },
+    { label: 'Anillo / Cruz Chladni (Modo 0, 2)', values: { freq: 189, plateSize: 28, material: 2, driveX: 0.0, driveY: 0.0, damping: 0.05 } },
+    { label: 'Estrella de Chladni (Modo 1, 2)⁺', values: { freq: 240, plateSize: 28, material: 2, driveX: 0.35, driveY: 0.0, damping: 0.04 } },
+    { label: 'Roseta Acústica Compleja (Modo 2, 3)⁺', values: { freq: 625, plateSize: 28, material: 2, driveX: 0.25, driveY: 0.25, damping: 0.04 } }
   ],
 
-  // Propiedades acústicas y visuales de los materiales
+  // Propiedades mecánicas y elásticas reales (Kirchhoff-Love, espesor h = 1.5 mm)
   MATERIALS_INFO: {
-    1: { name: 'Acero Inoxidable', c_mat: 1.35, color: 0x334155, metalness: 0.75, roughness: 0.25, waveSpeed: 5100 },
-    2: { name: 'Latón Acústico', c_mat: 0.92, color: 0x423525, metalness: 0.55, roughness: 0.35, waveSpeed: 3450 },
-    3: { name: 'Aluminio Estructural', c_mat: 1.25, color: 0x3f4756, metalness: 0.65, roughness: 0.30, waveSpeed: 4900 },
-    4: { name: 'Vidrio Templado', c_mat: 1.10, color: 0x1e293b, metalness: 0.25, roughness: 0.15, waveSpeed: 4200 }
+    1: { name: 'Acero Inoxidable 304', E: 193e9, rho: 8000, nu: 0.29, cp: 5132, D: 59.3, color: 0x334155, metalness: 0.75, roughness: 0.25 },
+    2: { name: 'Latón Acústico C260', E: 110e9, rho: 8530, nu: 0.35, cp: 3833, D: 35.2, color: 0x423525, metalness: 0.55, roughness: 0.35 },
+    3: { name: 'Aluminio 6061-T6', E: 68.9e9, rho: 2700, nu: 0.33, cp: 5351, D: 21.7, color: 0x3f4756, metalness: 0.65, roughness: 0.30 },
+    4: { name: 'Vidrio Templado', E: 70.0e9, rho: 2500, nu: 0.22, cp: 5424, D: 20.7, color: 0x1e293b, metalness: 0.25, roughness: 0.15 }
   },
 
   NUM_PARTICLES: 4500,
+
+  getBaseFrequency(L_cm, mat) {
+    const L_m = Math.max(0.12, (L_cm || 28) / 100);
+    const h = 0.0015;
+    const f_disp = (Math.PI * h) / (4 * Math.sqrt(3) * L_m * L_m);
+    return f_disp * mat.cp * 1.42;
+  },
 
   initState(params) {
     const N = this.NUM_PARTICLES;
@@ -59,7 +66,7 @@ window.VLabExperiments['OND-02'] = {
       py,
       hop,
       activeModes: [],
-      dominantMode: { n: 1, m: 2, fnm: 193.2, H: 0.5 },
+      dominantMode: { n: 0, m: 2, branch: '⁺', fnm: 189.0, H: 0.5 },
       maxAmp: 0.0,
       isDraggingObject: false
     };
@@ -76,58 +83,104 @@ window.VLabExperiments['OND-02'] = {
   },
 
   /**
-   * Cálculo analítico del conjunto de modos y respuesta Lorentziana
+   * Cálculo analítico riguroso del conjunto de modos y autofunciones Ψₙₘ⁺ y Ψₙₘ⁻
+   * con desdoblamiento de Rayleigh por Poisson ν y acoplamiento por función de Green
    */
   getActiveModes(params) {
-    const f = params.freq !== undefined ? params.freq : 440;
+    const f = params.freq !== undefined ? params.freq : 189;
     const L = params.plateSize !== undefined ? params.plateSize : 28;
     const matKey = Math.max(1, Math.min(4, Math.round(params.material || 2)));
     const mat = this.MATERIALS_INFO[matKey] || this.MATERIALS_INFO[2];
-    const c_mat = mat.c_mat;
-    const damp = Math.max(0.015, params.damping !== undefined ? params.damping : 0.06);
+    const damp = Math.max(0.015, params.damping !== undefined ? params.damping : 0.05);
 
     const u0 = Math.max(-0.85, Math.min(0.85, params.driveX || 0.0));
     const v0 = Math.max(-0.85, Math.min(0.85, params.driveY || 0.0));
 
-    const scaleL = Math.pow(28 / L, 2);
-    const baseFactor = 42 * c_mat * scaleL;
+    // Coordenadas normalizadas de borde libre ξ₀, η₀ ∈ [0, 1]
+    const xi0 = (u0 + 1.0) / 2.0;
+    const eta0 = (v0 + 1.0) / 2.0;
+
+    const baseFactor = this.getBaseFrequency(L, mat);
+    const nu_split = 0.12 * mat.nu;
 
     const modes = [];
     let dominant = null;
     let maxLorentz = -1;
 
-    for (let n = 1; n <= 7; n++) {
-      for (let m = n; m <= 7; m++) {
-        const fnm = baseFactor * (n * n + m * m);
-        const gamma = Math.max(10, fnm * damp * 1.35);
-        const df = f - fnm;
-        const halfG = gamma * 0.5;
-        const H = (halfG * halfG) / (df * df + halfG * halfG);
+    // Iteración modal completa n ∈ [0..6], m ∈ [n..6], descartando (0,0) y (0,1)
+    for (let n = 0; n <= 6; n++) {
+      for (let m = n; m <= 6; m++) {
+        if (n === 0 && m <= 1) continue; // Modos de cuerpo rígido sin deformación flexural
 
-        if (H > maxLorentz) {
-          maxLorentz = H;
-          dominant = { n, m, fnm, H };
-        }
+        if (n === m) {
+          // Autofunción degenerada única Ψₙₙ(ξ, η) = cos(nπξ)·cos(nπη)
+          const fnn = baseFactor * (2 * n * n);
+          const gamma = Math.max(8, fnn * damp * 1.25);
+          const df = f - fnn;
+          const halfG = gamma * 0.5;
+          const H = (halfG * halfG) / (df * df + halfG * halfG);
 
-        // Filtro de corte: sólo modos con respuesta Lorentziana significativa
-        if (H > 0.02) {
-          let a, b;
-          if (n === m) {
-            a = H * Math.cos((n * Math.PI * u0) / 2) * Math.cos((n * Math.PI * v0) / 2);
-            b = 0;
-          } else {
-            // Acoplamiento por punto de excitación (Green function modal projection)
-            const c1 = Math.cos((n * Math.PI * u0) / 2) * Math.cos((m * Math.PI * v0) / 2);
-            const c2 = Math.cos((m * Math.PI * u0) / 2) * Math.cos((n * Math.PI * v0) / 2);
-            a = H * c1;
-            b = -H * c2;
+          const c = Math.cos(n * Math.PI * xi0) * Math.cos(n * Math.PI * eta0);
+
+          if (H > maxLorentz) {
+            maxLorentz = H;
+            dominant = { n, m, branch: '', fnm: fnn, H };
           }
-          modes.push({ n, m, fnm, H, a, b });
+
+          if (H * Math.abs(c) > 0.015) {
+            modes.push({ n, m, fnm: fnn, H, a: H * c, b: 0 });
+          }
+        } else {
+          // Desdoblamiento de Rayleigh en modos simétricos (+) y antisimétricos (-)
+          const fnm_plus = baseFactor * (n * n + m * m + nu_split * n * m);
+          const fnm_minus = baseFactor * (n * n + m * m - nu_split * n * m);
+
+          const gamma_p = Math.max(8, fnm_plus * damp * 1.25);
+          const gamma_m = Math.max(8, fnm_minus * damp * 1.25);
+
+          const df_p = f - fnm_plus;
+          const df_m = f - fnm_minus;
+
+          const hG_p = gamma_p * 0.5;
+          const hG_m = gamma_m * 0.5;
+
+          const H_p = (hG_p * hG_p) / (df_p * df_p + hG_p * hG_p);
+          const H_m = (hG_m * hG_m) / (df_m * df_m + hG_m * hG_m);
+
+          // Proyección de Green: Ψₙₘ⁺(ξ₀, η₀) y Ψₙₘ⁻(ξ₀, η₀)
+          const c1 = Math.cos(n * Math.PI * xi0) * Math.cos(m * Math.PI * eta0);
+          const c2 = Math.cos(m * Math.PI * xi0) * Math.cos(n * Math.PI * eta0);
+          const c_plus = c1 + c2;
+          const c_minus = c1 - c2;
+
+          if (H_p > maxLorentz) {
+            maxLorentz = H_p;
+            dominant = { n, m, branch: '⁺', fnm: fnm_plus, H: H_p };
+          }
+          if (H_m > maxLorentz) {
+            maxLorentz = H_m;
+            dominant = { n, m, branch: '⁻', fnm: fnm_minus, H: H_m };
+          }
+
+          // Combinación modal sobre la base desacoplada {cos(nπξ)cos(mπη), cos(mπξ)cos(nπη)}
+          const A = H_p * c_plus + H_m * c_minus;
+          const B = H_p * c_plus - H_m * c_minus;
+
+          if (Math.abs(A) > 0.015 || Math.abs(B) > 0.015) {
+            modes.push({
+              n,
+              m,
+              fnm: H_p >= H_m ? fnm_plus : fnm_minus,
+              H: Math.max(H_p, H_m),
+              a: A,
+              b: B
+            });
+          }
         }
       }
     }
 
-    return { modes, dominant: dominant || { n: 1, m: 2, fnm: 193.2, H: 0.1 } };
+    return { modes, dominant: dominant || { n: 0, m: 2, branch: '⁺', fnm: 189.0, H: 0.1 } };
   },
 
   step(state, params, dt) {
@@ -161,14 +214,18 @@ window.VLabExperiments['OND-02'] = {
     const alpha = 0.0125; // Tasa de migración al gradiente descendente de W²
     const beta = 0.0160;  // Agitación estocástica en zonas de vientre/antinodo
 
-    // Simulación de transporte de partículas
+    // Simulación de transporte de partículas sobre la placa libre [0, 1] × [0, 1]
     for (let i = 0; i < N; i++) {
       let u = px[i];
       let v = py[i];
 
+      // Mapeo riguroso a coordenadas de placa libre ξ, η ∈ [0, 1]
+      const xi = (u + 1.0) / 2.0;
+      const eta = (v + 1.0) / 2.0;
+
       let W = 0.0;
-      let dW_du = 0.0;
-      let dW_dv = 0.0;
+      let dW_dxi = 0.0;
+      let dW_deta = 0.0;
 
       for (let k = 0; k < numModes; k++) {
         const mDef = modes[k];
@@ -177,28 +234,27 @@ window.VLabExperiments['OND-02'] = {
         const a = mDef.a * ampMult;
         const b = mDef.b * ampMult;
 
-        const kn = (n * Math.PI) / 2;
-        const km = (m * Math.PI) / 2;
+        const cn_xi = Math.cos(n * Math.PI * xi);
+        const sn_xi = Math.sin(n * Math.PI * xi);
+        const cm_xi = Math.cos(m * Math.PI * xi);
+        const sm_xi = Math.sin(m * Math.PI * xi);
 
-        const c_nu = Math.cos(kn * u);
-        const s_nu = Math.sin(kn * u);
-        const c_mu = Math.cos(km * u);
-        const s_mu = Math.sin(km * u);
+        const cn_eta = Math.cos(n * Math.PI * eta);
+        const sn_eta = Math.sin(n * Math.PI * eta);
+        const cm_eta = Math.cos(m * Math.PI * eta);
+        const sm_eta = Math.sin(m * Math.PI * eta);
 
-        const c_nv = Math.cos(kn * v);
-        const s_nv = Math.sin(kn * v);
-        const c_mv = Math.cos(km * v);
-        const s_mv = Math.sin(km * v);
+        // W(ξ, η) = A·cos(nπξ)cos(mπη) + B·cos(mπξ)cos(nπη)
+        W += a * cn_xi * cm_eta + b * cm_xi * cn_eta;
 
-        // z = a·cos(mπu/2)·cos(nπv/2) + b·cos(nπu/2)·cos(mπv/2)
-        const t1 = a * c_mu * c_nv;
-        const t2 = b * c_nu * c_mv;
-        W += t1 + t2;
-
-        // Derivadas espaciales analíticas
-        dW_du += -a * km * s_mu * c_nv - b * kn * s_nu * c_mv;
-        dW_dv += -a * kn * c_mu * s_nv - b * km * c_nu * s_mv;
+        // Derivadas espaciales exactas dW/dξ y dW/dη
+        dW_dxi += Math.PI * (-n * a * sn_xi * cm_eta - m * b * sm_xi * cn_eta);
+        dW_deta += Math.PI * (-m * a * cn_xi * sm_eta - n * b * cm_xi * sn_eta);
       }
+
+      // Derivadas respecto a u, v (dξ/du = 1/2, dη/dv = 1/2)
+      const dW_du = dW_dxi * 0.5;
+      const dW_dv = dW_deta * 0.5;
 
       const absW = Math.abs(W);
       // Gradiente de la energía cuadrática de vibración: ∇(W²) = 2·W·∇W
@@ -433,13 +489,13 @@ window.VLabExperiments['OND-02'] = {
   },
 
   getMetrics(state, params) {
-    const f = params.freq !== undefined ? params.freq : 440;
+    const f = params.freq !== undefined ? params.freq : 189;
     const L = params.plateSize !== undefined ? params.plateSize : 28;
     const matKey = Math.max(1, Math.min(4, Math.round(params.material || 2)));
     const mat = this.MATERIALS_INFO[matKey] || this.MATERIALS_INFO[2];
-    const damp = Math.max(0.015, params.damping !== undefined ? params.damping : 0.06);
+    const damp = Math.max(0.015, params.damping !== undefined ? params.damping : 0.05);
 
-    const dominant = state.dominantMode || { n: 1, m: 2, fnm: 193.2, H: 0.1 };
+    const dominant = state.dominantMode || { n: 0, m: 2, branch: '⁺', fnm: 189.0, H: 0.1 };
     const df = Math.abs(f - dominant.fnm);
     const Q = 1.0 / damp;
     const couplingPct = Math.round(dominant.H * 100);
@@ -449,9 +505,9 @@ window.VLabExperiments['OND-02'] = {
 
     let modeDesc;
     if (dominant.H > 0.35) {
-      modeDesc = `(${dominant.n}, ${dominant.m}) [Resonancia]`;
+      modeDesc = `(${dominant.n}, ${dominant.m})${dominant.branch || ''} [Resonancia]`;
     } else if (dominant.H > 0.10) {
-      modeDesc = `(${dominant.n}, ${dominant.m}) [Parcial]`;
+      modeDesc = `(${dominant.n}, ${dominant.m})${dominant.branch || ''} [Parcial]`;
     } else {
       modeDesc = 'Fuera de Banda Resonante';
     }
@@ -459,8 +515,10 @@ window.VLabExperiments['OND-02'] = {
     return [
       { label: 'Modo Predominante', value: modeDesc },
       { label: 'Frecuencia Propia (fₙₘ)', value: `${dominant.fnm.toFixed(1)} Hz (Δf: ${df > 0 ? '+' : ''}${(f - dominant.fnm).toFixed(1)} Hz)` },
+      { label: 'Velocidad Onda (cₚ)', value: `${mat.cp.toFixed(0)} m/s` },
+      { label: 'Rigidez Flexural (D)', value: `${mat.D.toFixed(1)} N·m` },
       { label: 'Acoplamiento / Q', value: `Q ≈ ${Q.toFixed(0)} (${couplingPct}%)` },
-      { label: 'Material de la Placa', value: `${mat.name} (${mat.waveSpeed} m/s)` },
+      { label: 'Material Placa', value: `${mat.name} (ν = ${mat.nu})` },
       { label: 'Punto Excitación (x₀, y₀)', value: `(${u0.toFixed(2)}, ${v0.toFixed(2)})` }
     ];
   }

@@ -217,11 +217,27 @@ window.VLabComponents.SciPlotter = {
           const phase = state.phase !== undefined ? state.phase : 0;
           const boost = state.boost || 1.0;
 
+          const L = 1.30;
+          const T = Math.max(5, params.tension || 40);
+          const muKg = Math.max(0.0001, (params.mu || 2.0) * 1e-3);
+          const vWave = Math.sqrt(T / muKg);
+          const fFund = vWave / (2 * L);
+          const fn = n * fFund;
+          const fOsc = Math.max(5, params.freq !== undefined ? params.freq : 60);
+
+          let resonance = state.resonance;
+          if (resonance === undefined) {
+            const df = Math.abs(fOsc - fn);
+            const halfG = Math.max(3.5, fn * 0.045);
+            resonance = (halfG * halfG) / (df * df + halfG * halfG);
+          }
+          const resFactor = 0.30 + 0.70 * resonance;
+
           const padL = 28, padR = 20, padT = 24, padB = 20;
           const pw = w - padL - padR;
           const ph = h - padT - padB;
           const cY = padT + ph / 2;
-          const maxAmpPx = ph * 0.42;
+          const maxAmpPx = ph * 0.42 * resFactor;
 
           // Eje central de equilibrio
           ctx.strokeStyle = '#334155';
@@ -254,7 +270,7 @@ window.VLabComponents.SciPlotter = {
           ctx.setLineDash([]);
 
           // Perfil instantáneo de la cuerda y(x,t) en Azul Cobalto (#3b82f6)
-          ctx.strokeStyle = '#3b82f6';
+          ctx.strokeStyle = resonance > 0.85 ? '#3b82f6' : (resonance > 0.50 ? '#60a5fa' : '#64748b');
           ctx.lineWidth = 2.2;
           ctx.beginPath();
           for (let i = 0; i <= 100; i++) {
@@ -280,9 +296,12 @@ window.VLabComponents.SciPlotter = {
             ctx.beginPath(); ctx.arc(antiPx, cY, 2, 0, Math.PI * 2); ctx.fill();
           }
 
+          // Métricas en el canvas
           ctx.fillStyle = '#94a3b8';
-          ctx.fillText(`Armónico n = ${n}`, padL + 4, padT + 12);
-          ctx.fillText(`${n - 1} Nodos internos`, padL + pw - 85, padT + 12);
+          ctx.fillText(`Armónico n = ${n} | f_osc = ${fOsc.toFixed(0)} Hz (fₙ = ${fn.toFixed(0)} Hz)`, padL + 4, padT + 12);
+          const resPct = (resonance * 100).toFixed(0);
+          ctx.fillStyle = resonance > 0.85 ? '#3b82f6' : (resonance > 0.50 ? '#f59e0b' : '#94a3b8');
+          ctx.fillText(`Resonancia: ${resPct}%`, padL + pw - 90, padT + 12);
 
           this.drawLegend(ctx, [
             { color: '#3b82f6', text: 'y(x,t) Perfil' },
@@ -291,18 +310,31 @@ window.VLabComponents.SciPlotter = {
           ]);
         }
 
-        // 5. PLACA DE CHLADNI: Espectro de Resonancia Acústica A(f) 80..2400 Hz + Línea f actual
+        // 5. PLACA DE CHLADNI: Espectro de Resonancia Acústica A(f) 80..2400 Hz (Kirchhoff-Love + Rayleigh)
         else if (expId === 'OND-02') {
-          const curF = params.freq !== undefined ? params.freq : 440;
+          const curF = params.freq !== undefined ? params.freq : 189;
           const L = params.plateSize !== undefined ? params.plateSize : 28;
           const matKey = Math.max(1, Math.min(4, Math.round(params.material || 2)));
-          const c_mat = [0, 1.35, 0.92, 1.25, 1.10][matKey] || 0.92;
-          const damp = Math.max(0.015, params.damping !== undefined ? params.damping : 0.06);
+          const matProps = {
+            1: { name: 'Acero Inox 304', cp: 5132, nu: 0.29 },
+            2: { name: 'Latón C260', cp: 3833, nu: 0.35 },
+            3: { name: 'Aluminio 6061', cp: 5351, nu: 0.33 },
+            4: { name: 'Vidrio Templado', cp: 5424, nu: 0.22 }
+          };
+          const mat = matProps[matKey] || matProps[2];
+          const damp = Math.max(0.015, params.damping !== undefined ? params.damping : 0.05);
+
           const u0 = Math.max(-0.85, Math.min(0.85, params.driveX || 0.0));
           const v0 = Math.max(-0.85, Math.min(0.85, params.driveY || 0.0));
+          const xi0 = (u0 + 1.0) / 2.0;
+          const eta0 = (v0 + 1.0) / 2.0;
 
-          const scaleL = Math.pow(28 / L, 2);
-          const baseFactor = 42 * c_mat * scaleL;
+          // Relación de dispersión Kirchhoff-Love con factor Rayleigh-Ritz
+          const L_m = Math.max(0.12, L / 100);
+          const hPlate = 0.0015;
+          const f_disp = (Math.PI * hPlate) / (4 * Math.sqrt(3) * L_m * L_m);
+          const baseFactor = f_disp * mat.cp * 1.42;
+          const nu_split = 0.12 * mat.nu;
 
           const padL = 32, padR = 20, padT = 24, padB = 22;
           const pw = w - padL - padR;
@@ -311,22 +343,42 @@ window.VLabComponents.SciPlotter = {
           const fMin = 80;
           const fMax = 2400;
 
-          // Precalcular modos en rango
+          // Precalcular modos en rango con desdoblamiento de Rayleigh Ψₙₘ⁺ y Ψₙₘ⁻
           const modesList = [];
-          for (let n = 1; n <= 7; n++) {
-            for (let m = n; m <= 7; m++) {
-              const fnm = baseFactor * (n * n + m * m);
-              if (fnm >= 70 && fnm <= 2600) {
-                const c1 = Math.cos((n * Math.PI * u0) / 2) * Math.cos((m * Math.PI * v0) / 2);
-                const c2 = Math.cos((m * Math.PI * u0) / 2) * Math.cos((n * Math.PI * v0) / 2);
-                const coup = Math.max(0.12, Math.abs(c1) + Math.abs(c2));
-                const gamma = Math.max(12, fnm * damp * 1.35);
-                modesList.push({ n, m, fnm, gamma, coup });
+          for (let n = 0; n <= 6; n++) {
+            for (let m = n; m <= 6; m++) {
+              if (n === 0 && m <= 1) continue;
+
+              if (n === m) {
+                const fnn = baseFactor * (2 * n * n);
+                if (fnn >= 70 && fnn <= 2600) {
+                  const c = Math.cos(n * Math.PI * xi0) * Math.cos(n * Math.PI * eta0);
+                  const gamma = Math.max(8, fnn * damp * 1.25);
+                  modesList.push({ n, m, label: `(${n},${n})`, fnm: fnn, gamma, coup: Math.abs(c) });
+                }
+              } else {
+                const fnm_plus = baseFactor * (n * n + m * m + nu_split * n * m);
+                const fnm_minus = baseFactor * (n * n + m * m - nu_split * n * m);
+
+                const c1 = Math.cos(n * Math.PI * xi0) * Math.cos(m * Math.PI * eta0);
+                const c2 = Math.cos(m * Math.PI * xi0) * Math.cos(n * Math.PI * eta0);
+                const c_plus = c1 + c2;
+                const c_minus = c1 - c2;
+
+                const gamma_p = Math.max(8, fnm_plus * damp * 1.25);
+                const gamma_m = Math.max(8, fnm_minus * damp * 1.25);
+
+                if (fnm_plus >= 70 && fnm_plus <= 2600 && Math.abs(c_plus) > 0.02) {
+                  modesList.push({ n, m, label: `(${n},${m})⁺`, fnm: fnm_plus, gamma: gamma_p, coup: Math.abs(c_plus) });
+                }
+                if (fnm_minus >= 70 && fnm_minus <= 2600 && Math.abs(c_minus) > 0.02) {
+                  modesList.push({ n, m, label: `(${n},${m})⁻`, fnm: fnm_minus, gamma: gamma_m, coup: Math.abs(c_minus) });
+                }
               }
             }
           }
 
-          // Función de respuesta modal acumulada A(f)
+          // Función de respuesta modal Lorentziana acumulada A(f)
           const evalAmp = (f) => {
             let sum = 0;
             for (let i = 0; i < modesList.length; i++) {
@@ -374,10 +426,10 @@ window.VLabComponents.SciPlotter = {
           // Picos modales con etiquetas breves
           ctx.fillStyle = '#64748b';
           ctx.font = '9px JetBrains Mono, monospace';
-          modesList.slice(0, 6).forEach(m => {
+          modesList.slice(0, 7).forEach(m => {
             if (m.fnm >= fMin && m.fnm <= fMax) {
               const mx = padL + ((m.fnm - fMin) / (fMax - fMin)) * pw;
-              ctx.fillText(`(${m.n},${m.m})`, mx - 10, padT + 12);
+              ctx.fillText(m.label, mx - 12, padT + 12);
             }
           });
 
