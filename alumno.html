@@ -136,6 +136,7 @@
           <button class="btn-top" onclick="window.VLabComponents.UIModals.openGallery()">🗂️ Galería (11)</button>
           <button class="btn-top" onclick="window.VLabComponents.UIModals.openMarker()">📄 Marcador AR</button>
           <a href="visor3d.html?exp=MEC-01" id="btn-go-3d" class="btn-top" style="background:#3b82f6; border-color:#3b82f6; color:#fff;">Visor 3D</a>
+          <button class="btn-top" id="btn-fullscreen" onclick="toggleFullscreen()">⛶ Pantalla Completa</button>
           <button class="btn-top" id="btn-orient-toggle">Modo Mesa</button>
           <button class="btn-top" id="btn-focus-top">Enfocar</button>
         </div>
@@ -164,6 +165,13 @@
       <div class="hud-line"><span>Seguimiento óptico:</span> <span id="ar-track">Buscando marcador...</span></div>
       <div class="hud-line"><span>Práctica activa:</span> <span id="ar-exp-name">Péndulo Simple</span></div>
       <div id="ar-dynamic-metrics"></div>
+
+      <!-- Control de Tamaño 3D Deslizante Personalizado para Pantalla Móvil -->
+      <div class="hud-line" style="display:flex; align-items:center; gap:0.55rem; margin-top:0.35rem; padding-top:0.35rem; border-top:1px solid #262b3a;">
+        <span style="white-space:nowrap; font-size:0.72rem; color:#94a3b8; font-weight:500;">🔍 Tamaño 3D:</span>
+        <input type="range" id="student-scale-slider" min="60" max="240" step="5" value="130" style="flex:1; accent-color:#3b82f6; height:5px; cursor:pointer;" oninput="onStudentScaleChange(this.value)" title="Ajusta el tamaño del experimento a tu pantalla">
+        <span id="student-scale-val" style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#38bdf8; min-width:44px; text-align:right;">130%</span>
+      </div>
     </div>
   </div>
 
@@ -187,7 +195,7 @@
     </a-marker>
 
     <a-entity id="stabilized-anchor" visible="false">
-      <a-entity id="apparatus-container" position="0 0 0" rotation="0 0 0" scale="0.52 0.52 0.52"></a-entity>
+      <a-entity id="apparatus-container" position="0 0 0" rotation="0 0 0" scale="0.676 0.676 0.676"></a-entity>
     </a-entity>
 
     <a-entity camera></a-entity>
@@ -332,6 +340,8 @@
       expSceneInstance = expDef.createScene(THREE, window.VLabComponents, expParams);
       rootObj.add(expSceneInstance.group);
       expSceneInstance.update(expState, expParams);
+      applyOrientation(currentOrientation);
+      applyApparatusScale(currentScalePct);
       updateMetricsUI();
     }
 
@@ -390,9 +400,11 @@
     };
     window.addEventListener('load', setupCameraFocusOnly);
 
-    let currentOrientation = 'desk';
+    /* === MODO DE PROYECCIÓN LOCAL (MESA / PIZARRA) SOBERANO DEL ESTUDIANTE === */
+    let currentOrientation = localStorage.getItem('vlab_student_orientation') || 'desk';
     function applyOrientation(mode) {
       currentOrientation = mode;
+      localStorage.setItem('vlab_student_orientation', mode);
       const rot = (mode === 'wall') ? "-90 0 0" : "0 0 0";
       if (apparatusContainer) apparatusContainer.setAttribute('rotation', rot);
       const btn = document.getElementById('btn-orient-toggle');
@@ -402,8 +414,54 @@
     document.getElementById('btn-orient-toggle').onclick = (e) => {
       e.stopPropagation();
       applyOrientation(currentOrientation === 'desk' ? 'wall' : 'desk');
-      flashStatus("Proyección: " + (currentOrientation === 'wall' ? "Pared / Monitor" : "Mesa"));
+      flashStatus("Proyección: " + (currentOrientation === 'wall' ? "Pared / Pizarra" : "Mesa"));
     };
+
+    /* === ESCALA 3D PERSONALIZABLE PARA PANTALLAS MÓVILES (PERSISTIDA) === */
+    const BASE_APPARATUS_SCALE = 0.52;
+    let currentScalePct = parseInt(localStorage.getItem('vlab_student_scale_pct') || '130', 10);
+
+    function applyApparatusScale(pct) {
+      currentScalePct = Math.max(50, Math.min(250, parseInt(pct, 10)));
+      localStorage.setItem('vlab_student_scale_pct', currentScalePct);
+      const s = BASE_APPARATUS_SCALE * (currentScalePct / 100);
+      if (apparatusContainer) {
+        apparatusContainer.setAttribute('scale', `${s.toFixed(3)} ${s.toFixed(3)} ${s.toFixed(3)}`);
+      }
+      const slider = document.getElementById('student-scale-slider');
+      const valText = document.getElementById('student-scale-val');
+      if (slider && slider.value !== String(currentScalePct)) slider.value = currentScalePct;
+      if (valText) valText.innerText = `${currentScalePct}%`;
+    }
+
+    function onStudentScaleChange(val) {
+      applyApparatusScale(val);
+    }
+
+    /* === MODO PANTALLA COMPLETA INMERSIVO PARA ESTUDIANTES === */
+    function toggleFullscreen() {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (!isFs) {
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    }
+
+    function updateFsButton() {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const btn = document.getElementById('btn-fullscreen');
+      if (btn) {
+        btn.innerText = isFs ? "✕ Salir Fullscreen" : "⛶ Pantalla Completa";
+        btn.style.borderColor = isFs ? "#10b981" : "#262b3a";
+        btn.style.color = isFs ? "#10b981" : "#f1f5f9";
+      }
+    }
+    document.addEventListener('fullscreenchange', updateFsButton);
+    document.addEventListener('webkitfullscreenchange', updateFsButton);
 
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
     client.on('connect', () => {
@@ -422,9 +480,7 @@
             Object.assign(expParams, payload.params);
           }
           if (payload.paused !== undefined) isPaused = payload.paused;
-          if (payload.orientation && payload.orientation !== currentOrientation) {
-            applyOrientation(payload.orientation);
-          }
+          // NOTA: Se respeta y preserva la orientación y escala local elegida por el alumno
           if (payload.state && (payload.action === 'RESET' || payload.action === 'PUSH' || payload.action === 'DRAG' || payload.action === 'SYNC_ALL')) {
             Object.assign(expState, payload.state);
           }
@@ -597,7 +653,8 @@
 
     sceneEl.addEventListener('loaded', () => {
       selectExperiment(currentExpId);
-      applyOrientation('desk');
+      applyOrientation(currentOrientation);
+      applyApparatusScale(currentScalePct);
       requestAnimationFrame(tick);
     });
   </script>

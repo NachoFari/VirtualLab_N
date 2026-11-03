@@ -236,6 +236,7 @@
 
       <button class="nav-btn" onclick="window.VLabComponents.UIModals.openGallery()">🗂️ Galería (11)</button>
       <button class="nav-btn" onclick="window.VLabComponents.UIModals.openMarker()">📄 Marcador AR</button>
+      <button class="nav-btn" id="btn-fs-top" onclick="toggleFullscreen()">⛶ Pantalla Completa</button>
       <a href="alumno.html" id="link-ar" class="nav-btn">Modo Cámara AR</a>
       <a href="profesor.html" class="nav-btn">Panel Docente</a>
     </div>
@@ -271,6 +272,7 @@
         <button class="btn-ctrl" id="btn-push" onclick="triggerPush()">Perturbar</button>
         <button class="btn-ctrl" id="btn-reset" onclick="resetSim()">Reiniciar</button>
         <button class="btn-ctrl" onclick="resetCameraView()">Centrar Vista</button>
+        <button class="btn-ctrl" id="btn-fs-bottom" onclick="toggleFullscreen()">⛶ Pantalla Completa</button>
       </div>
     </div>
 
@@ -325,11 +327,20 @@
     gridHelper.position.y = 0.0;
     scene.add(gridHelper);
 
+    function isMobileScreen() {
+      return window.innerWidth < 768 || (window.innerWidth / window.innerHeight) < 1.0;
+    }
+
+    function getDefaultCameraRadius() {
+      // En teléfonos móviles aproxima la cámara a 1.65m (~40% más grande) para llenar la pantalla vertical
+      return isMobileScreen() ? 1.65 : 1.95;
+    }
+
     // Cámara Orbital + Manipulación Directa de Objetos con Raycaster
     const camOrbit = {
       theta: 0.32,
       phi: 1.18,
-      radius: 2.35,
+      radius: getDefaultCameraRadius(),
       target: new THREE.Vector3(0, 0.58, 0),
       isOrbiting: false,
       isDraggingObject: false,
@@ -345,7 +356,7 @@
 
     function updateCameraOrbit() {
       camOrbit.phi = Math.max(0.2, Math.min(Math.PI / 2 - 0.04, camOrbit.phi));
-      camOrbit.radius = Math.max(0.9, Math.min(5.0, camOrbit.radius));
+      camOrbit.radius = Math.max(0.7, Math.min(5.0, camOrbit.radius));
       camera.position.x = camOrbit.target.x + camOrbit.radius * Math.sin(camOrbit.phi) * Math.sin(camOrbit.theta);
       camera.position.y = camOrbit.target.y + camOrbit.radius * Math.cos(camOrbit.phi);
       camera.position.z = camOrbit.target.z + camOrbit.radius * Math.sin(camOrbit.phi) * Math.cos(camOrbit.theta);
@@ -355,7 +366,7 @@
     function resetCameraView() {
       camOrbit.theta = 0.32;
       camOrbit.phi = 1.18;
-      camOrbit.radius = 2.35;
+      camOrbit.radius = getDefaultCameraRadius();
       camOrbit.target.set(0, 0.58, 0);
       updateCameraOrbit();
     }
@@ -429,6 +440,64 @@
       camOrbit.radius += e.deltaY * 0.0018;
       updateCameraOrbit();
     }, { passive: false });
+
+    // Gesto táctil de 2 dedos (Pinch-to-zoom) para teléfonos y tablets
+    domElem.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        camOrbit.pinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }, { passive: true });
+
+    domElem.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && camOrbit.pinchDist > 0) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const diff = camOrbit.pinchDist - dist;
+        camOrbit.radius = Math.max(0.7, Math.min(5.0, camOrbit.radius + diff * 0.005));
+        camOrbit.pinchDist = dist;
+        updateCameraOrbit();
+      }
+    }, { passive: true });
+
+    domElem.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        camOrbit.pinchDist = 0;
+      }
+    }, { passive: true });
+
+    // Modo Pantalla Completa inmersivo para el estudiante
+    function toggleFullscreen() {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (!isFs) {
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    }
+
+    function updateFsButtons() {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const b1 = document.getElementById('btn-fs-top');
+      const b2 = document.getElementById('btn-fs-bottom');
+      if (b1) {
+        b1.innerText = isFs ? "✕ Salir Fullscreen" : "⛶ Pantalla Completa";
+        b1.style.color = isFs ? "#10b981" : "var(--text-primary)";
+      }
+      if (b2) {
+        b2.innerText = isFs ? "✕ Salir Fullscreen" : "⛶ Pantalla Completa";
+        b2.style.color = isFs ? "#10b981" : "var(--text-primary)";
+      }
+    }
+    document.addEventListener('fullscreenchange', updateFsButtons);
+    document.addEventListener('webkitfullscreenchange', updateFsButtons);
 
     function onResize() {
       const container = document.getElementById('canvas-wrap');
