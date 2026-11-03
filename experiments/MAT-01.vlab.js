@@ -1,39 +1,82 @@
 window.VLabExperiments = window.VLabExperiments || {};
 window.VLabExperiments['MAT-01'] = {
   id: 'MAT-01',
-  title: 'Visor Holográfico de Funciones 3D z = f(x,y,t)',
+  title: 'Graficador de Superficies 3D z = f(x,y,t)',
   block: 'K',
-  category: 'Matemáticas y Campos 3D',
-  formula: 'z(x, y, t) = A · f(k·x, k·y, ω·t)   [r = √(x² + y²)]',
-  description: 'Graficador holográfico multivariable en tiempo real. El docente puede escribir cualquier expresión matemática f(x, y, t, r, theta) o elegir un preset y toda la clase verá la malla 3D deformarse en vivo a 60 FPS.',
+  category: 'Cálculo Multivariable',
+  formula: 'z = f(x, y, t)   [r = √(x² + y²)]',
+  description: 'Selecciona una función del catálogo académico o escribe cualquier expresión matemática en términos de (x, y, t, r) para visualizar la superficie tridimensional en tiempo real.',
   hasCustomFormulaInput: true,
+  hasImpulse: false, // Oculta el botón de Impulso (no aplica a superficies matemáticas)
   defaultFormula: 'A * sin(k * r - w * t) / (1 + 0.35 * r)',
+  exampleFunctions: [
+    {
+      name: '1. Onda Circular Amortiguada (Sinc Radial)',
+      expr: 'A * sin(k * r - w * t) / (1 + 0.35 * r)',
+      params: { A: 0.50, k: 2.8, w: 3.0, domain: 3.5 }
+    },
+    {
+      name: '2. Paraboloide Hiperbólico (Silla de Montar)',
+      expr: '0.12 * A * (x^2 - y^2) * cos(0.5 * w * t)',
+      params: { A: 0.65, k: 2.0, w: 2.0, domain: 3.0 }
+    },
+    {
+      name: '3. Paraboloide Elíptico (Cuenco 3D)',
+      expr: '0.12 * A * (x^2 + y^2) - 0.35',
+      params: { A: 0.60, k: 2.0, w: 0.0, domain: 3.0 }
+    },
+    {
+      name: '4. Campana de Gauss Bidimensional',
+      expr: 'A * exp(-0.4 * (x^2 + y^2)) * cos(w * t)',
+      params: { A: 0.55, k: 2.0, w: 2.5, domain: 3.0 }
+    },
+    {
+      name: '5. Interferencia de Dos Fuentes Coherentes',
+      expr: '0.5 * A * (sin(k * sqrt((x-1.2)^2 + y^2) - w*t) + sin(k * sqrt((x+1.2)^2 + y^2) - w*t))',
+      params: { A: 0.45, k: 3.0, w: 3.0, domain: 3.5 }
+    },
+    {
+      name: '6. Modo Normal de Membrana Cuadrada ( Ondas Estacionarias )',
+      expr: 'A * sin(0.8 * k * x) * cos(0.8 * k * y) * cos(w * t)',
+      params: { A: 0.45, k: 1.5, w: 2.5, domain: 3.0 }
+    },
+    {
+      name: '7. Dipolo / Gradiente de Campana (x · exp(-r²))',
+      expr: '1.2 * A * x * exp(-0.45 * (x^2 + y^2)) * cos(0.6 * w * t)',
+      params: { A: 0.55, k: 2.0, w: 2.0, domain: 3.0 }
+    },
+    {
+      name: '8. Superficie Espiral / Fase Helicoidal',
+      expr: '0.35 * A * sin(2 * atan2(y, x) + k * r - w * t)',
+      params: { A: 0.55, k: 2.2, w: 2.8, domain: 3.2 }
+    }
+  ],
   params: [
-    { key: 'A', label: 'Amplitud Escalar (A)', unit: '', min: 0.1, max: 1.0, step: 0.05, default: 0.45 },
-    { key: 'k', label: 'Frecuencia Espacial (k)', unit: 'rad/m', min: 0.5, max: 6.0, step: 0.25, default: 2.5 },
-    { key: 'w', label: 'Velocidad Temporal (ω)', unit: 'rad/s', min: 0.0, max: 8.0, step: 0.5, default: 3.0 },
-    { key: 'domain', label: 'Rango del Dominio (±X, ±Y)', unit: 'u', min: 1.5, max: 6.0, step: 0.5, default: 3.0 }
+    { key: 'A', label: 'Escala Vertical / Amplitud (A)', unit: '', min: 0.1, max: 1.0, step: 0.05, default: 0.50 },
+    { key: 'k', label: 'Frecuencia Espacial (k)', unit: 'rad/u', min: 0.5, max: 5.0, step: 0.25, default: 2.8 },
+    { key: 'w', label: 'Velocidad Temporal (ω)', unit: 'rad/s', min: 0.0, max: 6.0, step: 0.5, default: 3.0 },
+    { key: 'domain', label: 'Dominio de Graficación (±X, ±Y)', unit: 'u', min: 1.5, max: 5.0, step: 0.5, default: 3.5 }
   ],
   presets: [
     {
-      label: '🌊 Onda Esférica Sinc',
+      label: 'Onda Circular Sinc',
       formula: 'A * sin(k * r - w * t) / (1 + 0.35 * r)',
-      values: { A: 0.48, k: 2.8, w: 3.5, domain: 3.5 }
+      values: { A: 0.50, k: 2.8, w: 3.0, domain: 3.5 }
     },
     {
-      label: '🐎 Silla de Montar Hiperbólica',
-      formula: '0.08 * A * (x^2 - y^2) * cos(w * t * 0.5)',
-      values: { A: 0.65, k: 2.0, w: 2.5, domain: 3.0 }
+      label: 'Silla de Montar (x² - y²)',
+      formula: '0.12 * A * (x^2 - y^2) * cos(0.5 * w * t)',
+      values: { A: 0.65, k: 2.0, w: 2.0, domain: 3.0 }
     },
     {
-      label: '⚛️ Interferencia de 2 Fuentes',
+      label: 'Interferencia Doble',
       formula: '0.5 * A * (sin(k * sqrt((x-1.2)^2 + y^2) - w*t) + sin(k * sqrt((x+1.2)^2 + y^2) - w*t))',
-      values: { A: 0.42, k: 3.2, w: 3.5, domain: 3.5 }
+      values: { A: 0.45, k: 3.0, w: 3.0, domain: 3.5 }
     },
     {
-      label: '🔔 Campana de Gauss Pulsante',
-      formula: 'A * exp(-0.35 * (x^2 + y^2)) * cos(w * t)',
-      values: { A: 0.52, k: 2.0, w: 3.0, domain: 3.0 }
+      label: 'Campana de Gauss',
+      formula: 'A * exp(-0.4 * (x^2 + y^2)) * cos(w * t)',
+      values: { A: 0.55, k: 2.0, w: 2.5, domain: 3.0 }
     }
   ],
   initState(params) {
@@ -47,43 +90,35 @@ window.VLabExperiments['MAT-01'] = {
   step(state, params, dt) {
     state.t += dt;
   },
-  onPush(state) {
-    state.t += 0.8;
-  },
   createScene(THREE, components, params) {
     const group = new THREE.Group();
 
-    const matBase = new THREE.MeshStandardMaterial({ color: 0x0f141c, metalness: 0.8, roughness: 0.2 });
-    const matCyan = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.6 });
+    const matBase = new THREE.MeshStandardMaterial({ color: 0x18181b, metalness: 0.5, roughness: 0.5 });
 
-    // Base Frame
-    const base = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.05, 1.18), matBase);
-    base.position.set(0, 0.025, 0);
+    // Marco base sobrio
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.04, 1.18), matBase);
+    base.position.set(0, 0.02, 0);
     group.add(base);
 
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(1.20, 0.015, 1.20), matCyan);
-    trim.position.set(0, 0.052, 0);
-    group.add(trim);
-
-    // Coordinate Axes (X: Cyan, Y: Blue, Z: Green vertical)
-    const axisY = 0.58;
-    const xAxis = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 1.15, 8), new THREE.MeshBasicMaterial({ color: 0x00f2fe }));
+    // Ejes Coordenados (X: Rojo tenue, Y: Azul tenue, Z: Verde tenue vertical)
+    const axisY = 0.56;
+    const xAxis = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 1.18, 8), new THREE.MeshBasicMaterial({ color: 0xf87171 }));
     xAxis.rotation.z = Math.PI / 2;
     xAxis.position.set(0, axisY, 0);
     group.add(xAxis);
 
-    const yAxis = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 1.15, 8), new THREE.MeshBasicMaterial({ color: 0x4facfe }));
+    const yAxis = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 1.18, 8), new THREE.MeshBasicMaterial({ color: 0x60a5fa }));
     yAxis.rotation.x = Math.PI / 2;
     yAxis.position.set(0, axisY, 0);
     group.add(yAxis);
 
-    const zAxis = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.95, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+    const zAxis = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.96, 8), new THREE.MeshBasicMaterial({ color: 0x34d399 }));
     zAxis.position.set(0, axisY, 0);
     group.add(zAxis);
 
-    // Parametric Surface Grid (44x44 vertices)
-    const res = 44;
-    const size = 1.08;
+    // Malla Paramétrica de Alta Resolución (48x48)
+    const res = 48;
+    const size = 1.12;
     const geo = new THREE.PlaneGeometry(size, size, res, res);
     geo.rotateX(-Math.PI / 2);
 
@@ -94,32 +129,32 @@ window.VLabExperiments['MAT-01'] = {
     const surfMat = new THREE.MeshStandardMaterial({
       vertexColors: true,
       side: THREE.DoubleSide,
-      roughness: 0.22,
-      metalness: 0.25
+      roughness: 0.35,
+      metalness: 0.15
     });
     const surfMesh = new THREE.Mesh(geo, surfMat);
     surfMesh.position.y = axisY;
     group.add(surfMesh);
 
-    const wireMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true, transparent: true, opacity: 0.24 });
+    const wireMat = new THREE.MeshBasicMaterial({ color: 0x1e293b, wireframe: true, transparent: true, opacity: 0.28 });
     const wireMesh = new THREE.Mesh(geo, wireMat);
-    wireMesh.position.y = axisY + 0.002;
+    wireMesh.position.y = axisY + 0.0015;
     group.add(wireMesh);
 
     return {
       group,
       update(state, p) {
-        const exprStr = p.formulaExpr || state.expr || 'A * sin(k * r - w * t) / (1 + 0.35 * r)';
+        const exprStr = (p.formulaExpr && p.formulaExpr.trim()) ? p.formulaExpr : (state.expr || 'A * sin(k * r - w * t) / (1 + 0.35 * r)');
         if (state.lastExpr !== exprStr || !state.compiledFn) {
           state.lastExpr = exprStr;
           state.compiledFn = components.MathParser.compile(exprStr);
         }
 
         const evalFn = state.compiledFn;
-        const A = p.A !== undefined ? p.A : 0.45;
-        const k = p.k !== undefined ? p.k : 2.5;
+        const A = p.A !== undefined ? p.A : 0.50;
+        const k = p.k !== undefined ? p.k : 2.8;
         const w = p.w !== undefined ? p.w : 3.0;
-        const dom = p.domain !== undefined ? p.domain : 3.0;
+        const dom = p.domain !== undefined ? p.domain : 3.5;
 
         const pos = geo.attributes.position;
         const col = geo.attributes.color;
@@ -130,20 +165,21 @@ window.VLabExperiments['MAT-01'] = {
           const vz = pos.getZ(i);
           const x = (vx / (size / 2)) * dom;
           const y = (vz / (size / 2)) * dom;
-          let z = evalFn(x, y, state.t, A, k, w, 1.0);
+          let z = evalFn(x, y, state.t || 0, A, k, w, 1.0);
           z = Math.max(-0.48, Math.min(0.48, z));
           pos.setY(i, z);
 
           if (z < zMin) zMin = z;
           if (z > zMax) zMax = z;
 
-          const norm = Math.max(0, Math.min(1, (z + 0.42) / 0.84));
+          // Mapa de calor científico tipo Viridis/Académico (Índigo -> Azul -> Verde Esmeralda -> Ámbar suave)
+          const norm = Math.max(0, Math.min(1, (z + 0.40) / 0.80));
           if (norm < 0.5) {
             const u = norm * 2;
-            col.setXYZ(i, 0.42 * (1 - u), 0.15 * (1 - u) + 0.68 * u, 0.88 * (1 - u) + 1.0 * u);
+            col.setXYZ(i, 0.22 * (1 - u) + 0.12 * u, 0.25 * (1 - u) + 0.58 * u, 0.65 * (1 - u) + 0.85 * u);
           } else {
             const u = (norm - 0.5) * 2;
-            col.setXYZ(i, 0.1 * u, 0.68 * (1 - u) + 1.0 * u, 1.0 * (1 - u) + 0.65 * u);
+            col.setXYZ(i, 0.12 * (1 - u) + 0.20 * u, 0.58 * (1 - u) + 0.82 * u, 0.85 * (1 - u) + 0.55 * u);
           }
         }
         pos.needsUpdate = true;
@@ -152,7 +188,7 @@ window.VLabExperiments['MAT-01'] = {
 
         state.zMin = zMin;
         state.zMax = zMax;
-        state.zOrigin = evalFn(0, 0, state.t, A, k, w, 1.0);
+        state.zOrigin = evalFn(0, 0, state.t || 0, A, k, w, 1.0);
       }
     };
   },
@@ -162,32 +198,10 @@ window.VLabExperiments['MAT-01'] = {
     const zMax = state.zMax !== undefined ? state.zMax.toFixed(3) : '0.450';
     const zMin = state.zMin !== undefined ? state.zMin.toFixed(3) : '-0.450';
     return [
-      { label: 'Función Activa', value: exprStr.length > 22 ? exprStr.substring(0, 22) + '…' : exprStr },
-      { label: 'Valor en Origen f(0,0,t)', value: z0 },
-      { label: 'Cota Máxima / Mínima', value: `${zMax} / ${zMin}` },
-      { label: 'Malla GPU Activa', value: '45×45 (2,025 vértices)' }
+      { label: 'Expresión Activa', value: exprStr.length > 24 ? exprStr.substring(0, 24) + '…' : exprStr },
+      { label: 'Valor en f(0, 0, t)', value: z0 },
+      { label: 'Máximo / Mínimo Z', value: `${zMax} / ${zMin}` },
+      { label: 'Dominio XY', value: `[-${params.domain || 3.5}, +${params.domain || 3.5}]` }
     ];
-  },
-  questions: [
-    {
-      q: 'En una onda circular bidimensional z = A·sin(k·r - ω·t), ¿qué representa la coordenada radial r?',
-      options: [
-        'A) La distancia al origen en el plano XY: r = √(x² + y²)',
-        'B) La derivada parcial respecto al tiempo',
-        'C) El producto x · y',
-        'D) La altura fija del eje Z'
-      ],
-      answer: 0
-    },
-    {
-      q: '¿Qué tipo de superficie cuádrica describe la ecuación z = x² - y² en el origen (0,0)?',
-      options: [
-        'A) Una esfera cerrada',
-        'B) Un paraboloide hiperbólico con punto de silla (Silla de Montar)',
-        'C) Un plano horizontal constante',
-        'D) Un cilindro circular recto'
-      ],
-      answer: 1
-    }
-  ]
+  }
 };

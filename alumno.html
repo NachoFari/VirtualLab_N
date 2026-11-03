@@ -4,31 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <title>Cámara AR • 5 Experimentos | VirtualLab_N</title>
+  <title>Cámara AR | VirtualLab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- A-Frame y AR.js -->
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
-  <!-- Componentes y 5 Experimentos Interactivos -->
-  <script src="assets/components/math_parser.js?v=rev17"></script>
-  <script src="assets/components/surface_grid.js?v=rev17"></script>
-  <script src="experiments/MEC-01.vlab.js?v=rev17"></script>
-  <script src="experiments/MEC-02.vlab.js?v=rev17"></script>
-  <script src="experiments/OPT-01.vlab.js?v=rev17"></script>
-  <script src="experiments/QC-01.vlab.js?v=rev17"></script>
-  <script src="experiments/MAT-01.vlab.js?v=rev17"></script>
+  <script src="assets/components/math_parser.js?v=rev18"></script>
+  <script src="assets/components/surface_grid.js?v=rev18"></script>
+  <script src="experiments/MEC-01.vlab.js?v=rev18"></script>
+  <script src="experiments/MEC-02.vlab.js?v=rev18"></script>
+  <script src="experiments/OPT-01.vlab.js?v=rev18"></script>
+  <script src="experiments/QC-01.vlab.js?v=rev18"></script>
+  <script src="experiments/MAT-01.vlab.js?v=rev18"></script>
   
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Inter', sans-serif; overflow: hidden; background: #000; }
+    body { font-family: 'Inter', -apple-system, sans-serif; overflow: hidden; background: #000; }
     
-    /* Overlay 2D de detección láser de cuadrados en tiempo real */
     #quad-overlay {
       position: fixed; inset: 0; width: 100vw; height: 100vh;
       pointer-events: none; z-index: 99996;
@@ -36,7 +31,7 @@
 
     .ar-ui-container {
       position: fixed; inset: 0; pointer-events: none; z-index: 99999;
-      display: flex; flex-direction: column; justify-content: space-between; padding: 0.65rem;
+      display: flex; flex-direction: column; justify-content: space-between; padding: 0.7rem;
     }
     .top-header-group {
       display: flex; flex-direction: column; gap: 0.45rem; pointer-events: auto;
@@ -45,74 +40,62 @@
       display: flex; justify-content: space-between; align-items: center; gap: 0.35rem; flex-wrap: wrap;
     }
     .badge {
-      background: rgba(15, 20, 28, 0.92); border: 1px solid rgba(0, 242, 254, 0.5);
-      color: #00f2fe; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
-      padding: 0.35rem 0.7rem; border-radius: 20px; backdrop-filter: blur(8px);
-      display: flex; align-items: center; gap: 0.38rem; text-decoration: none;
+      background: rgba(18, 21, 29, 0.92); border: 1px solid #262b3a;
+      color: #f1f5f9; font-size: 0.75rem; font-weight: 600;
+      padding: 0.38rem 0.75rem; border-radius: 6px; backdrop-filter: blur(8px);
+      display: flex; align-items: center; gap: 0.4rem; text-decoration: none;
     }
     .pulse-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: #00f2fe;
-      box-shadow: 0 0 8px #00f2fe; display: inline-block;
+      width: 8px; height: 8px; border-radius: 50%; background: #64748b; display: inline-block;
     }
-    .pulse-dot.locked {
-      background: #10b981; box-shadow: 0 0 10px #10b981;
-    }
-    .btn-marker-help {
-      background: rgba(15, 20, 28, 0.9); border: 1px solid #00f2fe; color: #00f2fe;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 700;
-      padding: 0.35rem 0.65rem; border-radius: 20px; text-decoration: none; pointer-events: auto;
-      backdrop-filter: blur(8px);
+    .pulse-dot.locked { background: #10b981; }
+    .btn-top {
+      background: rgba(18, 21, 29, 0.92); border: 1px solid #262b3a; color: #f1f5f9;
+      font-size: 0.74rem; font-weight: 500; padding: 0.38rem 0.7rem; border-radius: 6px;
+      text-decoration: none; pointer-events: auto; backdrop-filter: blur(8px); cursor: pointer;
     }
 
-    /* Carrusel de los 5 Experimentos en AR */
     .exp-carousel {
-      display: flex; gap: 0.35rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 0.15rem;
+      display: flex; gap: 0.35rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 0.1rem;
     }
     .exp-carousel::-webkit-scrollbar { display: none; }
     .exp-chip {
-      background: rgba(15, 20, 28, 0.88); border: 1px solid rgba(0, 242, 254, 0.32);
-      color: #cbd5e1; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
-      font-weight: 700; padding: 0.36rem 0.7rem; border-radius: 16px; white-space: nowrap;
-      cursor: pointer; backdrop-filter: blur(8px); transition: all 0.18s;
+      background: rgba(18, 21, 29, 0.88); border: 1px solid #262b3a;
+      color: #94a3b8; font-size: 0.72rem; font-weight: 500;
+      padding: 0.36rem 0.75rem; border-radius: 6px; white-space: nowrap;
+      cursor: pointer; backdrop-filter: blur(8px);
     }
     .exp-chip.active {
-      background: linear-gradient(135deg, #00f2fe, #4facfe);
-      color: #000; border-color: transparent; box-shadow: 0 0 12px rgba(0,242,254,0.45);
+      background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600;
     }
     
-    /* Retícula de Enfoque Visual */
     .focus-reticle {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.4);
-      width: 115px; height: 115px; border: 2px dashed #00f2fe; border-radius: 16px;
-      pointer-events: none; opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 0 25px rgba(0, 242, 254, 0.6); z-index: 99998;
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1.3);
+      width: 110px; height: 110px; border: 1.5px dashed #f1f5f9; border-radius: 12px;
+      pointer-events: none; opacity: 0; transition: all 0.25s ease; z-index: 99998;
     }
-    .focus-reticle.active {
-      opacity: 1; transform: translate(-50%, -50%) scale(1.0);
-    }
+    .focus-reticle.active { opacity: 0.85; transform: translate(-50%, -50%) scale(1.0); }
 
-    /* Toast con desaparición suave automática */
     .status-toast {
-      align-self: center; background: rgba(7, 9, 14, 0.92); border: 1px solid #00f2fe;
-      color: #00f2fe; font-family: 'JetBrains Mono', monospace; font-size: 0.73rem;
-      padding: 0.42rem 1rem; border-radius: 20px; box-shadow: 0 0 15px rgba(0,242,254,0.3);
-      text-align: center; transition: opacity 0.4s ease; pointer-events: none;
+      align-self: center; background: rgba(18, 21, 29, 0.92); border: 1px solid #262b3a;
+      color: #f1f5f9; font-size: 0.75rem; font-weight: 500;
+      padding: 0.45rem 1rem; border-radius: 6px; text-align: center;
+      transition: opacity 0.35s ease; pointer-events: none;
     }
 
     .bottom-hud {
-      background: rgba(15, 20, 28, 0.92); border: 1px solid rgba(0, 242, 254, 0.35);
-      border-radius: 14px; padding: 0.65rem 0.9rem; backdrop-filter: blur(10px);
+      background: rgba(18, 21, 29, 0.92); border: 1px solid #262b3a;
+      border-radius: 8px; padding: 0.7rem 0.95rem; backdrop-filter: blur(10px);
       display: flex; flex-direction: column; gap: 0.28rem; pointer-events: auto;
     }
     .hud-line {
-      display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #fff;
+      display: flex; justify-content: space-between; font-size: 0.74rem; color: #94a3b8;
     }
-    .hud-line span:last-child { color: #00f2fe; font-weight: 700; }
+    .hud-line span:last-child { font-family: 'JetBrains Mono', monospace; color: #f1f5f9; font-weight: 500; }
   </style>
 
-  <!-- Auto Cache-Buster Revision 17 (Turbo-Lock + 5 Experimentos + Switch a Visor 3D) -->
   <script>
-    const CURRENT_REV = "rev17_multi_5exp";
+    const CURRENT_REV = "rev18_clean";
     const paramsUrl = new URLSearchParams(window.location.search);
     if (paramsUrl.get("v") !== CURRENT_REV) {
       paramsUrl.set("v", CURRENT_REV);
@@ -122,74 +105,64 @@
 </head>
 <body>
 
-  <!-- Canvas de Detección Óptica de Cuadrados en Vivo -->
   <canvas id="quad-overlay"></canvas>
-
-  <!-- Retícula de Enfoque en Pantalla -->
   <div class="focus-reticle" id="focus-reticle"></div>
 
-  <!-- UI FLOTANTE AMIGABLE -->
   <div class="ar-ui-container">
     <div class="top-header-group">
       <div class="top-bar">
         <a href="index.html" class="badge">
           <span class="pulse-dot" id="lock-dot"></span>
-          <span id="badge-text">VLAB_N • AR V17</span>
+          <span>VirtualLab • AR</span>
         </a>
-        <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
-          <a href="visor3d.html?exp=MEC-01" id="btn-go-3d" class="btn-marker-help" style="background:rgba(16,185,129,0.22); border-color:#10b981; color:#10b981;">🧊 Visor 3D</a>
-          <button class="btn-marker-help" id="btn-orient-toggle" style="cursor:pointer;">🖥️ Mesa</button>
-          <button class="btn-marker-help" id="btn-focus-top" style="cursor:pointer;">🎯 Enfocar</button>
-          <a href="marcador.html?v=rev16" target="_blank" class="btn-marker-help">📄 Diana</a>
+        <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+          <a href="visor3d.html?exp=MEC-01" id="btn-go-3d" class="btn-top" style="background:#3b82f6; border-color:#3b82f6; color:#fff;">Visor 3D</a>
+          <button class="btn-top" id="btn-orient-toggle">Modo Mesa</button>
+          <button class="btn-top" id="btn-focus-top">Enfocar</button>
+          <a href="marcador.html?v=rev18" target="_blank" class="btn-top">Marcador</a>
         </div>
       </div>
 
-      <!-- Selector Rápido de los 5 Experimentos en AR -->
       <div class="exp-carousel">
-        <button class="exp-chip active" data-id="MEC-01" onclick="selectExperiment('MEC-01')">⏱️ 1. Péndulo</button>
-        <button class="exp-chip" data-id="MEC-02" onclick="selectExperiment('MEC-02')">🔩 2. Resorte</button>
-        <button class="exp-chip" data-id="OPT-01" onclick="selectExperiment('OPT-01')">🔦 3. Snell Láser</button>
-        <button class="exp-chip" data-id="QC-01" onclick="selectExperiment('QC-01')">⚛️ 4. Qubits Bell</button>
-        <button class="exp-chip" data-id="MAT-01" onclick="selectExperiment('MAT-01')">📈 5. Función 3D</button>
+        <button class="exp-chip active" data-id="MEC-01" onclick="selectExperiment('MEC-01')">1. Péndulo</button>
+        <button class="exp-chip" data-id="MEC-02" onclick="selectExperiment('MEC-02')">2. Resorte</button>
+        <button class="exp-chip" data-id="OPT-01" onclick="selectExperiment('OPT-01')">3. Snell</button>
+        <button class="exp-chip" data-id="QC-01" onclick="selectExperiment('QC-01')">4. Qubits</button>
+        <button class="exp-chip" data-id="MAT-01" onclick="selectExperiment('MAT-01')">5. Superficies 3D</button>
       </div>
     </div>
 
     <div class="status-toast" id="tracking-status">
-      🔍 Apunta la cámara al cuadro negro de la Diana (o toca 🧊 Visor 3D)
+      Apunta la cámara al marcador cuadrado (o abre el Visor 3D)
     </div>
 
     <div class="bottom-hud">
-      <div class="hud-line"><span>Estado Óptico:</span> <span id="ar-track">Escaneando Cuadro...</span></div>
-      <div class="hud-line"><span>Experimento:</span> <span id="ar-exp-name" style="color:#10b981;">Péndulo Simple</span></div>
+      <div class="hud-line"><span>Seguimiento óptico:</span> <span id="ar-track">Buscando marcador...</span></div>
+      <div class="hud-line"><span>Práctica activa:</span> <span id="ar-exp-name">Péndulo Simple</span></div>
       <div id="ar-dynamic-metrics"></div>
     </div>
   </div>
 
-  <!-- ESCENA AR CON PROPORCIÓN 4:3 EXACTA (640x480 SIN DEFORMACIÓN RECTANGULAR) -->
+  <!-- ESCENA AR CON PROPORCIÓN 4:3 EXACTA E ILUMINACIÓN NEUTRA DE LABORATORIO -->
   <a-scene embedded 
            vr-mode-ui="enabled: false"
            renderer="logarithmicDepthBuffer: true; antialias: true; precision: mediump;"
            arjs="sourceType: webcam; sourceWidth: 640; sourceHeight: 480; canvasWidth: 640; canvasHeight: 480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; trackingMethod: best; maxDetectionRate: 60; patternRatio: 0.5;">
     
-    <a-entity light="type: ambient; color: #ffffff; intensity: 1.25;"></a-entity>
-    <a-entity light="type: directional; color: #00f2fe; intensity: 1.5; position: 1 3 2;"></a-entity>
+    <a-entity light="type: ambient; color: #ffffff; intensity: 1.05;"></a-entity>
+    <a-entity light="type: directional; color: #ffffff; intensity: 0.85; position: 2 5 3;"></a-entity>
 
-    <!-- 1. DIANA OFICIAL NATEX (16x16 Bloques Puros) -->
-    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt?v=rev16" patternRatio="0.5" 
+    <a-marker type="pattern" preset="custom" url="./pattern-natex.patt?v=rev18" patternRatio="0.5" 
               minConfidence="0.08" emitsEvents="true" id="natex-target">
     </a-marker>
 
-    <!-- 2. FALLBACK UNIVERSAL HIRO -->
     <a-marker preset="hiro" minConfidence="0.08" emitsEvents="true" id="hiro-target">
     </a-marker>
 
-    <!-- 3. FALLBACK MATRIZ BINARIA 3x3 -->
     <a-marker type="barcode" value="5" emitsEvents="true" id="barcode-target">
     </a-marker>
 
-    <!-- ANCLAJE UNIVERSAL ULTRA-ESTABLE -->
     <a-entity id="stabilized-anchor" visible="false">
-      <a-ring position="0 0.01 0" rotation="-90 0 0" radius-inner="0.38" radius-outer="0.44" color="#00f2fe" material="emissive: #00f2fe; emissiveIntensity: 0.85; side: double;"></a-ring>
       <a-entity id="apparatus-container" position="0 0 0" rotation="0 0 0" scale="0.52 0.52 0.52"></a-entity>
     </a-entity>
 
@@ -227,16 +200,14 @@
         clearTimeout(toastTimer);
         trackStatus.style.display = "block";
         trackStatus.style.opacity = "1";
-        trackStatus.innerText = "🎯 ¡" + name + " Anclado en 3D!";
-        trackStatus.style.borderColor = "#10b981";
-        trackStatus.style.color = "#10b981";
+        trackStatus.innerText = "Marcador anclado (" + name + ")";
 
         toastTimer = setTimeout(() => {
           trackStatus.style.opacity = "0";
-          setTimeout(() => { trackStatus.style.display = "none"; }, 400);
-        }, 2000);
+          setTimeout(() => { trackStatus.style.display = "none"; }, 350);
+        }, 1800);
       }
-      arTrackText.innerText = "ANCLADO (" + name + ")";
+      arTrackText.innerText = "Anclado (" + name + ")";
       arTrackText.style.color = "#10b981";
     }
 
@@ -246,11 +217,9 @@
       clearTimeout(toastTimer);
       trackStatus.style.display = "block";
       trackStatus.style.opacity = "1";
-      trackStatus.innerText = "🔍 Apunta al cuadro de la Diana (o usa 🧊 Visor 3D)";
-      trackStatus.style.borderColor = "#00f2fe";
-      trackStatus.style.color = "#00f2fe";
-      arTrackText.innerText = "Escaneando Cuadro...";
-      arTrackText.style.color = "#00f2fe";
+      trackStatus.innerText = "Apunta la cámara al marcador cuadrado";
+      arTrackText.innerText = "Buscando marcador...";
+      arTrackText.style.color = "#f1f5f9";
     }
 
     function flashStatus(text) {
@@ -258,15 +227,12 @@
       trackStatus.style.display = "block";
       trackStatus.style.opacity = "1";
       trackStatus.innerText = text;
-      trackStatus.style.borderColor = "#00f2fe";
-      trackStatus.style.color = "#00f2fe";
       toastTimer = setTimeout(() => {
         trackStatus.style.opacity = "0";
-        setTimeout(() => { trackStatus.style.display = "none"; }, 400);
-      }, 2000);
+        setTimeout(() => { trackStatus.style.display = "none"; }, 350);
+      }, 1800);
     }
 
-    // MOTOR MULTI-EXPERIMENTO DENTRO DEL CONTENEDOR AR
     let currentExpId = new URLSearchParams(window.location.search).get('exp') || 'MEC-01';
     if (!window.VLabExperiments[currentExpId]) currentExpId = 'MEC-01';
 
@@ -313,7 +279,6 @@
       `).join('');
     }
 
-    // Enfoque de cámara sin alterar el aspect ratio 4:3
     let currentVideoTrack = null;
     function setupCameraFocusOnly() {
       let attempts = 0;
@@ -342,9 +307,8 @@
       const reticle = document.getElementById('focus-reticle');
       if (reticle) {
         reticle.classList.add('active');
-        setTimeout(() => reticle.classList.remove('active'), 750);
+        setTimeout(() => reticle.classList.remove('active'), 650);
       }
-      if (navigator.vibrate) navigator.vibrate(35);
       if (currentVideoTrack && currentVideoTrack.applyConstraints) {
         try {
           const caps = currentVideoTrack.getCapabilities ? currentVideoTrack.getCapabilities() : {};
@@ -353,7 +317,7 @@
           }
         } catch (e) {}
       }
-      flashStatus("🎯 Enfocando lente sobre el cuadro...");
+      flashStatus("Ajustando enfoque óptico...");
     }
 
     document.getElementById('btn-focus-top').onclick = (e) => {
@@ -362,14 +326,13 @@
     };
     window.addEventListener('load', setupCameraFocusOnly);
 
-    // Orientación Mesa vs Pared
     let currentOrientation = 'desk';
     function applyOrientation(mode) {
       currentOrientation = mode;
       const rot = (mode === 'wall') ? "-90 0 0" : "0 0 0";
       if (apparatusContainer) apparatusContainer.setAttribute('rotation', rot);
       const btn = document.getElementById('btn-orient-toggle');
-      if (btn) btn.innerText = (mode === 'wall') ? "🧱 Pared" : "🖥️ Mesa";
+      if (btn) btn.innerText = (mode === 'wall') ? "Modo Pared" : "Modo Mesa";
     }
 
     document.getElementById('btn-orient-toggle').onclick = (e) => {
@@ -378,7 +341,6 @@
       flashStatus("Proyección: " + (currentOrientation === 'wall' ? "Pared / Monitor" : "Mesa"));
     };
 
-    // Sincronización MQTT por Eventos con el Profesor
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
     client.on('connect', () => {
       client.subscribe("vlab-n/sala-natex");
@@ -398,17 +360,13 @@
           if (payload.orientation && payload.orientation !== currentOrientation) {
             applyOrientation(payload.orientation);
           }
-          if (payload.action === 'RESET' || payload.action === 'PUSH' || payload.action === 'SYNC_ALL') {
-            if (payload.state) Object.assign(expState, payload.state);
+          if (payload.state && (payload.action === 'RESET' || payload.action === 'PUSH' || payload.action === 'DRAG' || payload.action === 'SYNC_ALL')) {
+            Object.assign(expState, payload.state);
           }
-          flashStatus("⚡ Sincronizado con el Profesor");
         }
       } catch (e) {}
     });
 
-    // ============================================================================
-    // MOTOR TURBO-LOCK V16/V17 (4:3 + Matrix Decompose + Multi-Threshold + Quad Lock)
-    // ============================================================================
     let activeMarkerObj = null;
     let activeMarkerName = "Diana";
     let lastSeenTime = 0;
@@ -455,10 +413,8 @@
         else quadCtx.lineTo(px, py);
       }
       quadCtx.closePath();
-      quadCtx.lineWidth = 3;
-      quadCtx.strokeStyle = isLocked ? '#10b981' : '#00f2fe';
-      quadCtx.shadowColor = isLocked ? '#10b981' : '#00f2fe';
-      quadCtx.shadowBlur = 12;
+      quadCtx.lineWidth = 2.5;
+      quadCtx.strokeStyle = isLocked ? '#10b981' : '#3b82f6';
       quadCtx.stroke();
       quadCtx.restore();
     }
@@ -477,17 +433,17 @@
 
       if (natexMarker.object3D && natexMarker.object3D.visible) {
         activeMarkerObj = natexMarker.object3D;
-        activeMarkerName = "Diana Natex";
+        activeMarkerName = "Natex";
         activeMarkerObj.matrix.decompose(targetPos, targetQuat, tempScale);
         poseFoundThisFrame = true;
       } else if (hiroMarker.object3D && hiroMarker.object3D.visible) {
         activeMarkerObj = hiroMarker.object3D;
-        activeMarkerName = "Diana Hiro";
+        activeMarkerName = "Hiro";
         activeMarkerObj.matrix.decompose(targetPos, targetQuat, tempScale);
         poseFoundThisFrame = true;
       } else if (barcodeMarker.object3D && barcodeMarker.object3D.visible) {
         activeMarkerObj = barcodeMarker.object3D;
-        activeMarkerName = "Matriz 3x3";
+        activeMarkerName = "Matriz";
         activeMarkerObj.matrix.decompose(targetPos, targetQuat, tempScale);
         poseFoundThisFrame = true;
       }
@@ -517,7 +473,7 @@
               rawMatrix.decompose(targetPos, targetQuat, tempScale);
               if (targetPos.lengthSq() > 0.01 && targetPos.lengthSq() < 100) {
                 poseFoundThisFrame = true;
-                activeMarkerName = "Cuadro Óptico";
+                activeMarkerName = "Cuadro";
               }
             } catch (e) {}
           }
@@ -563,7 +519,6 @@
         }
       }
 
-      // FÍSICA DEL EXPERIMENTO ACTIVO
       if (!isPaused && currentExp && currentExp.step) {
         currentExp.step(expState, expParams, dt);
       }

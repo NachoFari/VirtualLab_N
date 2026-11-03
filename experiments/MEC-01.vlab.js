@@ -3,29 +3,31 @@ window.VLabExperiments['MEC-01'] = {
   id: 'MEC-01',
   title: 'Péndulo Simple y Conservación de Energía',
   block: 'A',
-  category: 'Mecánica y Oscilaciones',
-  formula: 'T = 2π √(L / g)  ;  θ̈ + (γ)θ̇ + (g/L)·sin(θ) = 0',
-  description: 'Soporte telescópico Natex con péndulo no lineal integrado mediante Runge-Kutta de 4° orden (RK4). La altura del mástil se ajusta automáticamente con la longitud L para evitar colisiones con la base.',
+  category: 'Mecánica Clásica',
+  formula: 'T = 2π √(L / g)  ;  θ̈ + γ·θ̇ + (g/L)·sin(θ) = 0',
+  description: 'Puedes arrastrar la esfera directamente con el mouse/dedo para soltarla desde cualquier ángulo inicial, o ajustar la longitud L, masa m y gravedad g.',
+  hasImpulse: true,
   params: [
-    { key: 'length', label: 'Longitud de Cuerda (L)', unit: 'm', min: 0.25, max: 1.8, step: 0.05, default: 0.70 },
+    { key: 'length', label: 'Longitud de Cuerda (L)', unit: 'm', min: 0.25, max: 1.8, step: 0.05, default: 0.75 },
     { key: 'mass', label: 'Masa de la Esfera (m)', unit: 'kg', min: 0.2, max: 5.0, step: 0.1, default: 1.0 },
     { key: 'gravity', label: 'Gravedad (g)', unit: 'm/s²', min: 0.0, max: 25.0, step: 0.1, default: 9.8 },
-    { key: 'friction', label: 'Fricción del Aire (γ)', unit: 's⁻¹', min: 0.0, max: 0.4, step: 0.01, default: 0.03 }
+    { key: 'friction', label: 'Amortiguamiento (γ)', unit: 's⁻¹', min: 0.0, max: 0.4, step: 0.01, default: 0.02 }
   ],
   presets: [
-    { label: 'Tierra (9.8 m/s²)', values: { length: 0.70, mass: 1.0, gravity: 9.8, friction: 0.03 } },
-    { label: 'Luna (1.62 m/s²)', values: { length: 0.70, mass: 1.0, gravity: 1.62, friction: 0.0 } },
-    { label: 'Júpiter (24.79 m/s²)', values: { length: 0.70, mass: 1.5, gravity: 24.79, friction: 0.05 } },
-    { label: 'Péndulo Largo Sin Roce', values: { length: 1.40, mass: 2.0, gravity: 9.8, friction: 0.0 } }
+    { label: 'Tierra (9.8 m/s²)', values: { length: 0.75, mass: 1.0, gravity: 9.8, friction: 0.02 } },
+    { label: 'Luna (1.62 m/s²)', values: { length: 0.75, mass: 1.0, gravity: 1.62, friction: 0.0 } },
+    { label: 'Júpiter (24.79 m/s²)', values: { length: 0.75, mass: 1.5, gravity: 24.79, friction: 0.04 } },
+    { label: 'Cuerda Larga Ideal', values: { length: 1.40, mass: 2.0, gravity: 9.8, friction: 0.0 } }
   ],
   initState(params) {
-    return { theta: Math.PI / 4.5, omega: 0.0, t: 0 };
+    return { theta: Math.PI / 4.5, omega: 0.0, t: 0, isDraggingObject: false };
   },
   step(state, params, dt) {
+    if (state.isDraggingObject) return;
     state.t += dt;
-    const L = Math.max(0.2, params.length || 0.7);
+    const L = Math.max(0.2, params.length || 0.75);
     const g = params.gravity !== undefined ? params.gravity : 9.8;
-    const gamma = params.friction !== undefined ? params.friction : 0.03;
+    const gamma = params.friction !== undefined ? params.friction : 0.02;
 
     const f1 = (th, om) => om;
     const f2 = (th, om) => -(g / L) * Math.sin(th) - gamma * om;
@@ -51,35 +53,31 @@ window.VLabExperiments['MEC-01'] = {
       state.omega = 1.4;
     } else {
       const dir = state.omega >= 0 ? 1 : -1;
-      state.omega += dir * 2.2;
+      state.omega += dir * 2.0;
     }
   },
   createScene(THREE, components, params) {
     const group = new THREE.Group();
 
-    const matBase = new THREE.MeshStandardMaterial({ color: 0x0f141c, metalness: 0.8, roughness: 0.2 });
-    const matCyan = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.7, metalness: 0.3, roughness: 0.15 });
-    const matSteel = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.15 });
-    const matRod = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const matBase = new THREE.MeshStandardMaterial({ color: 0x18181b, metalness: 0.6, roughness: 0.4 });
+    const matSteel = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.25 });
+    const matBrass = new THREE.MeshStandardMaterial({ color: 0x3b82f6, metalness: 0.4, roughness: 0.2 });
+    const matCord = new THREE.MeshBasicMaterial({ color: 0xe2e8f0 });
 
     // Base Plate
-    const base = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.45), matBase);
-    base.position.set(0, 0.025, 0);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.04, 0.45), matBase);
+    base.position.set(0, 0.02, 0);
     group.add(base);
 
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(0.77, 0.015, 0.47), matCyan);
-    trim.position.set(0, 0.052, 0);
-    group.add(trim);
-
-    // Telescopic Mast at the back (Z = -0.20)
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 1.0, 20), matSteel);
+    // Telescopic Mast at the back (Z = -0.18)
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0, 20), matSteel);
     group.add(mast);
 
     // Clamp & Horizontal Arm towards Z = 0
-    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.08), matCyan);
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 0.065), matBase);
     group.add(clamp);
 
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.22, 16), matSteel);
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.20, 16), matSteel);
     arm.rotation.x = Math.PI / 2;
     group.add(arm);
 
@@ -87,32 +85,48 @@ window.VLabExperiments['MEC-01'] = {
     const pivot = new THREE.Group();
     group.add(pivot);
 
-    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 1.0, 12), matRod);
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 1.0, 12), matCord);
     pivot.add(rod);
 
-    const bob = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 32), matCyan);
+    const bob = new THREE.Mesh(new THREE.SphereGeometry(0.105, 32, 32), matBrass);
+    bob.userData.isDraggable = true;
     pivot.add(bob);
 
-    // Equilibrium reference ring on base
+    // Equilibrium reference mark on base
     const eqRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.06, 0.08, 32),
-      new THREE.MeshBasicMaterial({ color: 0x00f2fe, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
+      new THREE.RingGeometry(0.04, 0.055, 32),
+      new THREE.MeshBasicMaterial({ color: 0x64748b, side: THREE.DoubleSide })
     );
     eqRing.rotation.x = -Math.PI / 2;
-    eqRing.position.set(0, 0.061, 0);
+    eqRing.position.set(0, 0.042, 0);
     group.add(eqRing);
 
     return {
       group,
+      // Permite que el profesor o alumno tome la esfera con el mouse y la arrastre al ángulo deseado
+      getInteractiveObjects() {
+        return [bob, rod];
+      },
+      onDrag(worldPoint, state, p) {
+        const len = Math.max(0.25, p.length || 0.75);
+        const H = len + 0.35;
+        const dx = worldPoint.x;
+        const dy = worldPoint.y - H;
+        let angle = Math.atan2(dx, -dy);
+        angle = Math.max(-1.45, Math.min(1.45, angle));
+        state.theta = angle;
+        state.omega = 0;
+        return { stateChanged: true };
+      },
       update(state, p) {
-        const len = Math.max(0.25, p.length || 0.7);
+        const len = Math.max(0.25, p.length || 0.75);
         const H = len + 0.35;
 
         mast.scale.set(1, H, 1);
-        mast.position.set(0, H / 2, -0.20);
+        mast.position.set(0, H / 2, -0.18);
 
-        clamp.position.set(0, H, -0.20);
-        arm.position.set(0, H, -0.10);
+        clamp.position.set(0, H, -0.18);
+        arm.position.set(0, H, -0.09);
 
         pivot.position.set(0, H, 0);
         pivot.rotation.z = state.theta || 0;
@@ -127,7 +141,7 @@ window.VLabExperiments['MEC-01'] = {
     };
   },
   getMetrics(state, params) {
-    const len = Math.max(0.25, params.length || 0.7);
+    const len = Math.max(0.25, params.length || 0.75);
     const g = params.gravity !== undefined ? params.gravity : 9.8;
     const m = params.mass || 1.0;
     const deg = ((state.theta || 0) * 180) / Math.PI;
@@ -141,22 +155,5 @@ window.VLabExperiments['MEC-01'] = {
       { label: 'Período Teórico (T)', value: period },
       { label: 'Energía Mecánica (E)', value: (Ek + Ep).toFixed(2) + ' J' }
     ];
-  },
-  questions: [
-    {
-      q: 'Si cuadruplicamos la longitud de la cuerda de un péndulo simple (de L a 4L), ¿qué ocurre con su período de oscilación T?',
-      options: ['A) Se reduce a la mitad', 'B) Se duplica (2T)', 'C) Permanece igual', 'D) Se multiplica por cuatro'],
-      answer: 1
-    },
-    {
-      q: 'En ausencia de fricción del aire y para pequeñas oscilaciones, ¿cómo afecta duplicar la masa de la esfera al período del péndulo?',
-      options: ['A) El período aumenta al doble', 'B) El período disminuye a la mitad', 'C) El período es independiente de la masa y no cambia', 'D) El péndulo se detiene más rápido'],
-      answer: 2
-    },
-    {
-      q: '¿En qué punto de la trayectoria del péndulo es máxima la energía cinética (Ek) de la esfera?',
-      options: ['A) En los extremos de máxima amplitud', 'B) Al pasar por el punto más bajo (posición de equilibrio θ = 0°)', 'C) A mitad de camino entre el extremo y el centro', 'D) Es constante en todo punto'],
-      answer: 1
-    }
-  ]
+  }
 };

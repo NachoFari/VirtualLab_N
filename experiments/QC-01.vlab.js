@@ -5,7 +5,8 @@ window.VLabExperiments['QC-01'] = {
   block: 'G',
   category: 'Computación Cuántica',
   formula: '|Φ⁺⟩ = (|00⟩ + |11⟩)/√2  ;  E(α,β) = ±cos(α ± β)  ;  |S| ≤ 2√2',
-  description: 'Dos qubits entrelazados visualizados como esferas de Bloch 3D unidas por un puente de coherencia cuántica. Explora los 4 estados máximamente entrelazados de Bell, rota los ángulos de medición α y β de los detectores de Alice y Bob, y verifica la violación cuántica de la desigualdad de Bell-CHSH (|S| = 2√2 ≈ 2.828 > 2).',
+  description: 'Dos qubits entrelazados visualizados como esferas de Bloch 3D. Rota los ángulos de medición α y β de Alice y Bob y verifica la violación cuántica de la desigualdad de Bell-CHSH (|S| = 2√2 ≈ 2.828 > 2).',
+  hasImpulse: false,
   params: [
     { key: 'bellState', label: 'Estado de Bell (1:Φ⁺, 2:Φ⁻, 3:Ψ⁺, 4:Ψ⁻)', unit: '', min: 1, max: 4, step: 1, default: 1 },
     { key: 'alpha', label: 'Ángulo Detector Alice (α)', unit: '°', min: 0, max: 180, step: 5, default: 0 },

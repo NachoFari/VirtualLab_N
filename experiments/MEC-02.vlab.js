@@ -3,29 +3,31 @@ window.VLabExperiments['MEC-02'] = {
   id: 'MEC-02',
   title: 'Oscilador Masa-Resorte (Ley de Hooke)',
   block: 'A',
-  category: 'Mecánica y Oscilaciones',
+  category: 'Mecánica Clásica',
   formula: 'F = -k·y - b·v  ;  T = 2π √(m / k)',
-  description: 'Resorte helicoidal 3D deformable en tiempo real que sostiene un bloque calibrado. Permite comprobar la Ley de Hooke, la resonancia y la amortiguación viscosa.',
+  description: 'Puedes arrastrar el bloque verticalmente con el mouse/dedo para estirar o comprimir el resorte y soltarlo, o ajustar la constante elástica k, la masa m y el amortiguamiento b.',
+  hasImpulse: true,
   params: [
-    { key: 'k', label: 'Constante Elástica (k)', unit: 'N/m', min: 5, max: 60, step: 1, default: 20 },
+    { key: 'k', label: 'Constante Elástica (k)', unit: 'N/m', min: 5, max: 60, step: 1, default: 22 },
     { key: 'mass', label: 'Masa Suspendida (m)', unit: 'kg', min: 0.2, max: 5.0, step: 0.1, default: 1.2 },
-    { key: 'damping', label: 'Amortiguamiento (b)', unit: 'N·s/m', min: 0.0, max: 2.0, step: 0.05, default: 0.10 },
+    { key: 'damping', label: 'Amortiguamiento (b)', unit: 'N·s/m', min: 0.0, max: 2.0, step: 0.05, default: 0.08 },
     { key: 'amp0', label: 'Elongación Inicial (y₀)', unit: 'm', min: 0.05, max: 0.35, step: 0.01, default: 0.22 }
   ],
   presets: [
-    { label: ' Subamortiguado Estándar', values: { k: 20, mass: 1.2, damping: 0.08, amp0: 0.22 } },
-    { label: 'Resorte Rígido (Alta Frecuencia)', values: { k: 55, mass: 0.6, damping: 0.05, amp0: 0.18 } },
+    { label: 'Subamortiguado Estándar', values: { k: 22, mass: 1.2, damping: 0.08, amp0: 0.22 } },
+    { label: 'Resorte Rígido (Alta Frecuencia)', values: { k: 55, mass: 0.6, damping: 0.04, amp0: 0.18 } },
     { label: 'Armónico Ideal (Sin Roce)', values: { k: 25, mass: 1.0, damping: 0.0, amp0: 0.25 } },
-    { label: 'Amortiguamiento Crítico', values: { k: 15, mass: 1.5, damping: 1.8, amp0: 0.30 } }
+    { label: 'Amortiguamiento Fuerte', values: { k: 18, mass: 1.5, damping: 1.6, amp0: 0.28 } }
   ],
   initState(params) {
-    return { y: params.amp0 || 0.22, v: 0.0, t: 0 };
+    return { y: params.amp0 || 0.22, v: 0.0, t: 0, isDraggingObject: false };
   },
   step(state, params, dt) {
+    if (state.isDraggingObject) return;
     state.t += dt;
     const m = Math.max(0.1, params.mass || 1.2);
-    const k = params.k || 20;
-    const b = params.damping !== undefined ? params.damping : 0.1;
+    const k = params.k || 22;
+    const b = params.damping !== undefined ? params.damping : 0.08;
 
     const f1 = (y, v) => v;
     const f2 = (y, v) => (-k * y - b * v) / m;
@@ -54,72 +56,69 @@ window.VLabExperiments['MEC-02'] = {
   createScene(THREE, components, params) {
     const group = new THREE.Group();
 
-    const matBase = new THREE.MeshStandardMaterial({ color: 0x0f141c, metalness: 0.8, roughness: 0.2 });
-    const matCyan = new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.65, metalness: 0.3, roughness: 0.2 });
-    const matBlue = new THREE.MeshStandardMaterial({ color: 0x4facfe, emissive: 0x4facfe, emissiveIntensity: 0.45, metalness: 0.5, roughness: 0.2 });
-    const matSteel = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.15 });
-    const matGreen = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 0.5 });
+    const matBase = new THREE.MeshStandardMaterial({ color: 0x18181b, metalness: 0.6, roughness: 0.4 });
+    const matSteel = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.2 });
+    const matBlock = new THREE.MeshStandardMaterial({ color: 0x3b82f6, metalness: 0.35, roughness: 0.25 });
+    const matRef = new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.7 });
 
     // Base
-    const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.5), matBase);
-    base.position.set(0, 0.025, 0);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.04, 0.5), matBase);
+    base.position.set(0, 0.02, 0);
     group.add(base);
 
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.015, 0.52), matCyan);
-    trim.position.set(0, 0.052, 0);
-    group.add(trim);
-
-    // Gantry Frame (Marco Doble)
+    // Pórtico Metálico
     const H_top = 1.25;
-    const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, H_top, 16), matSteel);
+    const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, H_top, 16), matSteel);
     postL.position.set(-0.28, H_top / 2, 0);
-    const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, H_top, 16), matSteel);
+    const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, H_top, 16), matSteel);
     postR.position.set(0.28, H_top / 2, 0);
-    const topBar = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.06, 0.08), matBase);
+    const topBar = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.05, 0.08), matBase);
     topBar.position.set(0, H_top, 0);
     group.add(postL, postR, topBar);
 
-    // Equilibrium Laser Line (y_eq = 0.62)
+    // Línea de Equilibrio (yEq = 0.62)
     const yEq = 0.62;
-    const eqLine = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.004, 0.004, 0.54, 8),
-      new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.65 })
-    );
+    const eqLine = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.54, 8), matRef);
     eqLine.rotation.z = Math.PI / 2;
     eqLine.position.set(0, yEq, 0);
     group.add(eqLine);
 
-    // Helical Spring made of 16 Torus Coils stacked inside a scalable container
+    // Resorte Helicoidal
     const springContainer = new THREE.Group();
-    springContainer.position.set(0, H_top - 0.03, 0);
+    springContainer.position.set(0, H_top - 0.025, 0);
     group.add(springContainer);
 
     const numCoils = 14;
     for (let i = 0; i < numCoils; i++) {
-      const coil = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.009, 10, 24), i % 2 === 0 ? matCyan : matBlue);
+      const coil = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.008, 10, 24), matSteel);
       coil.rotation.x = Math.PI / 2 + 0.14;
-      coil.position.y = -((i + 0.5) / numCoils); // Normalized from 0 to -1
+      coil.position.y = -((i + 0.5) / numCoils);
       springContainer.add(coil);
     }
 
-    // Mass Block
+    // Bloque de Masa (Interactivo: arrastrable con el mouse)
     const massGroup = new THREE.Group();
     group.add(massGroup);
 
-    const cube = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.18, 0.20), matCyan);
+    const cube = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.17, 0.19), matBlock);
+    cube.userData.isDraggable = true;
     massGroup.add(cube);
-
-    const pointer = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.08, 12), matGreen);
-    pointer.rotation.z = Math.PI / 2;
-    pointer.position.set(-0.14, 0, 0);
-    massGroup.add(pointer);
 
     return {
       group,
+      getInteractiveObjects() {
+        return [cube];
+      },
+      onDrag(worldPoint, state, p) {
+        const disp = Math.max(-0.34, Math.min(0.34, yEq - worldPoint.y));
+        state.y = disp;
+        state.v = 0;
+        return { stateChanged: true };
+      },
       update(state, p) {
-        const disp = Math.max(-0.38, Math.min(0.38, state.y || 0));
-        const currentY = yEq - disp; // Positive elongation downwards
-        const springLen = Math.max(0.15, (H_top - 0.03) - (currentY + 0.09));
+        const disp = Math.max(-0.36, Math.min(0.36, state.y || 0));
+        const currentY = yEq - disp;
+        const springLen = Math.max(0.15, (H_top - 0.025) - (currentY + 0.085));
 
         springContainer.scale.set(1, springLen, 1);
 
@@ -130,7 +129,7 @@ window.VLabExperiments['MEC-02'] = {
     };
   },
   getMetrics(state, params) {
-    const k = params.k || 20;
+    const k = params.k || 22;
     const m = Math.max(0.1, params.mass || 1.2);
     const y = state.y || 0;
     const v = state.v || 0;
@@ -143,29 +142,7 @@ window.VLabExperiments['MEC-02'] = {
       { label: 'Elongación (y)', value: (y * 100).toFixed(1) + ' cm' },
       { label: 'Fuerza Elástica (F)', value: force.toFixed(2) + ' N' },
       { label: 'Período Propio (T)', value: period.toFixed(2) + ' s' },
-      { label: 'Energía Total (E)', value: E.toFixed(2) + ' J' }
+      { label: 'Energía Mecánica (E)', value: E.toFixed(2) + ' J' }
     ];
-  },
-  questions: [
-    {
-      q: 'Según la Ley de Hooke (F = -k·y), ¿qué indica el signo negativo en la ecuación?',
-      options: [
-        'A) Que la masa siempre disminuye',
-        'B) Que la fuerza elástica es restauradora y apunta siempre hacia la posición de equilibrio',
-        'C) Que la energía potencial es negativa',
-        'D) Que la constante k es menor que cero'
-      ],
-      answer: 1
-    },
-    {
-      q: 'Si cuadruplicamos la constante elástica k del resorte manteniendo la misma masa m, ¿qué ocurre con el período T?',
-      options: [
-        'A) Se duplica (2T)',
-        'B) Se reduce a la mitad (T/2)',
-        'C) No varía',
-        'D) Aumenta cuatro veces'
-      ],
-      answer: 1
-    }
-  ]
+  }
 };

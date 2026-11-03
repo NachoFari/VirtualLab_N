@@ -4,144 +4,130 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>VirtualLab_N | Laboratorio de Física en 3D y Realidad Aumentada</title>
+  <title>VirtualLab | Plataforma Interactiva de Física 3D y WebAR</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #07090e;
-      --panel-slate: #0f141c;
-      --border-cyan: rgba(0, 242, 254, 0.28);
-      --cyan-glow: #00f2fe;
-      --blue-electric: #4facfe;
-      --green-neon: #10b981;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-app: #090a0f;
+      --bg-surface: #12151d;
+      --bg-elevated: #1a1e29;
+      --border-subtle: #262b3a;
+      --border-focus: #475569;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #3b82f6;
+      --accent-hover: #2563eb;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: var(--bg-dark); color: var(--text-main);
-      font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.14) 0%, transparent 60%),
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 100% 100%, 32px 32px, 32px 32px;
+      background-color: var(--bg-app); color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column;
     }
+
     header {
-      padding: 1.15rem 2rem; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border-cyan); backdrop-filter: blur(12px);
-      background: rgba(15, 20, 28, 0.78); flex-wrap: wrap; gap: 0.75rem;
+      padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface);
+      flex-wrap: wrap; gap: 0.75rem;
     }
-    .logo-container { display: flex; align-items: center; gap: 0.75rem; }
+    .logo-container { display: flex; align-items: center; gap: 0.7rem; }
     .logo-badge {
-      width: 38px; height: 38px; border: 2px solid var(--cyan-glow);
+      width: 30px; height: 30px; background: var(--accent-primary); color: #fff;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--cyan-glow);
-      box-shadow: 0 0 15px rgba(0, 242, 254, 0.3); border-radius: 7px;
+      font-weight: 700; font-size: 0.9rem; border-radius: 6px;
     }
-    .logo-text { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 800; letter-spacing: 1.5px; }
+    .logo-text { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; }
     .github-link {
-      color: var(--cyan-glow); text-decoration: none; font-family: 'JetBrains Mono', monospace;
-      font-size: 0.82rem; border: 1px solid var(--border-cyan); padding: 0.5rem 1rem;
-      border-radius: 8px; display: flex; align-items: center; gap: 0.5rem;
-      transition: all 0.2s ease; background: rgba(0, 242, 254, 0.06);
+      color: var(--text-secondary); text-decoration: none; font-size: 0.82rem; font-weight: 500;
+      border: 1px solid var(--border-subtle); padding: 0.45rem 0.9rem;
+      border-radius: 6px; background: var(--bg-elevated); transition: all 0.15s;
     }
-    .github-link:hover { background: rgba(0, 242, 254, 0.2); box-shadow: 0 0 15px rgba(0, 242, 254, 0.4); }
+    .github-link:hover { color: var(--text-primary); border-color: var(--border-focus); }
 
     main {
-      flex: 1; max-width: 1180px; width: 100%; margin: 0 auto; padding: 2.5rem 1.5rem;
-      display: flex; flex-direction: column; align-items: center; text-align: center;
+      flex: 1; max-width: 1080px; width: 100%; margin: 0 auto; padding: 3rem 1.5rem;
+      display: flex; flex-direction: column; gap: 2.5rem;
     }
-    .badge-natex {
-      display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.74rem;
-      padding: 0.32rem 0.9rem; border-radius: 20px; background: rgba(0, 242, 254, 0.1);
-      border: 1px solid var(--cyan-glow); color: var(--cyan-glow); letter-spacing: 1.5px;
-      margin-bottom: 1.2rem; text-transform: uppercase;
+
+    .hero { max-width: 680px; }
+    .hero-tag {
+      display: inline-block; font-size: 0.75rem; font-weight: 500;
+      color: var(--accent-primary); background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.25); padding: 0.25rem 0.7rem;
+      border-radius: 99px; margin-bottom: 1rem;
     }
-    h1 { font-size: clamp(1.9rem, 4.5vw, 3.1rem); font-weight: 800; line-height: 1.15; margin-bottom: 0.85rem; }
-    h1 span {
-      background: linear-gradient(135deg, var(--cyan-glow), var(--blue-electric));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    h1 {
+      font-size: clamp(1.75rem, 3.5vw, 2.4rem); font-weight: 700;
+      letter-spacing: -0.025em; line-height: 1.2; margin-bottom: 0.75rem;
     }
     p.lead {
-      font-size: 1.05rem; color: var(--text-muted); max-width: 720px;
-      margin-bottom: 2.4rem; line-height: 1.55;
+      font-size: 0.98rem; color: var(--text-secondary); line-height: 1.6;
     }
 
-    /* 4 MODOS PRINCIPALES */
+    /* ROLES Y ACCESOS PRINCIPALES */
     .grid-roles {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.25rem; width: 100%; margin-bottom: 3rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+      gap: 1rem; width: 100%;
     }
     .card-role {
-      background: var(--panel-slate); border: 1px solid var(--border-cyan);
-      border-radius: 14px; padding: 1.65rem; text-align: left;
-      transition: all 0.22s ease; display: flex; flex-direction: column; justify-content: space-between;
+      background: var(--bg-surface); border: 1px solid var(--border-subtle);
+      border-radius: 10px; padding: 1.4rem; display: flex; flex-direction: column;
+      justify-content: space-between; transition: border-color 0.15s, background 0.15s;
     }
-    .card-role:hover {
-      border-color: var(--cyan-glow); box-shadow: 0 8px 30px rgba(0, 242, 254, 0.16);
-      transform: translateY(-3px);
-    }
-    .card-role.highlight {
-      border-color: var(--green-neon); box-shadow: 0 0 25px rgba(16, 185, 129, 0.14);
-    }
-    .card-role h3 {
-      font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; margin-bottom: 0.55rem;
-      display: flex; align-items: center; gap: 0.5rem;
-    }
-    .card-role p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.4rem; flex: 1; }
+    .card-role:hover { border-color: var(--border-focus); background: #151923; }
+    .card-role h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.45rem; color: var(--text-primary); }
+    .card-role p { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.25rem; flex: 1; }
 
     .btn-action {
-      display: block; width: 100%; text-align: center; padding: 0.8rem;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; font-weight: 700;
-      border-radius: 8px; text-decoration: none; cursor: pointer; transition: all 0.2s ease;
+      display: block; width: 100%; text-align: center; padding: 0.65rem 0.9rem;
+      font-size: 0.84rem; font-weight: 500; border-radius: 6px; text-decoration: none;
+      transition: all 0.15s;
     }
-    .btn-primary { background: linear-gradient(135deg, var(--cyan-glow), var(--blue-electric)); color: #000; }
-    .btn-primary:hover { box-shadow: 0 0 18px rgba(0, 242, 254, 0.5); filter: brightness(1.08); }
-    .btn-green { background: linear-gradient(135deg, #10b981, #059669); color: #000; }
-    .btn-green:hover { box-shadow: 0 0 18px rgba(16, 185, 129, 0.5); filter: brightness(1.08); }
+    .btn-primary { background: var(--accent-primary); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--border-cyan);
+      background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border-subtle);
     }
-    .btn-secondary:hover { background: rgba(0, 242, 254, 0.12); border-color: var(--cyan-glow); }
+    .btn-secondary:hover { border-color: var(--border-focus); background: #222736; }
 
-    /* GALERÍA DE ACCESO DIRECTO A LOS 5 EXPERIMENTOS */
-    .exp-showcase {
-      width: 100%; text-align: left; background: rgba(15, 20, 28, 0.75);
-      border: 1px solid var(--border-cyan); border-radius: 16px; padding: 1.75rem;
+    /* CATÁLOGO DE PRÁCTICAS DE LABORATORIO */
+    .exp-section h2 {
+      font-size: 1.05rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--text-primary);
     }
-    .exp-showcase h2 {
-      font-family: 'JetBrains Mono', monospace; font-size: 1.15rem; color: var(--cyan-glow);
-      margin-bottom: 0.4rem;
-    }
-    .exp-showcase p.sub { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem; }
+    .exp-section p.sub { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.1rem; }
     .exp-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.9rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.85rem;
     }
     .exp-card {
-      background: rgba(255,255,255,0.03); border: 1px solid rgba(0,242,254,0.22);
-      border-radius: 10px; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between;
-      gap: 0.75rem; transition: all 0.2s;
+      background: var(--bg-surface); border: 1px solid var(--border-subtle);
+      border-radius: 8px; padding: 1.1rem; display: flex; flex-direction: column;
+      justify-content: space-between; gap: 0.9rem; transition: border-color 0.15s;
     }
-    .exp-card:hover { border-color: var(--cyan-glow); background: rgba(0,242,254,0.06); }
+    .exp-card:hover { border-color: var(--border-focus); }
     .exp-tag {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--cyan-glow);
-      text-transform: uppercase; letter-spacing: 1px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted);
     }
-    .exp-name { font-weight: 700; font-size: 0.95rem; margin-top: 0.2rem; }
+    .exp-name { font-weight: 600; font-size: 0.9rem; margin-top: 0.25rem; line-height: 1.35; }
+    .exp-formula {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-secondary);
+      margin-top: 0.35rem;
+    }
     .exp-links { display: flex; gap: 0.4rem; }
     .exp-links a {
-      flex: 1; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
-      font-weight: 700; padding: 0.45rem 0.3rem; border-radius: 6px; text-decoration: none;
+      flex: 1; text-align: center; font-size: 0.75rem; font-weight: 500;
+      padding: 0.45rem 0.4rem; border-radius: 5px; text-decoration: none; transition: all 0.15s;
     }
-    .link-3d { background: var(--cyan-glow); color: #000; }
-    .link-ar { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-cyan); }
+    .link-3d { background: var(--accent-primary); color: #fff; }
+    .link-3d:hover { background: var(--accent-hover); }
+    .link-ar { background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-subtle); }
+    .link-ar:hover { color: var(--text-primary); border-color: var(--border-focus); }
 
     footer {
-      padding: 1.5rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);
-      border-top: 1px solid rgba(255, 255, 255, 0.05); font-family: 'JetBrains Mono', monospace;
+      padding: 1.25rem 2rem; text-align: center; font-size: 0.78rem; color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
     }
   </style>
 </head>
@@ -150,113 +136,115 @@
   <header>
     <div class="logo-container">
       <div class="logo-badge">N</div>
-      <div class="logo-text">VirtualLab_N</div>
+      <div class="logo-text">VirtualLab</div>
     </div>
     <a href="https://github.com/NachoFari/VirtualLab_N" target="_blank" class="github-link">
-      Creado por NachoFari • GitHub
+      Repositorio en GitHub
     </a>
   </header>
 
   <main>
-    <div class="badge-natex">Suite Interactiva 3D + Realidad Aumentada WebAR</div>
-    <h1>El Laboratorio de Física en <span>3D y Realidad Aumentada</span></h1>
-    <p class="lead">Explora 5 experimentos interactivos en tiempo real: úsalos directamente en el <strong>Visor 3D sin cámara</strong> desde cualquier pantalla o proyéctalos sobre tu mesa con <strong>Cámara AR Turbo-Lock V17</strong>.</p>
+    <section class="hero">
+      <div class="hero-tag">Laboratorio de Física y Cálculo 3D</div>
+      <h1>Simulaciones interactivas para el aula</h1>
+      <p class="lead">Manipula sistemas físicos directamente en 3D desde cualquier navegador o proyéctalos sobre el escritorio mediante realidad aumentada sincronizada en tiempo real con el docente.</p>
+    </section>
 
-    <div class="grid-roles">
-      <!-- Tarjeta Visor 3D Sin Cámara (NUEVO) -->
-      <div class="card-role highlight">
-        <div>
-          <h3>🧊 Visor 3D (Sin Cámara)</h3>
-          <p>Explora los 5 experimentos en un entorno 3D interactivo de 360° sin encender la cámara. Rota, haz zoom, modifica parámetros y sincronízate con el profesor.</p>
-        </div>
-        <a href="visor3d.html" class="btn-action btn-green">Abrir Visor 3D Interactivo</a>
-      </div>
-
-      <!-- Tarjeta Profesor -->
+    <section class="grid-roles">
       <div class="card-role">
         <div>
-          <h3>👨‍🏫 Consola Docente</h3>
-          <p>Cambia entre los 5 experimentos en vivo para toda la clase, escribe funciones 3D en tiempo real, lanza preguntas de evaluación y descarga notas en Excel.</p>
+          <h3>Visor 3D Interactivo</h3>
+          <p>Explora los 5 experimentos en pantalla completa sin necesidad de cámara. Arrastra objetos con el mouse, rota la vista en 360° y modifica parámetros.</p>
         </div>
-        <a href="profesor.html" class="btn-action btn-primary">Entrar como Profesor</a>
+        <a href="visor3d.html" class="btn-action btn-primary">Abrir Visor 3D</a>
       </div>
 
-      <!-- Tarjeta Alumno AR -->
       <div class="card-role">
         <div>
-          <h3>📱 Cámara AR (Turbo V17)</h3>
-          <p>Proyecta cualquiera de los 5 experimentos sobre la Diana en tu mesa o monitor con enganche óptico instantáneo y cambia a Visor 3D con un toque.</p>
+          <h3>Consola Docente</h3>
+          <p>Controla el experimento activo de la clase, manipula el péndulo o el láser directamente con el cursor y sincroniza parámetros con los estudiantes.</p>
         </div>
-        <a href="alumno.html?v=rev17_multi_5exp" class="btn-action btn-secondary">Abrir Cámara AR (6DoF)</a>
+        <a href="profesor.html" class="btn-action btn-secondary">Entrar como Docente</a>
       </div>
 
-      <!-- Tarjeta Marcador -->
       <div class="card-role">
         <div>
-          <h3>📄 Diana Óptica 16×16</h3>
-          <p>Muestra el marcador calibrado de alto contraste en tu pantalla o descárgalo en SVG/PNG para proyectar los experimentos con la cámara AR.</p>
+          <h3>Modo Cámara AR</h3>
+          <p>Proyecta el aparato experimental sobre una hoja impresa o pantalla secundaria utilizando la cámara del dispositivo móvil.</p>
         </div>
-        <a href="marcador.html?v=rev16" class="btn-action btn-secondary">Abrir Diana en Pantalla</a>
+        <a href="alumno.html?v=rev18_clean" class="btn-action btn-secondary">Abrir Cámara AR</a>
       </div>
-    </div>
 
-    <!-- ACCESO DIRECTO A LOS 5 EXPERIMENTOS -->
-    <section class="exp-showcase">
-      <h2>🔬 5 Experimentos Interactivos Disponibles</h2>
-      <p class="sub">Elige cualquier experimento para abrirlo directamente en el Visor 3D (sin cámara) o en Realidad Aumentada:</p>
+      <div class="card-role">
+        <div>
+          <h3>Marcador de Referencia</h3>
+          <p>Muestra en pantalla o descarga el patrón óptico cuadrado utilizado como punto de anclaje para el modo de realidad aumentada.</p>
+        </div>
+        <a href="marcador.html?v=rev18" class="btn-action btn-secondary">Ver Marcador</a>
+      </div>
+    </section>
+
+    <section class="exp-section">
+      <h2>Prácticas de Laboratorio Disponibles</h2>
+      <p class="sub">Selecciona una práctica para abrirla directamente en el Visor 3D o en Realidad Aumentada:</p>
       <div class="exp-grid">
         <div class="exp-card">
           <div>
             <div class="exp-tag">MEC-01 • Mecánica</div>
-            <div class="exp-name">⏱️ 1. Péndulo Simple Telescópico</div>
+            <div class="exp-name">1. Péndulo Simple</div>
+            <div class="exp-formula">T = 2π √(L / g)</div>
           </div>
           <div class="exp-links">
-            <a href="visor3d.html?exp=MEC-01" class="link-3d">🧊 Ver en 3D</a>
-            <a href="alumno.html?v=rev17_multi_5exp&exp=MEC-01" class="link-ar">📷 AR</a>
+            <a href="visor3d.html?exp=MEC-01" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?v=rev18_clean&exp=MEC-01" class="link-ar">Cámara AR</a>
           </div>
         </div>
 
         <div class="exp-card">
           <div>
-            <div class="exp-tag">MEC-02 • Elasticidad</div>
-            <div class="exp-name">🔩 2. Oscilador Masa-Resorte (Hooke)</div>
+            <div class="exp-tag">MEC-02 • Oscilaciones</div>
+            <div class="exp-name">2. Sistema Masa-Resorte</div>
+            <div class="exp-formula">F = -k·y - b·v</div>
           </div>
           <div class="exp-links">
-            <a href="visor3d.html?exp=MEC-02" class="link-3d">🧊 Ver en 3D</a>
-            <a href="alumno.html?v=rev17_multi_5exp&exp=MEC-02" class="link-ar">📷 AR</a>
+            <a href="visor3d.html?exp=MEC-02" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?v=rev18_clean&exp=MEC-02" class="link-ar">Cámara AR</a>
           </div>
         </div>
 
         <div class="exp-card">
           <div>
-            <div class="exp-tag">OPT-01 • Fotónica</div>
-            <div class="exp-name">🔦 3. Ley de Snell y Reflexión Láser</div>
+            <div class="exp-tag">OPT-01 • Óptica Geométrica</div>
+            <div class="exp-name">3. Ley de Snell y Refracción</div>
+            <div class="exp-formula">n₁·sin(θ₁) = n₂·sin(θ₂)</div>
           </div>
           <div class="exp-links">
-            <a href="visor3d.html?exp=OPT-01" class="link-3d">🧊 Ver en 3D</a>
-            <a href="alumno.html?v=rev17_multi_5exp&exp=OPT-01" class="link-ar">📷 AR</a>
+            <a href="visor3d.html?exp=OPT-01" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?v=rev18_clean&exp=OPT-01" class="link-ar">Cámara AR</a>
           </div>
         </div>
 
         <div class="exp-card">
           <div>
-            <div class="exp-tag">QC-01 • Cuántica</div>
-            <div class="exp-name">⚛️ 4. Entrelazamiento y Qubits de Bell</div>
+            <div class="exp-tag">QC-01 • Física Cuántica</div>
+            <div class="exp-name">4. Estados de Bell y Qubits</div>
+            <div class="exp-formula">|Φ⁺⟩ = (|00⟩ + |11⟩)/√2</div>
           </div>
           <div class="exp-links">
-            <a href="visor3d.html?exp=QC-01" class="link-3d">🧊 Ver en 3D</a>
-            <a href="alumno.html?v=rev17_multi_5exp&exp=QC-01" class="link-ar">📷 AR</a>
+            <a href="visor3d.html?exp=QC-01" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?v=rev18_clean&exp=QC-01" class="link-ar">Cámara AR</a>
           </div>
         </div>
 
         <div class="exp-card">
           <div>
-            <div class="exp-tag">MAT-01 • Cálculo 3D</div>
-            <div class="exp-name">📈 5. Visor de Funciones z = f(x,y,t)</div>
+            <div class="exp-tag">MAT-01 • Cálculo Multivariable</div>
+            <div class="exp-name">5. Superficies 3D z = f(x,y,t)</div>
+            <div class="exp-formula">8 funciones de ejemplo</div>
           </div>
           <div class="exp-links">
-            <a href="visor3d.html?exp=MAT-01" class="link-3d">🧊 Ver en 3D</a>
-            <a href="alumno.html?v=rev17_multi_5exp&exp=MAT-01" class="link-ar">📷 AR</a>
+            <a href="visor3d.html?exp=MAT-01" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?v=rev18_clean&exp=MAT-01" class="link-ar">Cámara AR</a>
           </div>
         </div>
       </div>
@@ -264,7 +252,7 @@
   </main>
 
   <footer>
-    VirtualLab_N • Plataforma Abierta de Física 3D y WebAR ($0 Costo) • <a href="https://github.com/NachoFari/VirtualLab_N" style="color:var(--cyan-glow);">NachoFari/VirtualLab_N</a>
+    VirtualLab • Herramienta Abierta de Simulación Física • <a href="https://github.com/NachoFari/VirtualLab_N" style="color:var(--text-secondary);">GitHub</a>
   </footer>
 
 </body>

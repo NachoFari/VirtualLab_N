@@ -4,202 +4,189 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>Panel Maestro Docente • 5 Experimentos | VirtualLab_N</title>
+  <title>Panel Docente | VirtualLab_N</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
-  <!-- Librerías Externas CDN ($0 Costo) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
   <!-- Componentes y 5 Experimentos Interactivos -->
-  <script src="assets/components/math_parser.js?v=rev17"></script>
-  <script src="assets/components/surface_grid.js?v=rev17"></script>
-  <script src="experiments/MEC-01.vlab.js?v=rev17"></script>
-  <script src="experiments/MEC-02.vlab.js?v=rev17"></script>
-  <script src="experiments/OPT-01.vlab.js?v=rev17"></script>
-  <script src="experiments/QC-01.vlab.js?v=rev17"></script>
-  <script src="experiments/MAT-01.vlab.js?v=rev17"></script>
+  <script src="assets/components/math_parser.js?v=rev18"></script>
+  <script src="assets/components/surface_grid.js?v=rev18"></script>
+  <script src="experiments/MEC-01.vlab.js?v=rev18"></script>
+  <script src="experiments/MEC-02.vlab.js?v=rev18"></script>
+  <script src="experiments/OPT-01.vlab.js?v=rev18"></script>
+  <script src="experiments/QC-01.vlab.js?v=rev18"></script>
+  <script src="experiments/MAT-01.vlab.js?v=rev18"></script>
 
   <style>
     :root {
-      --bg-dark: #07090e;
-      --panel-slate: #0f141c;
-      --border-cyan: rgba(0, 242, 254, 0.28);
-      --cyan-glow: #00f2fe;
-      --blue-electric: #4facfe;
-      --green-neon: #10b981;
-      --amber-warn: #f59e0b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-app: #090a0f;
+      --bg-surface: #12151d;
+      --bg-elevated: #1a1e29;
+      --border-subtle: #262b3a;
+      --border-focus: #475569;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-success: #10b981;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: var(--bg-dark); color: var(--text-main);
-      font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column;
+      background-color: var(--bg-app); color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column;
     }
+
     header {
-      padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--border-cyan); background: rgba(15, 20, 28, 0.92);
-      backdrop-filter: blur(12px); flex-wrap: wrap; gap: 0.75rem;
+      padding: 0.65rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border-subtle); background: var(--bg-surface);
+      flex-wrap: wrap; gap: 0.75rem;
     }
-    .header-left { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
+    .header-left { display: flex; align-items: center; gap: 0.75rem; }
     .logo-badge {
-      width: 34px; height: 34px; border: 2px solid var(--cyan-glow);
+      width: 28px; height: 28px; background: var(--accent-primary); color: #fff;
       display: flex; align-items: center; justify-content: center; text-decoration: none;
-      font-family: 'JetBrains Mono', monospace; font-weight: 800; color: var(--cyan-glow);
-      border-radius: 7px; box-shadow: 0 0 12px rgba(0,242,254,0.3);
+      font-weight: 700; font-size: 0.85rem; border-radius: 6px;
     }
     .status-pill {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.76rem;
-      padding: 0.32rem 0.75rem; border-radius: 20px;
-      background: rgba(16, 185, 129, 0.15); border: 1px solid var(--green-neon);
-      color: var(--green-neon); display: flex; align-items: center; gap: 0.45rem;
+      font-size: 0.72rem; padding: 0.28rem 0.65rem; border-radius: 6px;
+      background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--accent-success); font-weight: 500;
     }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-neon); animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
-    .nav-links { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .nav-links { display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; }
     .nav-btn {
-      color: var(--cyan-glow); text-decoration: none; font-family: 'JetBrains Mono', monospace;
-      font-size: 0.78rem; font-weight: 700; border: 1px solid var(--border-cyan);
-      padding: 0.42rem 0.8rem; border-radius: 8px; display: inline-flex; align-items: center;
-      gap: 0.35rem; background: rgba(0,242,254,0.06); transition: all 0.2s;
+      color: var(--text-primary); text-decoration: none; font-size: 0.76rem; font-weight: 500;
+      border: 1px solid var(--border-subtle); padding: 0.38rem 0.75rem; border-radius: 6px;
+      background: var(--bg-elevated); transition: all 0.15s;
     }
-    .nav-btn:hover { background: rgba(0,242,254,0.2); box-shadow: 0 0 12px rgba(0,242,254,0.35); }
+    .nav-btn:hover { background: #222736; border-color: var(--border-focus); }
 
     /* BARRA DE SELECCIÓN DE LOS 5 EXPERIMENTOS */
     .exp-selector-bar {
-      display: flex; gap: 0.45rem; padding: 0.6rem 1.25rem;
-      background: rgba(11, 15, 22, 0.95); border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex; gap: 0.4rem; padding: 0.5rem 1.25rem;
+      background: #0d1017; border-bottom: 1px solid var(--border-subtle);
       overflow-x: auto; scrollbar-width: none; align-items: center;
     }
     .exp-selector-bar::-webkit-scrollbar { display: none; }
     .exp-tab {
-      background: rgba(255,255,255,0.04); border: 1px solid rgba(0,242,254,0.25);
-      color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
-      font-weight: 700; padding: 0.5rem 0.95rem; border-radius: 22px; cursor: pointer;
-      white-space: nowrap; transition: all 0.2s;
+      background: transparent; border: 1px solid transparent;
+      color: var(--text-secondary); font-size: 0.78rem; font-weight: 500;
+      padding: 0.42rem 0.85rem; border-radius: 6px; cursor: pointer;
+      white-space: nowrap; transition: all 0.15s;
     }
-    .exp-tab:hover { border-color: var(--cyan-glow); color: #fff; background: rgba(0,242,254,0.12); }
+    .exp-tab:hover { color: var(--text-primary); background: var(--bg-surface); }
     .exp-tab.active {
-      background: linear-gradient(135deg, var(--cyan-glow), var(--blue-electric));
-      color: #000; border-color: transparent; box-shadow: 0 0 16px rgba(0,242,254,0.45);
+      background: var(--bg-elevated); color: var(--text-primary);
+      border-color: var(--border-focus); font-weight: 600;
     }
 
     .main-layout {
-      flex: 1; display: grid; grid-template-columns: 1fr 400px; gap: 1rem; padding: 1rem;
+      flex: 1; display: grid; grid-template-columns: 1fr 370px; overflow: hidden;
     }
-    @media (max-width: 960px) {
-      .main-layout { grid-template-columns: 1fr; }
+    @media (max-width: 920px) {
+      .main-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
     }
+
     .viewport-container {
-      background: radial-gradient(circle at 50% 35%, #111927 0%, #07090e 75%);
-      border: 1px solid var(--border-cyan); border-radius: 12px;
-      position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 460px;
+      background: #0a0d14; position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
     }
     #three-canvas { width: 100%; height: 100%; flex: 1; display: block; cursor: grab; }
     #three-canvas:active { cursor: grabbing; }
 
     .hud-overlay {
       position: absolute; top: 1rem; left: 1rem; pointer-events: none;
-      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
-      background: rgba(15, 20, 28, 0.88); border: 1px solid var(--border-cyan);
-      padding: 0.8rem 1rem; border-radius: 10px; backdrop-filter: blur(10px);
-      min-width: 260px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+      background: rgba(18, 21, 29, 0.92); border: 1px solid var(--border-subtle);
+      padding: 0.85rem 1rem; border-radius: 8px; backdrop-filter: blur(8px);
+      min-width: 250px; max-width: 330px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
-    .hud-title { color: var(--cyan-glow); font-weight: 800; font-size: 0.88rem; margin-bottom: 0.25rem; }
+    .hud-title { color: var(--text-primary); font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem; }
     .hud-formula {
-      font-size: 0.72rem; color: #cbd5e1; background: rgba(0,242,254,0.08);
-      padding: 0.22rem 0.5rem; border-radius: 5px; margin-bottom: 0.55rem; display: inline-block;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-secondary);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle);
+      padding: 0.22rem 0.5rem; border-radius: 4px; margin-bottom: 0.65rem; display: inline-block;
     }
-    .hud-stat { margin-bottom: 0.3rem; display: flex; gap: 1rem; justify-content: space-between; font-size: 0.76rem; }
-    .hud-stat span:last-child { color: var(--cyan-glow); font-weight: 700; }
+    .hud-stat { margin-bottom: 0.3rem; display: flex; gap: 1rem; justify-content: space-between; font-size: 0.76rem; color: var(--text-secondary); }
+    .hud-stat:last-child { margin-bottom: 0; }
+    .hud-stat span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--text-primary); font-weight: 500; }
+
+    .interaction-hint {
+      position: absolute; top: 1rem; right: 1rem; pointer-events: none;
+      background: rgba(18, 21, 29, 0.85); border: 1px solid var(--border-subtle);
+      padding: 0.45rem 0.75rem; border-radius: 6px; font-size: 0.73rem; color: var(--text-secondary);
+    }
 
     .playback-bar {
       position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 0.45rem; background: rgba(15, 20, 28, 0.92);
-      border: 1px solid var(--border-cyan); border-radius: 30px; padding: 0.45rem 0.85rem;
-      backdrop-filter: blur(10px); flex-wrap: wrap; justify-content: center;
+      display: flex; gap: 0.4rem; background: rgba(18, 21, 29, 0.92);
+      border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.35rem;
+      backdrop-filter: blur(8px); flex-wrap: wrap; justify-content: center;
     }
     .btn-control {
-      background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-cyan);
-      color: var(--text-main); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
-      padding: 0.4rem 0.8rem; border-radius: 20px; cursor: pointer; transition: all 0.2s;
+      background: transparent; border: 1px solid transparent;
+      color: var(--text-secondary); font-size: 0.76rem; font-weight: 500;
+      padding: 0.38rem 0.75rem; border-radius: 6px; cursor: pointer; transition: all 0.15s;
     }
-    .btn-control:hover { background: rgba(0, 242, 254, 0.2); border-color: var(--cyan-glow); }
-    .btn-control.active { background: var(--cyan-glow); color: #000; font-weight: 700; }
+    .btn-control:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .btn-control.active { background: var(--accent-primary); color: #fff; }
+    .btn-sync {
+      background: rgba(59, 130, 246, 0.14); border-color: rgba(59, 130, 246, 0.35); color: #60a5fa;
+    }
+    .btn-sync:hover { background: var(--accent-primary); color: #fff; }
 
     .controls-panel {
-      background: var(--panel-slate); border: 1px solid var(--border-cyan);
-      border-radius: 12px; padding: 1.15rem; display: flex; flex-direction: column; gap: 1.1rem;
-      overflow-y: auto; max-height: calc(100vh - 140px);
+      background: var(--bg-surface); border-left: 1px solid var(--border-subtle);
+      padding: 1.15rem; display: flex; flex-direction: column; gap: 1.15rem;
+      overflow-y: auto;
     }
-    .panel-section { border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 1rem; }
+    @media (max-width: 920px) {
+      .controls-panel { border-left: none; border-top: 1px solid var(--border-subtle); max-height: 45vh; }
+    }
+
+    .panel-section { border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; }
+    .panel-section:last-child { border-bottom: none; padding-bottom: 0; }
     .section-title {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; text-transform: uppercase;
-      letter-spacing: 1px; color: var(--cyan-glow); margin-bottom: 0.7rem; display: flex; justify-content: space-between;
+      font-size: 0.74rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.75rem;
+      display: flex; justify-content: space-between;
     }
-    .control-row { margin-bottom: 0.8rem; }
-    .control-header { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.3rem; }
-    .control-header span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--cyan-glow); font-weight: 700; }
+    .control-row { margin-bottom: 0.85rem; }
+    .control-row:last-child { margin-bottom: 0; }
+    .control-header { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.35rem; color: var(--text-primary); }
+    .control-header span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); font-size: 0.76rem; }
     input[type="range"] {
-      width: 100%; -webkit-appearance: none; background: rgba(255, 255, 255, 0.12);
-      height: 6px; border-radius: 3px; outline: none;
+      width: 100%; -webkit-appearance: none; background: #262b3a;
+      height: 5px; border-radius: 3px; outline: none;
     }
     input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
-      background: var(--cyan-glow); cursor: pointer; box-shadow: 0 0 8px var(--cyan-glow);
+      -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+      background: var(--accent-primary); cursor: pointer; border: 2px solid #fff;
     }
 
     .formula-box {
-      display: none; flex-direction: column; gap: 0.4rem; margin-bottom: 0.85rem;
-      background: rgba(0, 242, 254, 0.05); border: 1px solid var(--border-cyan);
-      padding: 0.7rem; border-radius: 8px;
+      display: none; flex-direction: column; gap: 0.55rem; margin-bottom: 1rem;
+      background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+      padding: 0.75rem; border-radius: 6px;
     }
-    .formula-input {
-      width: 100%; background: #07090e; border: 1px solid var(--cyan-glow); color: var(--cyan-glow);
-      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; padding: 0.5rem 0.65rem;
-      border-radius: 6px; outline: none;
+    .formula-select, .formula-input {
+      width: 100%; background: var(--bg-app); border: 1px solid var(--border-subtle);
+      color: var(--text-primary); font-size: 0.78rem; padding: 0.48rem 0.6rem;
+      border-radius: 5px; outline: none;
     }
+    .formula-input { font-family: 'JetBrains Mono', monospace; }
 
-    .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-top: 0.4rem; }
+    .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-top: 0.5rem; }
     .btn-preset {
-      background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12);
-      color: var(--text-muted); font-size: 0.74rem; padding: 0.45rem 0.35rem; text-align: center;
-      border-radius: 6px; cursor: pointer; transition: all 0.15s;
+      background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+      color: var(--text-secondary); font-size: 0.74rem; padding: 0.45rem 0.5rem; text-align: left;
+      border-radius: 5px; cursor: pointer; transition: all 0.15s;
     }
-    .btn-preset:hover { border-color: var(--cyan-glow); color: #fff; background: rgba(0,242,254,0.1); }
-
-    .btn-launch-quiz {
-      width: 100%; background: linear-gradient(135deg, var(--cyan-glow), var(--blue-electric));
-      color: #000; border: none; font-family: 'JetBrains Mono', monospace; font-weight: 700;
-      font-size: 0.88rem; padding: 0.7rem; border-radius: 8px; cursor: pointer; transition: all 0.2s;
-    }
-    .btn-launch-quiz:hover { box-shadow: 0 0 15px rgba(0, 242, 254, 0.5); filter: brightness(1.1); }
-    .btn-export {
-      width: 100%; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--green-neon);
-      color: var(--green-neon); font-family: 'JetBrains Mono', monospace; font-weight: 700;
-      font-size: 0.82rem; padding: 0.6rem; border-radius: 8px; cursor: pointer; margin-top: 0.45rem;
-    }
-
-    /* Modal Quiz */
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.78); display: none;
-      align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(6px);
-    }
-    .modal-box {
-      background: var(--panel-slate); border: 1px solid var(--cyan-glow); width: 92%; max-width: 520px;
-      border-radius: 12px; padding: 1.5rem; box-shadow: 0 0 30px rgba(0, 242, 254, 0.25);
-    }
-    .modal-box h3 { font-family: 'JetBrains Mono', monospace; margin-bottom: 0.75rem; color: var(--cyan-glow); }
-    .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
-    .quiz-opt {
-      padding: 0.65rem 0.9rem; border: 1px solid var(--border-cyan); border-radius: 6px;
-      font-size: 0.84rem; cursor: pointer; background: rgba(255,255,255,0.03);
-    }
-    .quiz-opt:hover { background: rgba(0,242,254,0.12); border-color: var(--cyan-glow); }
+    .btn-preset:hover { border-color: var(--border-focus); color: var(--text-primary); }
   </style>
 </head>
 <body>
@@ -208,118 +195,94 @@
     <div class="header-left">
       <a href="index.html" class="logo-badge">N</a>
       <div>
-        <h2 style="font-family:'JetBrains Mono', monospace; font-size:1.02rem; letter-spacing:0.5px;">VirtualLab_N • Consola Docente</h2>
-        <small style="color:var(--text-muted); font-size:0.74rem;">Sincroniza en vivo con Visor 3D y Cámara AR • Sala: <strong style="color:var(--cyan-glow);">SALA-NATEX</strong></small>
+        <span style="font-weight:600; font-size:0.92rem;">VirtualLab • Consola Docente</span>
+        <span style="color:var(--text-muted); font-size:0.74rem; margin-left:0.5rem;">Sincronización en vivo con el aula</span>
       </div>
-      <div class="status-pill">
-        <div class="status-dot"></div>
-        <span id="conn-status">Conectando...</span>
-      </div>
+      <div class="status-pill" id="conn-status">Conectando...</div>
     </div>
 
     <div class="nav-links">
-      <a href="visor3d.html" target="_blank" class="nav-btn">🧊 Abrir Visor 3D (Sin Cámara)</a>
-      <a href="alumno.html?v=rev17_multi_5exp" target="_blank" class="nav-btn">📱 Cámara AR</a>
-      <a href="marcador.html?v=rev16" target="_blank" class="nav-btn">📄 Diana</a>
+      <a href="visor3d.html" target="_blank" class="nav-btn">Visor 3D Estudiante</a>
+      <a href="alumno.html?v=rev18_clean" target="_blank" class="nav-btn">Vista Cámara AR</a>
+      <a href="marcador.html?v=rev18" target="_blank" class="nav-btn">Marcador Óptico</a>
     </div>
   </header>
 
-  <!-- BARRA DE SELECCIÓN DE LOS 5 EXPERIMENTOS -->
   <div class="exp-selector-bar">
-    <span style="font-family:'JetBrains Mono', monospace; font-size:0.75rem; color:var(--cyan-glow); margin-right:0.3rem;">EXPERIMENTO ACTIVO:</span>
-    <button class="exp-tab active" data-id="MEC-01" onclick="selectExperiment('MEC-01')">⏱️ 1. Péndulo Simple</button>
-    <button class="exp-tab" data-id="MEC-02" onclick="selectExperiment('MEC-02')">🔩 2. Masa-Resorte (Hooke)</button>
-    <button class="exp-tab" data-id="OPT-01" onclick="selectExperiment('OPT-01')">🔦 3. Óptica Láser (Snell)</button>
-    <button class="exp-tab" data-id="QC-01" onclick="selectExperiment('QC-01')">⚛️ 4. Qubits de Bell (Cuántica)</button>
-    <button class="exp-tab" data-id="MAT-01" onclick="selectExperiment('MAT-01')">📈 5. Funciones 3D z=f(x,y,t)</button>
+    <button class="exp-tab active" data-id="MEC-01" onclick="selectExperiment('MEC-01')">1. Péndulo Simple</button>
+    <button class="exp-tab" data-id="MEC-02" onclick="selectExperiment('MEC-02')">2. Sistema Masa-Resorte</button>
+    <button class="exp-tab" data-id="OPT-01" onclick="selectExperiment('OPT-01')">3. Ley de Snell (Óptica)</button>
+    <button class="exp-tab" data-id="QC-01" onclick="selectExperiment('QC-01')">4. Estados de Bell (Cuántica)</button>
+    <button class="exp-tab" data-id="MAT-01" onclick="selectExperiment('MAT-01')">5. Superficies 3D z = f(x,y)</button>
   </div>
 
   <div class="main-layout">
-    <!-- Viewport 3D Orbital del Profesor -->
     <div class="viewport-container" id="viewport-wrap">
       <div id="three-canvas"></div>
       
-      <!-- Telemetría Dinámica HUD -->
       <div class="hud-overlay">
         <div class="hud-title" id="hud-exp-title">Péndulo Simple</div>
         <div class="hud-formula" id="hud-exp-formula">T = 2π √(L / g)</div>
         <div id="hud-metrics-box"></div>
       </div>
 
-      <!-- Barra de Reproducción -->
+      <div class="interaction-hint" id="interaction-hint">
+        💡 Puedes arrastrar el objeto directamente con el mouse
+      </div>
+
+      <!-- Barra de Reproducción Contextual -->
       <div class="playback-bar">
-        <button class="btn-control" id="btn-pause" onclick="togglePause()">⏸️ Pausar</button>
-        <button class="btn-control" id="btn-push" onclick="triggerPush()">⚡ Impulso</button>
-        <button class="btn-control" id="btn-slow" onclick="toggleSlow()">🐢 0.5x</button>
-        <button class="btn-control" id="btn-reset" onclick="resetSim()">🔄 Reset</button>
-        <button class="btn-control" onclick="resetCamera()">🎥 Centrar 3D</button>
-        <button class="btn-control" style="border-color:#10b981; color:#10b981;" onclick="broadcastChange('SYNC_ALL')">📡 Sincronizar Clase</button>
+        <button class="btn-control" id="btn-pause" onclick="togglePause()">Pausar</button>
+        <button class="btn-control" id="btn-push" onclick="triggerPush()">Perturbar</button>
+        <button class="btn-control" id="btn-slow" onclick="toggleSlow()">Cámara Lenta (0.5x)</button>
+        <button class="btn-control" id="btn-reset" onclick="resetSim()">Reiniciar</button>
+        <button class="btn-control" onclick="resetCamera()">Centrar Vista</button>
+        <button class="btn-control btn-sync" onclick="broadcastChange('SYNC_ALL')">Sincronizar Clase</button>
       </div>
     </div>
 
-    <!-- Controles Maestros Dinámicos -->
+    <!-- Controles Maestros Dinámicos (Sin módulo de preguntas, 100% enfocado en laboratorio) -->
     <div class="controls-panel">
       <div class="panel-section">
         <div class="section-title">
-          <span>Parámetros Físicos</span>
-          <span style="font-size:0.7rem; color:var(--green-neon);">Sync Automático</span>
+          <span>Parámetros del Experimento</span>
+          <span style="color:var(--accent-success); text-transform:none; font-weight:500;">En vivo</span>
         </div>
 
-        <!-- Entrada en vivo de función 3D para MAT-01 -->
+        <!-- Selector de Funciones de Ejemplo + Editor para MAT-01 -->
         <div class="formula-box" id="formula-box">
-          <label style="font-size:0.75rem; color:var(--text-main);">Función 3D en vivo <strong>z = f(x, y, t, r)</strong>:</label>
+          <label style="font-size:0.75rem; color:var(--text-secondary);">Seleccionar función de ejemplo:</label>
+          <select id="formula-select" class="formula-select"></select>
+          <label style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.2rem;">Expresión matemática z = f(x, y, t, r):</label>
           <input type="text" id="formula-input" class="formula-input" value="A * sin(k * r - w * t) / (1 + 0.35 * r)">
-          <small style="font-size:0.7rem; color:var(--text-muted);">Variables: <code>x, y, t, r, A, k, w</code> • Ej: <code>0.15*(x^2 - y^2)*cos(w*t)</code></small>
         </div>
 
         <div id="dynamic-sliders"></div>
 
-        <div style="margin-top:0.75rem;">
-          <small style="font-family:'JetBrains Mono', monospace; font-size:0.72rem; color:var(--text-muted); display:block; margin-bottom:0.3rem;">ESCENARIOS RÁPIDOS:</small>
+        <div style="margin-top:0.9rem;">
+          <div class="section-title" style="margin-bottom:0.4rem;">Escenarios de Referencia</div>
           <div class="preset-grid" id="dynamic-presets"></div>
         </div>
       </div>
 
-      <!-- Modo de Proyección AR -->
       <div class="panel-section">
         <div class="section-title">
-          <span>Proyección AR en Aula</span>
-          <span id="val-orientation" style="color:var(--cyan-glow); font-size:0.72rem;">Mesa (Horizontal)</span>
+          <span>Orientación en Cámara AR</span>
+          <span id="val-orientation" style="color:var(--text-secondary); text-transform:none;">Horizontal (Mesa)</span>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
-          <button class="btn-control active" id="btn-orient-desk" onclick="setOrientation('desk')">
-            🖥️ Modo Mesa
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.45rem;">
+          <button class="btn-control active" style="border:1px solid var(--border-subtle);" id="btn-orient-desk" onclick="setOrientation('desk')">
+            Modo Mesa
           </button>
-          <button class="btn-control" id="btn-orient-wall" onclick="setOrientation('wall')">
-            🧱 Modo Pared / Monitor
+          <button class="btn-control" style="border:1px solid var(--border-subtle);" id="btn-orient-wall" onclick="setOrientation('wall')">
+            Modo Pared / Monitor
           </button>
         </div>
       </div>
 
-      <!-- Evaluación y Excel -->
       <div class="panel-section">
-        <div class="section-title">Evaluación Interactiva</div>
-        <button class="btn-launch-quiz" id="btn-open-quiz">📋 Lanzar Pregunta del Experimento</button>
-        <button class="btn-export" id="btn-export-excel">📥 Descargar Calificaciones (Excel)</button>
-      </div>
-
-      <!-- Guía Didáctica -->
-      <div>
-        <div class="section-title">Descripción Científica</div>
-        <small id="exp-description" style="color:var(--text-muted); font-size:0.76rem; line-height:1.45; display:block;"></small>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Quiz -->
-  <div class="modal-backdrop" id="modal-quiz">
-    <div class="modal-box">
-      <h3 id="quiz-modal-title">Quiz en Vivo</h3>
-      <p style="font-size:0.88rem; margin-bottom:0.85rem; line-height:1.4;" id="quiz-question-text"></p>
-      <div class="quiz-options" id="quiz-options-box"></div>
-      <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
-        <button class="btn-control" style="flex:1;" onclick="nextQuestion()">🔀 Otra Pregunta</button>
-        <button class="btn-control" style="flex:1;" onclick="closeQuizModal()">Cerrar</button>
+        <div class="section-title">Notas del Experimento</div>
+        <p id="exp-description" style="color:var(--text-secondary); font-size:0.78rem; line-height:1.5;"></p>
       </div>
     </div>
   </div>
@@ -334,24 +297,16 @@
     let isPaused = false;
     let timeScale = 1.0;
     let orientationMode = 'desk';
-    let currentQuestionIdx = 0;
 
-    let studentResponses = [
-      { id: 1, alumno: "Camila Soto", experimento: "MEC-01", respuesta: "B", puntaje: "1.0", hora: new Date().toLocaleTimeString() },
-      { id: 2, alumno: "Matías Gómez", experimento: "OPT-01", respuesta: "B", puntaje: "1.0", hora: new Date().toLocaleTimeString() }
-    ];
-
-    // Conexión MQTT ($0)
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true, connectTimeout: 4000 });
     client.on('connect', () => {
-      document.getElementById('conn-status').innerText = "En Vivo (Sincronizado)";
+      document.getElementById('conn-status').innerText = "● Aula Sincronizada";
       client.subscribe(room);
       broadcastChange('INIT');
     });
 
     function broadcastChange(action = 'PARAM_CHANGE') {
       if (!client || !client.connected) return;
-      // Incluir también campos legacy (length, gravity, friction, theta, omega) para compatibilidad total
       client.publish(room, JSON.stringify({
         type: 'PARAM_CHANGE',
         action: action,
@@ -363,39 +318,47 @@
         orientation: orientationMode,
         theta: expState.theta !== undefined ? expState.theta : 0.4,
         omega: expState.omega !== undefined ? expState.omega : 0.0,
-        length: expParams.length || 0.7,
+        length: expParams.length || 0.75,
         gravity: expParams.gravity !== undefined ? expParams.gravity : 9.8,
-        friction: expParams.friction !== undefined ? expParams.friction : 0.03,
+        friction: expParams.friction !== undefined ? expParams.friction : 0.02,
         timestamp: Date.now()
       }));
     }
 
-    // Configuración Three.js con Cámara Orbital Interactiva
     const container = document.getElementById('three-canvas');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x07090e);
+    scene.background = new THREE.Color(0x0a0d14);
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 100);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-    const dirLight = new THREE.DirectionalLight(0x00f2fe, 1.35);
-    dirLight.position.set(3, 6, 4);
-    scene.add(dirLight);
-    const dirLight2 = new THREE.DirectionalLight(0x4facfe, 0.65);
-    dirLight2.position.set(-3, 3, -3);
-    scene.add(dirLight2);
+    // Iluminación neutra de laboratorio
+    scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.75);
+    keyLight.position.set(4, 8, 5);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0x94a3b8, 0.35);
+    fillLight.position.set(-4, 3, -4);
+    scene.add(fillLight);
 
-    const grid = new THREE.GridHelper(4.0, 20, 0x00f2fe, 0x1e293b);
+    const grid = new THREE.GridHelper(3.6, 18, 0x334155, 0x1e293b);
     scene.add(grid);
 
     const expRootGroup = new THREE.Group();
     scene.add(expRootGroup);
 
-    // Orbit Camera
-    const orbit = { theta: 0.32, phi: 1.18, radius: 2.35, target: new THREE.Vector3(0, 0.58, 0), dragging: false, lx: 0, ly: 0 };
+    // Orbit Camera + Manipulación Directa con el Mouse (Raycaster)
+    const orbit = {
+      theta: 0.32, phi: 1.18, radius: 2.35, target: new THREE.Vector3(0, 0.58, 0),
+      orbiting: false, draggingObj: false, lx: 0, ly: 0
+    };
+    const raycaster = new THREE.Raycaster();
+    const pointerNDC = new THREE.Vector2();
+    const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    const intersectPt = new THREE.Vector3();
+
     function updateOrbit() {
       orbit.phi = Math.max(0.2, Math.min(Math.PI / 2 - 0.04, orbit.phi));
       orbit.radius = Math.max(0.9, Math.min(5.0, orbit.radius));
@@ -412,15 +375,68 @@
     }
     resetCamera();
 
-    renderer.domElement.addEventListener('pointerdown', e => { orbit.dragging = true; orbit.lx = e.clientX; orbit.ly = e.clientY; });
+    function updatePointerNDC(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointerNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', e => {
+      updatePointerNDC(e);
+      if (expSceneInstance && expSceneInstance.getInteractiveObjects) {
+        const targets = expSceneInstance.getInteractiveObjects();
+        raycaster.setFromCamera(pointerNDC, camera);
+        const hits = raycaster.intersectObjects(targets, true);
+        if (hits.length > 0) {
+          orbit.draggingObj = true;
+          expState.isDraggingObject = true;
+          renderer.domElement.style.cursor = 'grabbing';
+          return;
+        }
+      }
+      orbit.orbiting = true;
+      orbit.lx = e.clientX;
+      orbit.ly = e.clientY;
+    });
+
     window.addEventListener('pointermove', e => {
-      if (!orbit.dragging) return;
+      if (orbit.draggingObj && expSceneInstance && expSceneInstance.onDrag) {
+        updatePointerNDC(e);
+        raycaster.setFromCamera(pointerNDC, camera);
+        if (raycaster.ray.intersectPlane(dragPlane, intersectPt)) {
+          const res = expSceneInstance.onDrag(intersectPt, expState, expParams);
+          if (res && res.paramChanged) {
+            const k = res.paramChanged;
+            const r = document.getElementById(`rng-${k}`);
+            const l = document.getElementById(`lbl-${k}`);
+            const pDef = (currentExp.params || []).find(x => x.key === k);
+            if (r) r.value = res.value;
+            if (l) l.innerText = `${res.value} ${pDef ? pDef.unit : ''}`;
+          }
+          expSceneInstance.update(expState, expParams);
+          updateHUD();
+          broadcastChange('DRAG');
+        }
+        return;
+      }
+      if (!orbit.orbiting) return;
       orbit.theta -= (e.clientX - orbit.lx) * 0.0075;
       orbit.phi -= (e.clientY - orbit.ly) * 0.0075;
-      orbit.lx = e.clientX; orbit.ly = e.clientY;
+      orbit.lx = e.clientX;
+      orbit.ly = e.clientY;
       updateOrbit();
     });
-    window.addEventListener('pointerup', () => { orbit.dragging = false; });
+
+    window.addEventListener('pointerup', () => {
+      if (orbit.draggingObj) {
+        orbit.draggingObj = false;
+        if (expState) expState.isDraggingObject = false;
+        renderer.domElement.style.cursor = 'grab';
+        broadcastChange('RESET'); // Sincronizar el nuevo ángulo/estado soltado por el profesor
+      }
+      orbit.orbiting = false;
+    });
+
     renderer.domElement.addEventListener('wheel', e => {
       e.preventDefault();
       orbit.radius += e.deltaY * 0.0018;
@@ -438,13 +454,11 @@
     window.addEventListener('resize', resizeViewport);
     setTimeout(resizeViewport, 50);
 
-    // Selector de los 5 Experimentos
     function selectExperiment(expId) {
       const expDef = window.VLabExperiments[expId];
       if (!expDef) return;
       currentExpId = expId;
       currentExp = expDef;
-      currentQuestionIdx = 0;
 
       document.querySelectorAll('.exp-tab').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.id === expId);
@@ -452,12 +466,48 @@
 
       expParams = {};
       (expDef.params || []).forEach(p => { expParams[p.key] = p.default; });
+
+      // Botones contextuales inteligentes
+      document.getElementById('btn-pause').style.display = expDef.isStaticScene ? 'none' : 'inline-block';
+      document.getElementById('btn-slow').style.display = expDef.isStaticScene ? 'none' : 'inline-block';
+      document.getElementById('btn-push').style.display = expDef.hasImpulse ? 'inline-block' : 'none';
+
+      // Selector de funciones de ejemplo en MAT-01
+      const fBox = document.getElementById('formula-box');
       if (expDef.hasCustomFormulaInput) {
         expParams.formulaExpr = expDef.defaultFormula;
-        document.getElementById('formula-box').style.display = 'flex';
+        fBox.style.display = 'flex';
         document.getElementById('formula-input').value = expDef.defaultFormula;
+
+        const fSelect = document.getElementById('formula-select');
+        fSelect.innerHTML = '';
+        (expDef.exampleFunctions || []).forEach((fnItem, idx) => {
+          const opt = document.createElement('option');
+          opt.value = idx;
+          opt.textContent = fnItem.name;
+          fSelect.appendChild(opt);
+        });
+        fSelect.onchange = () => {
+          const item = expDef.exampleFunctions[fSelect.value];
+          if (!item) return;
+          expParams.formulaExpr = item.expr;
+          document.getElementById('formula-input').value = item.expr;
+          if (item.params) {
+            Object.keys(item.params).forEach(k => {
+              expParams[k] = item.params[k];
+              const r = document.getElementById(`rng-${k}`);
+              const l = document.getElementById(`lbl-${k}`);
+              const pDef = (expDef.params || []).find(x => x.key === k);
+              if (r) r.value = item.params[k];
+              if (l) l.innerText = `${item.params[k]} ${pDef ? pDef.unit : ''}`;
+            });
+          }
+          if (expSceneInstance) expSceneInstance.update(expState, expParams);
+          updateHUD();
+          broadcastChange('FORMULA');
+        };
       } else {
-        document.getElementById('formula-box').style.display = 'none';
+        fBox.style.display = 'none';
       }
 
       expState = expDef.initState ? expDef.initState(expParams) : { t: 0 };
@@ -468,6 +518,9 @@
       expSceneInstance = expDef.createScene(THREE, window.VLabComponents, expParams);
       expRootGroup.add(expSceneInstance.group);
       expSceneInstance.update(expState, expParams);
+
+      document.getElementById('interaction-hint').style.display =
+        (expSceneInstance && expSceneInstance.getInteractiveObjects) ? 'block' : 'none';
 
       document.getElementById('hud-exp-title').innerText = expDef.title;
       document.getElementById('hud-exp-formula').innerText = expDef.formula;
@@ -534,6 +587,7 @@
 
     document.getElementById('formula-input').addEventListener('input', e => {
       expParams.formulaExpr = e.target.value;
+      if (expSceneInstance) expSceneInstance.update(expState, expParams);
       broadcastChange('FORMULA');
     });
 
@@ -541,13 +595,13 @@
       if (!currentExp || !currentExp.getMetrics) return;
       const metrics = currentExp.getMetrics(expState, expParams);
       document.getElementById('hud-metrics-box').innerHTML = metrics.map(m => `
-        <div class="hud-stat"><span>${m.label}:</span> <span>${m.value}</span></div>
+        <div class="hud-stat"><span>${m.label}</span> <span>${m.value}</span></div>
       `).join('');
     }
 
     function setOrientation(mode) {
       orientationMode = mode;
-      document.getElementById('val-orientation').innerText = mode === 'desk' ? 'Mesa (Horizontal)' : 'Pared / Monitor';
+      document.getElementById('val-orientation').innerText = mode === 'desk' ? 'Horizontal (Mesa)' : 'Vertical (Pared / Monitor)';
       document.getElementById('btn-orient-desk').classList.toggle('active', mode === 'desk');
       document.getElementById('btn-orient-wall').classList.toggle('active', mode === 'wall');
       broadcastChange('ORIENTATION');
@@ -556,7 +610,7 @@
     function togglePause() {
       isPaused = !isPaused;
       const btn = document.getElementById('btn-pause');
-      btn.innerText = isPaused ? '▶️ Reanudar' : '⏸️ Pausar';
+      btn.innerText = isPaused ? 'Reanudar' : 'Pausar';
       btn.classList.toggle('active', isPaused);
       broadcastChange('PAUSE');
     }
@@ -571,7 +625,7 @@
     function toggleSlow() {
       timeScale = timeScale === 1.0 ? 0.35 : 1.0;
       const btn = document.getElementById('btn-slow');
-      btn.innerText = timeScale === 1.0 ? '🐢 0.5x' : '⚡ 1.0x';
+      btn.innerText = timeScale === 1.0 ? 'Cámara Lenta (0.5x)' : 'Velocidad Normal (1x)';
       btn.classList.toggle('active', timeScale !== 1.0);
       broadcastChange('TIMESCALE');
     }
@@ -580,57 +634,10 @@
       if (currentExp && currentExp.initState) {
         expState = currentExp.initState(expParams);
       }
+      if (expSceneInstance) expSceneInstance.update(expState, expParams);
       broadcastChange('RESET');
     }
 
-    // Quiz Modal
-    function renderQuizQuestion() {
-      const qs = (currentExp && currentExp.questions) || [];
-      if (qs.length === 0) return;
-      const qObj = qs[currentQuestionIdx % qs.length];
-      document.getElementById('quiz-modal-title').innerText = `Quiz: ${currentExp.title}`;
-      document.getElementById('quiz-question-text').innerText = qObj.q;
-      const optBox = document.getElementById('quiz-options-box');
-      optBox.innerHTML = '';
-      qObj.options.forEach((optText, idx) => {
-        const div = document.createElement('div');
-        div.className = 'quiz-opt';
-        div.innerText = optText + (idx === qObj.answer ? ' ✅' : '');
-        div.onclick = () => {
-          if (client.connected) {
-            client.publish(room, JSON.stringify({
-              type: 'QUIZ',
-              expId: currentExpId,
-              data: { pregunta: qObj.q, opciones: qObj.options, correcta: qObj.answer }
-            }));
-          }
-          closeQuizModal();
-        };
-        optBox.appendChild(div);
-      });
-    }
-
-    function nextQuestion() {
-      currentQuestionIdx++;
-      renderQuizQuestion();
-    }
-
-    document.getElementById('btn-open-quiz').onclick = () => {
-      renderQuizQuestion();
-      document.getElementById('modal-quiz').style.display = 'flex';
-    };
-    function closeQuizModal() {
-      document.getElementById('modal-quiz').style.display = 'none';
-    }
-
-    document.getElementById('btn-export-excel').onclick = () => {
-      const ws = XLSX.utils.json_to_sheet(studentResponses);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Calificaciones_VLab");
-      XLSX.writeFile(wb, `VirtualLab_N_${currentExpId}.xlsx`);
-    };
-
-    // Bucle de Animación 60 FPS
     let lastTime = performance.now();
     let frameCount = 0;
     function animate(now) {
