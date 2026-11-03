@@ -2,107 +2,352 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>Marcador de Referencia AR | VirtualLab</title>
+  <title>Marcador de Referencia AR (Pantalla Completa) | VirtualLab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #090a0f; color: #f1f5f9; font-family: 'Inter', -apple-system, sans-serif;
-      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 1.5rem; text-align: center;
+    :root {
+      --bg-bar: rgba(18, 21, 29, 0.92);
+      --border: #262b3a;
+      --border-focus: #475569;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
-    .card {
-      background: #12151d; border: 1px solid #262b3a; padding: 1.75rem; border-radius: 12px;
-      max-width: 520px; width: 100%;
-    }
-    h1 { font-size: 1.15rem; font-weight: 600; color: #f1f5f9; margin-bottom: 0.4rem; }
-    p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.5; }
 
-    .tab-bar {
-      display: flex; gap: 0.45rem; justify-content: center; margin-bottom: 1.25rem;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #ffffff !important;
+      color: #0f172a;
+      font-family: var(--font-sans);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Quiet Zone Infinita y Centrado Absoluto */
+    .marker-stage {
+      position: absolute;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    #marker-img {
+      width: min(72vmin, 520px);
+      height: min(72vmin, 520px);
+      max-width: 90vw;
+      max-height: 80vh;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: block;
+      margin: auto;
+      pointer-events: auto;
+      transition: width 0.08s ease-out, height 0.08s ease-out;
+    }
+
+    /* Barras Flotantes Minimalistas Slate/Zinc */
+    .floating-bar {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-bar);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+      max-width: calc(100vw - 2rem);
+      pointer-events: auto;
+    }
+
+    .floating-bar-top {
+      top: 1.1rem;
+      padding: 0.5rem 0.95rem;
+      gap: 0.75rem;
+      justify-content: space-between;
+    }
+
+    .floating-bar-bottom {
+      bottom: 1.1rem;
+      padding: 0.55rem 1rem;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .brand-badge span {
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    .tabs-switch {
+      background: #090a0f;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 3px;
+      display: inline-flex;
+      gap: 3px;
+    }
+
     .tab-btn {
-      background: #1a1e29; border: 1px solid #262b3a; color: #94a3b8;
-      font-size: 0.78rem; font-weight: 500; padding: 0.45rem 0.9rem;
-      border-radius: 6px; cursor: pointer; transition: all 0.15s;
-    }
-    .tab-btn.active {
-      background: #3b82f6; color: #fff; border-color: #3b82f6;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.76rem;
+      font-weight: 500;
+      padding: 0.35rem 0.75rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
     }
 
-    .marker-frame {
-      background: #ffffff; padding: 2.2rem; border-radius: 10px; display: inline-block; margin-bottom: 1.25rem;
+    .tab-btn:hover {
+      color: var(--text);
     }
-    .marker-img {
-      width: 310px; height: 310px; display: block; object-fit: contain;
-      image-rendering: pixelated; image-rendering: crisp-edges; margin: 0 auto;
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .v-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 0.15rem;
+    }
+
+    .btn-vlab {
+      background: #1a1e29;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 0.76rem;
+      font-weight: 500;
+      padding: 0.42rem 0.78rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn-vlab:hover {
+      background: #232838;
+      border-color: var(--border-focus);
+      color: #ffffff;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
     }
 
     .size-control {
-      display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-      margin-bottom: 1.25rem; font-size: 0.78rem; color: #94a3b8;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      white-space: nowrap;
     }
-    .size-control input[type="range"] { width: 150px; accent-color: #3b82f6; }
 
-    .btn-group { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
-    .btn {
-      display: inline-block; background: #3b82f6; color: #fff; font-weight: 500;
-      padding: 0.6rem 1.1rem; border-radius: 6px; text-decoration: none; font-size: 0.8rem;
+    .size-control input[type="range"] {
+      width: 140px;
+      accent-color: var(--accent);
+      cursor: pointer;
     }
-    .btn-secondary {
-      background: #1a1e29; color: #f1f5f9; border: 1px solid #262b3a;
+
+    .size-val {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--text);
+      min-width: 50px;
+      text-align: right;
+    }
+
+    /* Impresión Limpia de Laboratorio (PDF / Papel) */
+    @media print {
+      @page {
+        size: auto;
+        margin: 0;
+      }
+      body {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .floating-bar {
+        display: none !important;
+      }
+      .marker-stage {
+        position: static !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      #marker-img {
+        width: 150mm !important;
+        height: 150mm !important;
+        max-width: none !important;
+        max-height: none !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .floating-bar-top, .floating-bar-bottom {
+        padding: 0.45rem 0.65rem;
+        gap: 0.4rem;
+      }
+      .size-control input[type="range"] {
+        width: 95px;
+      }
+      .brand-badge span {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Marcador de Referencia Óptica</h1>
-    <p>Muestra este patrón en tu pantalla o imprímelo en papel para proyectar el experimento con la cámara del dispositivo móvil.</p>
-    
-    <div class="tab-bar">
-      <button class="tab-btn active" id="tab-natex" onclick="setMarker('natex')">Patrón N (16×16)</button>
-      <button class="tab-btn" id="tab-hiro" onclick="setMarker('hiro')">Patrón Hiro Estándar</button>
-    </div>
-
-    <div class="marker-frame" id="frame">
-      <img id="marker-img" src="marcador.svg?v=rev18" alt="Marcador AR" class="marker-img">
-    </div>
-
-    <div class="size-control">
-      <span>Escala en pantalla:</span>
-      <input type="range" id="size-slider" min="200" max="460" step="10" value="310" oninput="changeSize(this.value)">
-      <span id="size-val" style="font-family:'JetBrains Mono', monospace;">310 px</span>
-    </div>
-
-    <div class="btn-group">
-      <a href="alumno.html?v=rev18_clean" class="btn">Abrir Cámara AR</a>
-      <a id="btn-download" href="marcador.svg?v=rev18" download="marcador_VirtualLab.svg" class="btn btn-secondary">Descargar SVG</a>
-      <a href="index.html" class="btn btn-secondary">Volver al Inicio</a>
-    </div>
+  <!-- Quiet Zone Infinita (Clic en cualquier parte para Fullscreen) -->
+  <div class="marker-stage" id="marker-stage" title="Haz clic en cualquier parte para Pantalla Completa">
+    <img id="marker-img" src="marcador.svg?v=rev20" alt="Marcador de Referencia AR" draggable="false">
   </div>
 
+  <!-- Barra Flotante Superior -->
+  <header class="floating-bar floating-bar-top" role="toolbar">
+    <button class="btn-vlab" onclick="goBack()" title="Volver a la página anterior">
+      ← Volver
+    </button>
+
+    <div class="brand-badge">
+      VirtualLab <span>QUIET ZONE 100%</span>
+    </div>
+
+    <div class="tabs-switch">
+      <button class="tab-btn active" id="tab-natex" onclick="setMarker('natex')" title="Marcador matricial de alta precisión">
+        Patrón N (16×16)
+      </button>
+      <button class="tab-btn" id="tab-hiro" onclick="setMarker('hiro')" title="Marcador estándar Hiro de AR.js">
+        Patrón Hiro Estándar
+      </button>
+    </div>
+  </header>
+
+  <!-- Barra Flotante Inferior -->
+  <footer class="floating-bar floating-bar-bottom" role="toolbar">
+    <div class="size-control">
+      <label for="size-slider">Escala:</label>
+      <input type="range" id="size-slider" min="220" max="650" step="5" value="520" oninput="changeSize(this.value)">
+      <span id="size-val" class="size-val">520 px</span>
+    </div>
+
+    <div class="v-divider"></div>
+
+    <a id="btn-dl-svg" class="btn-vlab btn-accent" href="marcador.svg?v=rev20" download="marcador_VirtualLab.svg" title="Descargar archivo vectorial SVG">
+      📥 Descargar SVG
+    </a>
+    <a id="btn-dl-png" class="btn-vlab" href="marcador_natex.png?v=rev20" download="marcador_VirtualLab.png" title="Descargar imagen ráster PNG">
+      📥 Descargar PNG
+    </a>
+
+    <div class="v-divider"></div>
+
+    <button class="btn-vlab" onclick="window.print()" title="Imprimir o Guardar como PDF con márgenes perfectos">
+      🖨️ Imprimir (PDF)
+    </button>
+    <button class="btn-vlab" id="btn-fs" onclick="toggleFullscreen()" title="Alternar modo pantalla completa F11">
+      ⛶ Pantalla Completa (F11)
+    </button>
+  </footer>
+
   <script>
+    let currentMarkerType = 'natex';
+
     function setMarker(type) {
+      currentMarkerType = type;
       const img = document.getElementById('marker-img');
       const tabNatex = document.getElementById('tab-natex');
       const tabHiro = document.getElementById('tab-hiro');
-      const btnDl = document.getElementById('btn-download');
+      const btnDlSvg = document.getElementById('btn-dl-svg');
+      const btnDlPng = document.getElementById('btn-dl-png');
 
       if (type === 'natex') {
-        img.src = 'marcador.svg?v=rev18';
-        btnDl.href = 'marcador.svg?v=rev18';
-        btnDl.download = 'marcador_VirtualLab.svg';
+        img.src = 'marcador.svg?v=rev20';
         tabNatex.classList.add('active');
         tabHiro.classList.remove('active');
+
+        btnDlSvg.href = 'marcador.svg?v=rev20';
+        btnDlSvg.download = 'marcador_VirtualLab.svg';
+        btnDlSvg.style.display = 'inline-flex';
+
+        btnDlPng.href = 'marcador_natex.png?v=rev20';
+        btnDlPng.download = 'marcador_VirtualLab.png';
       } else {
-        img.src = 'marcador_hiro.png?v=rev18';
-        btnDl.href = 'marcador_hiro.png?v=rev18';
-        btnDl.download = 'marcador_hiro.png';
+        img.src = 'marcador_hiro.png?v=rev20';
         tabHiro.classList.add('active');
         tabNatex.classList.remove('active');
+
+        btnDlSvg.href = 'marcador.svg?v=rev20';
+        btnDlSvg.download = 'marcador_VirtualLab.svg';
+
+        btnDlPng.href = 'marcador_hiro.png?v=rev20';
+        btnDlPng.download = 'marcador_hiro.png';
       }
     }
 
@@ -112,6 +357,64 @@
       img.style.height = val + 'px';
       document.getElementById('size-val').innerText = val + ' px';
     }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+
+    // Al abrir o hacer clic en cualquier parte libre de la pantalla, activa pantalla completa
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.floating-bar') && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    });
+
+    // Atajos de teclado
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    // Intentar abrir en fullscreen al cargar
+    window.addEventListener('load', () => {
+      document.documentElement.requestFullscreen().catch(() => {});
+    });
+
+    // Sincronizar etiqueta del botón de pantalla completa
+    document.addEventListener('fullscreenchange', () => {
+      const btnFs = document.getElementById('btn-fs');
+      if (btnFs) {
+        if (document.fullscreenElement) {
+          btnFs.innerHTML = '🗗 Salir Pantalla Completa';
+        } else {
+          btnFs.innerHTML = '⛶ Pantalla Completa (F11)';
+        }
+      }
+    });
+
+    // Ajuste inicial del slider según la resolución de la pantalla
+    (function initScale() {
+      const initialPx = Math.min(Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.72), 520);
+      const clamped = Math.max(220, Math.min(650, initialPx));
+      const slider = document.getElementById('size-slider');
+      if (slider) {
+        slider.value = clamped;
+        changeSize(clamped);
+      }
+    })();
   </script>
 </body>
 </html>

@@ -4,21 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <title>Panel Docente | VirtualLab_N</title>
+  <title>Panel Docente | VirtualLab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
-  <!-- Componentes y 5 Experimentos Interactivos -->
-  <script src="assets/components/math_parser.js?v=rev18"></script>
-  <script src="assets/components/surface_grid.js?v=rev18"></script>
-  <script src="experiments/MEC-01.vlab.js?v=rev18"></script>
-  <script src="experiments/MEC-02.vlab.js?v=rev18"></script>
-  <script src="experiments/OPT-01.vlab.js?v=rev18"></script>
-  <script src="experiments/QC-01.vlab.js?v=rev18"></script>
-  <script src="experiments/MAT-01.vlab.js?v=rev18"></script>
+  <!-- Componentes, Gráficos Científicos, Modales y 10 Experimentos -->
+  <script src="assets/components/math_parser.js?v=rev19"></script>
+  <script src="assets/components/surface_grid.js?v=rev19"></script>
+  <script src="assets/components/sci_plotter.js?v=rev19"></script>
+  <script src="assets/components/ui_modals.js?v=rev19"></script>
+  <script src="experiments/MEC-01.vlab.js?v=rev19"></script>
+  <script src="experiments/MEC-02.vlab.js?v=rev19"></script>
+  <script src="experiments/OPT-01.vlab.js?v=rev19"></script>
+  <script src="experiments/QC-01.vlab.js?v=rev19"></script>
+  <script src="experiments/MAT-01.vlab.js?v=rev19"></script>
+  <script src="experiments/MEC-03.vlab.js?v=rev19"></script>
+  <script src="experiments/OND-01.vlab.js?v=rev19"></script>
+  <script src="experiments/EM-01.vlab.js?v=rev19"></script>
+  <script src="experiments/TER-01.vlab.js?v=rev19"></script>
+  <script src="experiments/MOD-01.vlab.js?v=rev19"></script>
+  <script src="experiments/OND-02.vlab.js?v=rev19"></script>
 
   <style>
     :root {
@@ -62,9 +70,10 @@
     .nav-btn {
       color: var(--text-primary); text-decoration: none; font-size: 0.76rem; font-weight: 500;
       border: 1px solid var(--border-subtle); padding: 0.38rem 0.75rem; border-radius: 6px;
-      background: var(--bg-elevated); transition: all 0.15s;
+      background: var(--bg-elevated); cursor: pointer; transition: all 0.15s;
     }
     .nav-btn:hover { background: #222736; border-color: var(--border-focus); }
+    .nav-btn.primary { background: var(--accent-primary); border-color: var(--accent-primary); color: #fff; }
 
     /* BARRA DE SELECCIÓN DE LOS 5 EXPERIMENTOS */
     .exp-selector-bar {
@@ -86,9 +95,9 @@
     }
 
     .main-layout {
-      flex: 1; display: grid; grid-template-columns: 1fr 370px; overflow: hidden;
+      flex: 1; display: grid; grid-template-columns: 1fr 390px; overflow: hidden;
     }
-    @media (max-width: 920px) {
+    @media (max-width: 940px) {
       .main-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
     }
 
@@ -117,7 +126,7 @@
 
     .interaction-hint {
       position: absolute; top: 1rem; right: 1rem; pointer-events: none;
-      background: rgba(18, 21, 29, 0.85); border: 1px solid var(--border-subtle);
+      background: rgba(18, 21, 29, 0.88); border: 1px solid var(--border-subtle);
       padding: 0.45rem 0.75rem; border-radius: 6px; font-size: 0.73rem; color: var(--text-secondary);
     }
 
@@ -141,24 +150,32 @@
 
     .controls-panel {
       background: var(--bg-surface); border-left: 1px solid var(--border-subtle);
-      padding: 1.15rem; display: flex; flex-direction: column; gap: 1.15rem;
+      padding: 1.1rem; display: flex; flex-direction: column; gap: 1rem;
       overflow-y: auto;
     }
-    @media (max-width: 920px) {
-      .controls-panel { border-left: none; border-top: 1px solid var(--border-subtle); max-height: 45vh; }
+    @media (max-width: 940px) {
+      .controls-panel { border-left: none; border-top: 1px solid var(--border-subtle); max-height: 48vh; }
     }
 
-    .panel-section { border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; }
+    .panel-section { border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.95rem; }
     .panel-section:last-child { border-bottom: none; padding-bottom: 0; }
     .section-title {
-      font-size: 0.74rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.75rem;
-      display: flex; justify-content: space-between;
+      font-size: 0.73rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.65rem;
+      display: flex; justify-content: space-between; align-items: center;
     }
-    .control-row { margin-bottom: 0.85rem; }
+
+    /* PANEL DE GRÁFICO CIENTÍFICO EN VIVO */
+    .sci-chart-box {
+      background: #0d1017; border: 1px solid var(--border-subtle);
+      border-radius: 8px; overflow: hidden; padding: 0.4rem;
+    }
+    #sci-chart-canvas { width: 100%; height: 155px; display: block; border-radius: 4px; }
+
+    .control-row { margin-bottom: 0.8rem; }
     .control-row:last-child { margin-bottom: 0; }
-    .control-header { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.35rem; color: var(--text-primary); }
-    .control-header span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); font-size: 0.76rem; }
+    .control-header { display: flex; justify-content: space-between; font-size: 0.79rem; margin-bottom: 0.32rem; color: var(--text-primary); }
+    .control-header span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); font-size: 0.75rem; }
     input[type="range"] {
       width: 100%; -webkit-appearance: none; background: #262b3a;
       height: 5px; border-radius: 3px; outline: none;
@@ -169,21 +186,21 @@
     }
 
     .formula-box {
-      display: none; flex-direction: column; gap: 0.55rem; margin-bottom: 1rem;
+      display: none; flex-direction: column; gap: 0.5rem; margin-bottom: 0.9rem;
       background: var(--bg-elevated); border: 1px solid var(--border-subtle);
       padding: 0.75rem; border-radius: 6px;
     }
     .formula-select, .formula-input {
       width: 100%; background: var(--bg-app); border: 1px solid var(--border-subtle);
-      color: var(--text-primary); font-size: 0.78rem; padding: 0.48rem 0.6rem;
+      color: var(--text-primary); font-size: 0.78rem; padding: 0.46rem 0.6rem;
       border-radius: 5px; outline: none;
     }
     .formula-input { font-family: 'JetBrains Mono', monospace; }
 
-    .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-top: 0.5rem; }
+    .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin-top: 0.45rem; }
     .btn-preset {
       background: var(--bg-elevated); border: 1px solid var(--border-subtle);
-      color: var(--text-secondary); font-size: 0.74rem; padding: 0.45rem 0.5rem; text-align: left;
+      color: var(--text-secondary); font-size: 0.73rem; padding: 0.42rem 0.5rem; text-align: left;
       border-radius: 5px; cursor: pointer; transition: all 0.15s;
     }
     .btn-preset:hover { border-color: var(--border-focus); color: var(--text-primary); }
@@ -196,24 +213,39 @@
       <a href="index.html" class="logo-badge">N</a>
       <div>
         <span style="font-weight:600; font-size:0.92rem;">VirtualLab • Consola Docente</span>
-        <span style="color:var(--text-muted); font-size:0.74rem; margin-left:0.5rem;">Sincronización en vivo con el aula</span>
+        <span style="color:var(--text-muted); font-size:0.74rem; margin-left:0.5rem;">Control, gráficas y sincronización</span>
       </div>
       <div class="status-pill" id="conn-status">Conectando...</div>
+
+      <!-- BADGE DESTACADO DE SALA CON CÓDIGO ALEATORIO -->
+      <div class="room-badge-group" style="display:inline-flex; align-items:center; gap:0.35rem; background:#1a1e29; border:1px solid #262b3a; border-radius:6px; padding:0.25rem 0.55rem;">
+        <span style="font-size:0.72rem; color:var(--text-secondary);">Sala:</span>
+        <strong id="room-code-badge" style="font-family:'JetBrains Mono', monospace; font-size:0.82rem; color:#3b82f6; letter-spacing:0.06em;">NATEX</strong>
+        <button class="nav-btn" style="padding:0.22rem 0.45rem; font-size:0.70rem;" onclick="generateNewRoom()" title="Generar un nuevo código aleatorio de sala para esta clase">🔄 Nueva Sala</button>
+        <button class="nav-btn" style="padding:0.22rem 0.45rem; font-size:0.70rem;" id="btn-copy-link" onclick="copyClassLink()" title="Copiar enlace directo con el código de sala">📋 Copiar Link de Clase</button>
+      </div>
     </div>
 
     <div class="nav-links">
-      <a href="visor3d.html" target="_blank" class="nav-btn">Visor 3D Estudiante</a>
-      <a href="alumno.html?v=rev18_clean" target="_blank" class="nav-btn">Vista Cámara AR</a>
-      <a href="marcador.html?v=rev18" target="_blank" class="nav-btn">Marcador Óptico</a>
+      <button class="nav-btn primary" onclick="window.VLabComponents.UIModals.openGallery()">🗂️ Galería (11)</button>
+      <button class="nav-btn" onclick="window.VLabComponents.UIModals.openMarker()">📄 Marcador AR</button>
+      <a href="visor3d.html" id="link-student-3d" target="_blank" class="nav-btn">Visor 3D Estudiante</a>
+      <a href="alumno.html" id="link-student-ar" target="_blank" class="nav-btn">Cámara AR</a>
     </div>
   </header>
 
   <div class="exp-selector-bar">
     <button class="exp-tab active" data-id="MEC-01" onclick="selectExperiment('MEC-01')">1. Péndulo Simple</button>
-    <button class="exp-tab" data-id="MEC-02" onclick="selectExperiment('MEC-02')">2. Sistema Masa-Resorte</button>
-    <button class="exp-tab" data-id="OPT-01" onclick="selectExperiment('OPT-01')">3. Ley de Snell (Óptica)</button>
-    <button class="exp-tab" data-id="QC-01" onclick="selectExperiment('QC-01')">4. Estados de Bell (Cuántica)</button>
-    <button class="exp-tab" data-id="MAT-01" onclick="selectExperiment('MAT-01')">5. Superficies 3D z = f(x,y)</button>
+    <button class="exp-tab" data-id="MEC-02" onclick="selectExperiment('MEC-02')">2. Masa-Resorte</button>
+    <button class="exp-tab" data-id="MEC-03" onclick="selectExperiment('MEC-03')">3. Balística / Tiro</button>
+    <button class="exp-tab" data-id="OND-01" onclick="selectExperiment('OND-01')">4. Ondas Melde</button>
+    <button class="exp-tab" data-id="OND-02" onclick="selectExperiment('OND-02')">5. Placa Chladni</button>
+    <button class="exp-tab" data-id="OPT-01" onclick="selectExperiment('OPT-01')">6. Ley Snell (Óptica)</button>
+    <button class="exp-tab" data-id="EM-01" onclick="selectExperiment('EM-01')">7. Fuerza Lorentz</button>
+    <button class="exp-tab" data-id="TER-01" onclick="selectExperiment('TER-01')">8. Gas Ideal (PV=nRT)</button>
+    <button class="exp-tab" data-id="MOD-01" onclick="selectExperiment('MOD-01')">9. Átomo Bohr</button>
+    <button class="exp-tab" data-id="QC-01" onclick="selectExperiment('QC-01')">10. Estados Bell</button>
+    <button class="exp-tab" data-id="MAT-01" onclick="selectExperiment('MAT-01')">11. Superficies 3D</button>
   </div>
 
   <div class="main-layout">
@@ -227,7 +259,7 @@
       </div>
 
       <div class="interaction-hint" id="interaction-hint">
-        💡 Puedes arrastrar el objeto directamente con el mouse
+        Arrastra el objeto directamente con el mouse
       </div>
 
       <!-- Barra de Reproducción Contextual -->
@@ -241,15 +273,25 @@
       </div>
     </div>
 
-    <!-- Controles Maestros Dinámicos (Sin módulo de preguntas, 100% enfocado en laboratorio) -->
     <div class="controls-panel">
+      <!-- 1. GRÁFICOS EXPLICATIVOS EN TIEMPO REAL PARA LA CLASE -->
       <div class="panel-section">
         <div class="section-title">
-          <span>Parámetros del Experimento</span>
-          <span style="color:var(--accent-success); text-transform:none; font-weight:500;">En vivo</span>
+          <span>Gráfico del Fenómeno en Tiempo Real</span>
+          <span id="chart-subtitle" style="color:var(--text-secondary); text-transform:none; font-weight:400;">Oscilación y Energía</span>
+        </div>
+        <div class="sci-chart-box">
+          <canvas id="sci-chart-canvas" width="340" height="155"></canvas>
+        </div>
+      </div>
+
+      <!-- 2. PARÁMETROS DEL EXPERIMENTO -->
+      <div class="panel-section">
+        <div class="section-title">
+          <span>Parámetros Físicos</span>
+          <span style="color:var(--accent-success); text-transform:none; font-weight:500;">Sincronizado</span>
         </div>
 
-        <!-- Selector de Funciones de Ejemplo + Editor para MAT-01 -->
         <div class="formula-box" id="formula-box">
           <label style="font-size:0.75rem; color:var(--text-secondary);">Seleccionar función de ejemplo:</label>
           <select id="formula-select" class="formula-select"></select>
@@ -259,18 +301,19 @@
 
         <div id="dynamic-sliders"></div>
 
-        <div style="margin-top:0.9rem;">
+        <div style="margin-top:0.85rem;">
           <div class="section-title" style="margin-bottom:0.4rem;">Escenarios de Referencia</div>
           <div class="preset-grid" id="dynamic-presets"></div>
         </div>
       </div>
 
+      <!-- 3. PROYECCIÓN AR Y MARCADOR -->
       <div class="panel-section">
         <div class="section-title">
-          <span>Orientación en Cámara AR</span>
+          <span>Proyección AR y Marcador</span>
           <span id="val-orientation" style="color:var(--text-secondary); text-transform:none;">Horizontal (Mesa)</span>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.45rem;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.45rem; margin-bottom:0.5rem;">
           <button class="btn-control active" style="border:1px solid var(--border-subtle);" id="btn-orient-desk" onclick="setOrientation('desk')">
             Modo Mesa
           </button>
@@ -278,19 +321,65 @@
             Modo Pared / Monitor
           </button>
         </div>
+        <button class="btn-control" style="width:100%; border:1px solid var(--border-subtle); background:var(--bg-elevated); color:var(--text-primary);" onclick="window.VLabComponents.UIModals.openMarker()">
+          📄 Mostrar / Descargar Marcador AR en Pantalla
+        </button>
       </div>
 
       <div class="panel-section">
-        <div class="section-title">Notas del Experimento</div>
+        <div class="section-title">Descripción del Fenómeno</div>
         <p id="exp-description" style="color:var(--text-secondary); font-size:0.78rem; line-height:1.5;"></p>
       </div>
     </div>
   </div>
 
   <script>
-    const room = "vlab-n/sala-natex";
-    let currentExpId = 'MEC-01';
-    let currentExp = window.VLabExperiments['MEC-01'];
+    // Gestión de Sala con Código Aleatorio de 4 caracteres
+    let currentRoomCode = window.VLabComponents.RoomManager.getRoomCode({ isTeacher: true });
+    let roomTopic = window.VLabComponents.RoomManager.getTopic(currentRoomCode);
+
+    const roomBadge = document.getElementById('room-code-badge');
+    if (roomBadge) roomBadge.innerText = currentRoomCode;
+
+    const updateStudentLinks = () => {
+      const l3d = document.getElementById('link-student-3d');
+      const lar = document.getElementById('link-student-ar');
+      if (l3d) l3d.href = `visor3d.html?sala=${currentRoomCode}&exp=${currentExpId}`;
+      if (lar) lar.href = `alumno.html?sala=${currentRoomCode}&exp=${currentExpId}`;
+    };
+
+    function copyClassLink() {
+      const url = new URL(window.location.href);
+      url.searchParams.set('sala', currentRoomCode);
+      url.searchParams.set('exp', currentExpId);
+      navigator.clipboard.writeText(url.toString()).then(() => {
+        const btn = document.getElementById('btn-copy-link');
+        const prev = btn.innerText;
+        btn.innerText = '✓ ¡Copiado!';
+        setTimeout(() => { btn.innerText = prev; }, 1800);
+      }).catch(() => {
+        prompt('Copia el link de tu sala:', url.toString());
+      });
+    }
+
+    function generateNewRoom() {
+      if (client && client.connected) {
+        client.unsubscribe(roomTopic);
+      }
+      currentRoomCode = window.VLabComponents.RoomManager.generateNewRoom();
+      roomTopic = window.VLabComponents.RoomManager.getTopic(currentRoomCode);
+      if (roomBadge) roomBadge.innerText = currentRoomCode;
+      updateStudentLinks();
+      if (client && client.connected) {
+        client.subscribe(roomTopic);
+        broadcastChange('INIT');
+      }
+    }
+
+    let currentExpId = new URLSearchParams(window.location.search).get('exp') || 'MEC-01';
+    if (!window.VLabExperiments[currentExpId]) currentExpId = 'MEC-01';
+
+    let currentExp = window.VLabExperiments[currentExpId];
     let expParams = {};
     let expState = {};
     let expSceneInstance = null;
@@ -298,18 +387,23 @@
     let timeScale = 1.0;
     let orientationMode = 'desk';
 
+    // Inicializar Graficador Científico y Modales de Galería/Marcador
+    const sciPlotter = window.VLabComponents.SciPlotter.create(document.getElementById('sci-chart-canvas'));
+    window.VLabComponents.UIModals.inject((id) => selectExperiment(id));
+
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true, connectTimeout: 4000 });
     client.on('connect', () => {
       document.getElementById('conn-status').innerText = "● Aula Sincronizada";
-      client.subscribe(room);
+      client.subscribe(roomTopic);
       broadcastChange('INIT');
     });
 
     function broadcastChange(action = 'PARAM_CHANGE') {
       if (!client || !client.connected) return;
-      client.publish(room, JSON.stringify({
+      client.publish(roomTopic, JSON.stringify({
         type: 'PARAM_CHANGE',
         action: action,
+        room: currentRoomCode,
         expId: currentExpId,
         params: expParams,
         state: expState,
@@ -334,7 +428,6 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // Iluminación neutra de laboratorio
     scene.add(new THREE.AmbientLight(0xffffff, 0.95));
     const keyLight = new THREE.DirectionalLight(0xffffff, 0.75);
     keyLight.position.set(4, 8, 5);
@@ -349,7 +442,6 @@
     const expRootGroup = new THREE.Group();
     scene.add(expRootGroup);
 
-    // Orbit Camera + Manipulación Directa con el Mouse (Raycaster)
     const orbit = {
       theta: 0.32, phi: 1.18, radius: 2.35, target: new THREE.Vector3(0, 0.58, 0),
       orbiting: false, draggingObj: false, lx: 0, ly: 0
@@ -403,9 +495,18 @@
       if (orbit.draggingObj && expSceneInstance && expSceneInstance.onDrag) {
         updatePointerNDC(e);
         raycaster.setFromCamera(pointerNDC, camera);
-        if (raycaster.ray.intersectPlane(dragPlane, intersectPt)) {
+        const activePlane = (expSceneInstance && expSceneInstance.dragPlane) ? expSceneInstance.dragPlane : dragPlane;
+        if (raycaster.ray.intersectPlane(activePlane, intersectPt)) {
           const res = expSceneInstance.onDrag(intersectPt, expState, expParams);
-          if (res && res.paramChanged) {
+          if (res && res.paramChanges) {
+            res.paramChanges.forEach(ch => {
+              const r = document.getElementById(`rng-${ch.key}`);
+              const l = document.getElementById(`lbl-${ch.key}`);
+              const pDef = (currentExp.params || []).find(x => x.key === ch.key);
+              if (r) r.value = ch.value;
+              if (l) l.innerText = `${ch.value} ${pDef ? pDef.unit : ''}`;
+            });
+          } else if (res && res.paramChanged) {
             const k = res.paramChanged;
             const r = document.getElementById(`rng-${k}`);
             const l = document.getElementById(`lbl-${k}`);
@@ -432,7 +533,7 @@
         orbit.draggingObj = false;
         if (expState) expState.isDraggingObject = false;
         renderer.domElement.style.cursor = 'grab';
-        broadcastChange('RESET'); // Sincronizar el nuevo ángulo/estado soltado por el profesor
+        broadcastChange('RESET');
       }
       orbit.orbiting = false;
     });
@@ -454,25 +555,39 @@
     window.addEventListener('resize', resizeViewport);
     setTimeout(resizeViewport, 50);
 
+    const chartTitles = {
+      'MEC-01': 'Oscilación θ(t), ω(t) y Energías',
+      'MEC-02': 'Elongación y(t), v(t) y Energías',
+      'MEC-03': 'Trayectoria Balística y Componentes vx, vy',
+      'OND-01': 'Frecuencia Armónica y Modos Propios fn',
+      'EM-01': 'Radio de Giro de Ciclotrón y Fuerza Centrípeta',
+      'TER-01': 'Curva Isotérmica P vs V y Distribución Cinética',
+      'OPT-01': 'Curva de Snell θ₂ vs θ₁ y Ángulo Crítico',
+      'MOD-01': 'Niveles Cuánticos En y Espectro de Emisión',
+      'QC-01': 'Correlación Cuántica E(Δθ) vs Límite Clásico',
+      'MAT-01': 'Perfiles de Corte Transversal z(x,0) y z(0,y)',
+      'OND-02': 'Espectro de Modos Propios fₙₘ y Resonancia Acústica'
+    };
+
     function selectExperiment(expId) {
       const expDef = window.VLabExperiments[expId];
       if (!expDef) return;
       currentExpId = expId;
       currentExp = expDef;
+      sciPlotter.reset();
 
       document.querySelectorAll('.exp-tab').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.id === expId);
       });
+      document.getElementById('chart-subtitle').innerText = chartTitles[expId] || 'Análisis en vivo';
 
       expParams = {};
       (expDef.params || []).forEach(p => { expParams[p.key] = p.default; });
 
-      // Botones contextuales inteligentes
       document.getElementById('btn-pause').style.display = expDef.isStaticScene ? 'none' : 'inline-block';
       document.getElementById('btn-slow').style.display = expDef.isStaticScene ? 'none' : 'inline-block';
       document.getElementById('btn-push').style.display = expDef.hasImpulse ? 'inline-block' : 'none';
 
-      // Selector de funciones de ejemplo en MAT-01
       const fBox = document.getElementById('formula-box');
       if (expDef.hasCustomFormulaInput) {
         expParams.formulaExpr = expDef.defaultFormula;
@@ -529,6 +644,7 @@
       buildSliders(expDef);
       buildPresets(expDef);
       updateHUD();
+      updateStudentLinks();
       broadcastChange('SWITCH_EXP');
     }
 
@@ -631,6 +747,7 @@
     }
 
     function resetSim() {
+      sciPlotter.reset();
       if (currentExp && currentExp.initState) {
         expState = currentExp.initState(expParams);
       }
@@ -652,13 +769,16 @@
       if (expSceneInstance && expSceneInstance.update) {
         expSceneInstance.update(expState, expParams);
       }
-      if (frameCount++ % 4 === 0) {
+      if (frameCount++ % 2 === 0) {
+        sciPlotter.render(currentExpId, expState, expParams);
+      }
+      if (frameCount % 4 === 0) {
         updateHUD();
       }
       renderer.render(scene, camera);
     }
 
-    selectExperiment('MEC-01');
+    selectExperiment(currentExpId);
     requestAnimationFrame(animate);
   </script>
 </body>

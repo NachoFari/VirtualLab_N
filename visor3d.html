@@ -11,14 +11,22 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
-  <!-- Componentes y 5 Experimentos Interactivos -->
-  <script src="assets/components/math_parser.js?v=rev18"></script>
-  <script src="assets/components/surface_grid.js?v=rev18"></script>
-  <script src="experiments/MEC-01.vlab.js?v=rev18"></script>
-  <script src="experiments/MEC-02.vlab.js?v=rev18"></script>
-  <script src="experiments/OPT-01.vlab.js?v=rev18"></script>
-  <script src="experiments/QC-01.vlab.js?v=rev18"></script>
-  <script src="experiments/MAT-01.vlab.js?v=rev18"></script>
+  <!-- Componentes, Modales y 11 Experimentos Interactivos -->
+  <script src="assets/components/math_parser.js?v=rev20"></script>
+  <script src="assets/components/surface_grid.js?v=rev20"></script>
+  <script src="assets/components/sci_plotter.js?v=rev20"></script>
+  <script src="assets/components/ui_modals.js?v=rev20"></script>
+  <script src="experiments/MEC-01.vlab.js?v=rev20"></script>
+  <script src="experiments/MEC-02.vlab.js?v=rev20"></script>
+  <script src="experiments/MEC-03.vlab.js?v=rev20"></script>
+  <script src="experiments/OND-01.vlab.js?v=rev20"></script>
+  <script src="experiments/OND-02.vlab.js?v=rev20"></script>
+  <script src="experiments/OPT-01.vlab.js?v=rev20"></script>
+  <script src="experiments/EM-01.vlab.js?v=rev20"></script>
+  <script src="experiments/TER-01.vlab.js?v=rev20"></script>
+  <script src="experiments/MOD-01.vlab.js?v=rev20"></script>
+  <script src="experiments/QC-01.vlab.js?v=rev20"></script>
+  <script src="experiments/MAT-01.vlab.js?v=rev20"></script>
 
   <style>
     :root {
@@ -219,18 +227,32 @@
     </a>
 
     <div class="header-actions">
-      <span class="status-badge">● Sala Activa</span>
-      <a href="alumno.html?v=rev18_clean" id="link-ar" class="nav-btn">Modo Cámara AR</a>
+      <!-- CUADRO INTERACTIVO DE SALA -->
+      <div style="display:inline-flex; align-items:center; gap:0.35rem; background:#1a1e29; border:1px solid #262b3a; border-radius:6px; padding:0.25rem 0.55rem;">
+        <span style="font-size:0.72rem; color:var(--text-secondary);">🔑 Sala:</span>
+        <input type="text" id="room-code-input" maxlength="6" value="NATEX" style="width:58px; background:#090a0f; border:1px solid #3b82f6; border-radius:4px; color:#f1f5f9; font-family:'JetBrains Mono',monospace; font-size:0.76rem; font-weight:600; text-transform:uppercase; text-align:center; padding:0.18rem 0.2rem; outline:none;" title="Escribe el código de sala del profesor y pulsa Enter">
+        <button class="nav-btn" style="padding:0.2rem 0.45rem; font-size:0.70rem;" onclick="applyStudentRoomCode()" title="Conectarse a la sala">Unirse</button>
+      </div>
+
+      <button class="nav-btn" onclick="window.VLabComponents.UIModals.openGallery()">🗂️ Galería (11)</button>
+      <button class="nav-btn" onclick="window.VLabComponents.UIModals.openMarker()">📄 Marcador AR</button>
+      <a href="alumno.html" id="link-ar" class="nav-btn">Modo Cámara AR</a>
       <a href="profesor.html" class="nav-btn">Panel Docente</a>
     </div>
   </header>
 
   <div class="exp-bar" id="exp-bar">
     <button class="exp-pill active" data-id="MEC-01" onclick="selectExperiment('MEC-01')">1. Péndulo Simple</button>
-    <button class="exp-pill" data-id="MEC-02" onclick="selectExperiment('MEC-02')">2. Sistema Masa-Resorte</button>
-    <button class="exp-pill" data-id="OPT-01" onclick="selectExperiment('OPT-01')">3. Ley de Snell (Óptica)</button>
-    <button class="exp-pill" data-id="QC-01" onclick="selectExperiment('QC-01')">4. Estados de Bell (Cuántica)</button>
-    <button class="exp-pill" data-id="MAT-01" onclick="selectExperiment('MAT-01')">5. Superficies 3D z = f(x,y)</button>
+    <button class="exp-pill" data-id="MEC-02" onclick="selectExperiment('MEC-02')">2. Masa-Resorte</button>
+    <button class="exp-pill" data-id="MEC-03" onclick="selectExperiment('MEC-03')">3. Balística / Tiro</button>
+    <button class="exp-pill" data-id="OND-01" onclick="selectExperiment('OND-01')">4. Ondas Melde</button>
+    <button class="exp-pill" data-id="OND-02" onclick="selectExperiment('OND-02')">5. Placa Chladni</button>
+    <button class="exp-pill" data-id="OPT-01" onclick="selectExperiment('OPT-01')">6. Ley Snell (Óptica)</button>
+    <button class="exp-pill" data-id="EM-01" onclick="selectExperiment('EM-01')">7. Fuerza Lorentz</button>
+    <button class="exp-pill" data-id="TER-01" onclick="selectExperiment('TER-01')">8. Gas Ideal (PV=nRT)</button>
+    <button class="exp-pill" data-id="MOD-01" onclick="selectExperiment('MOD-01')">9. Átomo Bohr</button>
+    <button class="exp-pill" data-id="QC-01" onclick="selectExperiment('QC-01')">10. Estados Bell</button>
+    <button class="exp-pill" data-id="MAT-01" onclick="selectExperiment('MAT-01')">11. Superficies 3D</button>
   </div>
 
   <div class="workspace">
@@ -419,7 +441,7 @@
     window.addEventListener('resize', onResize);
     setTimeout(onResize, 50);
 
-    // Gestor de Experimentos
+    // Gestor de Experimentos y Modales
     let currentExpId = new URLSearchParams(window.location.search).get('exp') || 'MEC-01';
     if (!window.VLabExperiments[currentExpId]) currentExpId = 'MEC-01';
 
@@ -428,6 +450,45 @@
     let expParams = {};
     let expSceneInstance = null;
     let isPaused = false;
+
+    // Inicializar Modales Globales de Galería y Marcador AR
+    if (window.VLabComponents && window.VLabComponents.UIModals) {
+      window.VLabComponents.UIModals.inject((id) => selectExperiment(id));
+    }
+
+    // Código de Sala de Alumno
+    let studentRoomCode = window.VLabComponents.RoomManager.getRoomCode({ isTeacher: false });
+    let roomTopic = window.VLabComponents.RoomManager.getTopic(studentRoomCode);
+
+    const roomInput = document.getElementById('room-code-input');
+    if (roomInput) {
+      roomInput.value = studentRoomCode;
+      roomInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') applyStudentRoomCode();
+      });
+    }
+
+    function updateARLink() {
+      const linkAr = document.getElementById('link-ar');
+      if (linkAr) linkAr.href = `alumno.html?sala=${studentRoomCode}&exp=${currentExpId}`;
+    }
+
+    function applyStudentRoomCode() {
+      const input = document.getElementById('room-code-input');
+      const raw = input ? input.value : 'NATEX';
+      const clean = window.VLabComponents.RoomManager.setRoomCode(raw, { isTeacher: false }) || 'NATEX';
+      if (input) input.value = clean;
+      if (client && client.connected) {
+        client.unsubscribe(roomTopic);
+      }
+      studentRoomCode = clean;
+      roomTopic = window.VLabComponents.RoomManager.getTopic(clean);
+      if (client && client.connected) {
+        client.subscribe(roomTopic);
+      }
+      updateARLink();
+      showSyncToast(`Conectado a Sala ${clean}`);
+    }
 
     const expRootGroup = new THREE.Group();
     scene.add(expRootGroup);
@@ -441,7 +502,7 @@
       document.querySelectorAll('.exp-pill').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.id === expId);
       });
-      document.getElementById('link-ar').href = `alumno.html?v=rev18_clean&exp=${expId}`;
+      updateARLink();
 
       expParams = {};
       (expDef.params || []).forEach(p => { expParams[p.key] = p.default; });
@@ -591,15 +652,25 @@
       if (expSceneInstance) expSceneInstance.update(expState, expParams);
     }
 
-    // Sincronización con el Profesor vía MQTT
+    function showSyncToast(msg = 'Sincronizado con el docente') {
+      const toast = document.getElementById('toast-sync');
+      if (toast) {
+        toast.innerText = msg;
+        toast.style.opacity = '1';
+        setTimeout(() => { toast.style.opacity = '0'; }, 1600);
+      }
+    }
+
+    // Sincronización con el Profesor vía MQTT en sala dinámica
     const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt', { clean: true });
     client.on('connect', () => {
-      client.subscribe('vlab-n/sala-natex');
+      client.subscribe(roomTopic);
     });
     client.on('message', (topic, message) => {
       try {
         const payload = JSON.parse(message.toString());
         if (payload.type === 'PARAM_CHANGE' || payload.type === 'SYNC') {
+          showSyncToast(`Sincronizado con docente (${studentRoomCode})`);
           if (payload.expId && payload.expId !== currentExpId && window.VLabExperiments[payload.expId]) {
             selectExperiment(payload.expId);
           }

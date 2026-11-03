@@ -8,6 +8,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Componentes, Modales y 11 Experimentos de Laboratorio -->
+  <script src="assets/components/ui_modals.js?v=rev20"></script>
+  <script src="experiments/MEC-01.vlab.js?v=rev20"></script>
+  <script src="experiments/MEC-02.vlab.js?v=rev20"></script>
+  <script src="experiments/MEC-03.vlab.js?v=rev20"></script>
+  <script src="experiments/OND-01.vlab.js?v=rev20"></script>
+  <script src="experiments/OND-02.vlab.js?v=rev20"></script>
+  <script src="experiments/OPT-01.vlab.js?v=rev20"></script>
+  <script src="experiments/EM-01.vlab.js?v=rev20"></script>
+  <script src="experiments/TER-01.vlab.js?v=rev20"></script>
+  <script src="experiments/MOD-01.vlab.js?v=rev20"></script>
+  <script src="experiments/QC-01.vlab.js?v=rev20"></script>
+  <script src="experiments/MAT-01.vlab.js?v=rev20"></script>
   <style>
     :root {
       --bg-app: #090a0f;
@@ -138,23 +152,27 @@
       <div class="logo-badge">N</div>
       <div class="logo-text">VirtualLab</div>
     </div>
-    <a href="https://github.com/NachoFari/VirtualLab_N" target="_blank" class="github-link">
-      Repositorio en GitHub
-    </a>
+    <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+      <button onclick="window.VLabComponents.UIModals.openGallery()" class="github-link" style="cursor:pointer; background:var(--accent-primary); border-color:var(--accent-primary); color:#fff;">🗂️ Galería (11)</button>
+      <button onclick="window.VLabComponents.UIModals.openMarker()" class="github-link" style="cursor:pointer;">📄 Marcador AR</button>
+      <a href="https://github.com/NachoFari/VirtualLab_N" target="_blank" class="github-link">
+        GitHub
+      </a>
+    </div>
   </header>
 
   <main>
     <section class="hero">
-      <div class="hero-tag">Laboratorio de Física y Cálculo 3D</div>
-      <h1>Simulaciones interactivas para el aula</h1>
-      <p class="lead">Manipula sistemas físicos directamente en 3D desde cualquier navegador o proyéctalos sobre el escritorio mediante realidad aumentada sincronizada en tiempo real con el docente.</p>
+      <div class="hero-tag">Laboratorio de Física Computacional y Cálculo 3D</div>
+      <h1>11 Simulaciones Interactivas para el Aula</h1>
+      <p class="lead">Manipula instrumental físico directamente en 3D desde cualquier navegador o proyéctalo sobre el pupitre mediante Realidad Aumentada sincronizada en tiempo real con el docente vía MQTT.</p>
     </section>
 
     <section class="grid-roles">
       <div class="card-role">
         <div>
           <h3>Visor 3D Interactivo</h3>
-          <p>Explora los 5 experimentos en pantalla completa sin necesidad de cámara. Arrastra objetos con el mouse, rota la vista en 360° y modifica parámetros.</p>
+          <p>Explora las 11 prácticas en pantalla completa sin necesidad de cámara. Arrastra objetos con el mouse, rota la vista en 360° y modifica parámetros físicos en tiempo real.</p>
         </div>
         <a href="visor3d.html" class="btn-action btn-primary">Abrir Visor 3D</a>
       </div>
@@ -162,7 +180,7 @@
       <div class="card-role">
         <div>
           <h3>Consola Docente</h3>
-          <p>Controla el experimento activo de la clase, manipula el péndulo o el láser directamente con el cursor y sincroniza parámetros con los estudiantes.</p>
+          <p>Controla el experimento activo del aula con gráficas científicas en vivo, código aleatorio de sala por clase y sincronización MQTT bidireccional instantánea.</p>
         </div>
         <a href="profesor.html" class="btn-action btn-secondary">Entrar como Docente</a>
       </div>
@@ -170,22 +188,22 @@
       <div class="card-role">
         <div>
           <h3>Modo Cámara AR</h3>
-          <p>Proyecta el aparato experimental sobre una hoja impresa o pantalla secundaria utilizando la cámara del dispositivo móvil.</p>
+          <p>Proyecta los 11 montajes experimentales sobre el pupitre o pantalla con tracking óptico de alta estabilidad (Patrón N / Hiro) y orientación Mesa/Pared.</p>
         </div>
-        <a href="alumno.html?v=rev18_clean" class="btn-action btn-secondary">Abrir Cámara AR</a>
+        <a href="alumno.html" class="btn-action btn-secondary">Abrir Cámara AR</a>
       </div>
 
       <div class="card-role">
         <div>
-          <h3>Marcador de Referencia</h3>
-          <p>Muestra en pantalla o descarga el patrón óptico cuadrado utilizado como punto de anclaje para el modo de realidad aumentada.</p>
+          <h3>Marcador Óptico Fullscreen</h3>
+          <p>Muestra en pantalla completa o descarga en SVG/PNG el patrón óptico cuadrado de alta precisión utilizado como anclaje espacial para la Realidad Aumentada.</p>
         </div>
-        <a href="marcador.html?v=rev18" class="btn-action btn-secondary">Ver Marcador</a>
+        <button onclick="window.VLabComponents.UIModals.openMarker()" class="btn-action btn-secondary" style="cursor:pointer; background:var(--bg-elevated); border:1px solid var(--border-subtle); width:100%;">Ver Marcador AR</button>
       </div>
     </section>
 
     <section class="exp-section">
-      <h2>Prácticas de Laboratorio Disponibles</h2>
+      <h2>Prácticas de Laboratorio Disponibles (11 Experimentos)</h2>
       <p class="sub">Selecciona una práctica para abrirla directamente en el Visor 3D o en Realidad Aumentada:</p>
       <div class="exp-grid">
         <div class="exp-card">
@@ -196,7 +214,7 @@
           </div>
           <div class="exp-links">
             <a href="visor3d.html?exp=MEC-01" class="link-3d">Visor 3D</a>
-            <a href="alumno.html?v=rev18_clean&exp=MEC-01" class="link-ar">Cámara AR</a>
+            <a href="alumno.html?exp=MEC-01" class="link-ar">Cámara AR</a>
           </div>
         </div>
 
@@ -208,43 +226,115 @@
           </div>
           <div class="exp-links">
             <a href="visor3d.html?exp=MEC-02" class="link-3d">Visor 3D</a>
-            <a href="alumno.html?v=rev18_clean&exp=MEC-02" class="link-ar">Cámara AR</a>
+            <a href="alumno.html?exp=MEC-02" class="link-ar">Cámara AR</a>
+          </div>
+        </div>
+
+        <div class="exp-card">
+          <div>
+            <div class="exp-tag">MEC-03 • Balística</div>
+            <div class="exp-name">3. Tiro Parabólico</div>
+            <div class="exp-formula">y(x) = x·tan(θ) - gx²/(2v₀²cos²θ)</div>
+          </div>
+          <div class="exp-links">
+            <a href="visor3d.html?exp=MEC-03" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?exp=MEC-03" class="link-ar">Cámara AR</a>
+          </div>
+        </div>
+
+        <div class="exp-card">
+          <div>
+            <div class="exp-tag">OND-01 • Ondas y Acústica</div>
+            <div class="exp-name">4. Ondas en Cuerda (Melde)</div>
+            <div class="exp-formula">y(x,t) = 2A·sin(nπx/L)·cos(ωt)</div>
+          </div>
+          <div class="exp-links">
+            <a href="visor3d.html?exp=OND-01" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?exp=OND-01" class="link-ar">Cámara AR</a>
+          </div>
+        </div>
+
+        <div class="exp-card">
+          <div>
+            <div class="exp-tag">OND-02 • Resonancia 2D</div>
+            <div class="exp-name">5. Placa de Chladni</div>
+            <div class="exp-formula">z(x,y)=0 ; fₙₘ ∝ (c/L²)(n²+m²)</div>
+          </div>
+          <div class="exp-links">
+            <a href="visor3d.html?exp=OND-02" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?exp=OND-02" class="link-ar">Cámara AR</a>
           </div>
         </div>
 
         <div class="exp-card">
           <div>
             <div class="exp-tag">OPT-01 • Óptica Geométrica</div>
-            <div class="exp-name">3. Ley de Snell y Refracción</div>
+            <div class="exp-name">6. Ley de Snell y Refracción</div>
             <div class="exp-formula">n₁·sin(θ₁) = n₂·sin(θ₂)</div>
           </div>
           <div class="exp-links">
             <a href="visor3d.html?exp=OPT-01" class="link-3d">Visor 3D</a>
-            <a href="alumno.html?v=rev18_clean&exp=OPT-01" class="link-ar">Cámara AR</a>
+            <a href="alumno.html?exp=OPT-01" class="link-ar">Cámara AR</a>
+          </div>
+        </div>
+
+        <div class="exp-card">
+          <div>
+            <div class="exp-tag">EM-01 • Electromagnetismo</div>
+            <div class="exp-name">7. Fuerza de Lorentz</div>
+            <div class="exp-formula">F = q(v × B) ; R = mv/(|q|B)</div>
+          </div>
+          <div class="exp-links">
+            <a href="visor3d.html?exp=EM-01" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?exp=EM-01" class="link-ar">Cámara AR</a>
+          </div>
+        </div>
+
+        <div class="exp-card">
+          <div>
+            <div class="exp-tag">TER-01 • Termodinámica</div>
+            <div class="exp-name">8. Gas Ideal (PV = nRT)</div>
+            <div class="exp-formula">P·V = n·R·T ; ⟨Ek⟩ = (3/2) k_B T</div>
+          </div>
+          <div class="exp-links">
+            <a href="visor3d.html?exp=TER-01" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?exp=TER-01" class="link-ar">Cámara AR</a>
+          </div>
+        </div>
+
+        <div class="exp-card">
+          <div>
+            <div class="exp-tag">MOD-01 • Física Moderna</div>
+            <div class="exp-name">9. Átomo de Bohr</div>
+            <div class="exp-formula">Eₙ = -13.6 eV/n² ; ΔE = hc/λ</div>
+          </div>
+          <div class="exp-links">
+            <a href="visor3d.html?exp=MOD-01" class="link-3d">Visor 3D</a>
+            <a href="alumno.html?exp=MOD-01" class="link-ar">Cámara AR</a>
           </div>
         </div>
 
         <div class="exp-card">
           <div>
             <div class="exp-tag">QC-01 • Física Cuántica</div>
-            <div class="exp-name">4. Estados de Bell y Qubits</div>
+            <div class="exp-name">10. Estados de Bell y Qubits</div>
             <div class="exp-formula">|Φ⁺⟩ = (|00⟩ + |11⟩)/√2</div>
           </div>
           <div class="exp-links">
             <a href="visor3d.html?exp=QC-01" class="link-3d">Visor 3D</a>
-            <a href="alumno.html?v=rev18_clean&exp=QC-01" class="link-ar">Cámara AR</a>
+            <a href="alumno.html?exp=QC-01" class="link-ar">Cámara AR</a>
           </div>
         </div>
 
         <div class="exp-card">
           <div>
             <div class="exp-tag">MAT-01 • Cálculo Multivariable</div>
-            <div class="exp-name">5. Superficies 3D z = f(x,y,t)</div>
-            <div class="exp-formula">8 funciones de ejemplo</div>
+            <div class="exp-name">11. Superficies 3D z = f(x,y,t)</div>
+            <div class="exp-formula">8 familias de ondas y funciones</div>
           </div>
           <div class="exp-links">
             <a href="visor3d.html?exp=MAT-01" class="link-3d">Visor 3D</a>
-            <a href="alumno.html?v=rev18_clean&exp=MAT-01" class="link-ar">Cámara AR</a>
+            <a href="alumno.html?exp=MAT-01" class="link-ar">Cámara AR</a>
           </div>
         </div>
       </div>
@@ -252,8 +342,16 @@
   </main>
 
   <footer>
-    VirtualLab • Herramienta Abierta de Simulación Física • <a href="https://github.com/NachoFari/VirtualLab_N" style="color:var(--text-secondary);">GitHub</a>
+    VirtualLab • Herramienta Abierta de Simulación Física y Realidad Aumentada • <a href="https://github.com/NachoFari/VirtualLab_N" style="color:var(--text-secondary);">GitHub</a>
   </footer>
+
+  <script>
+    if (window.VLabComponents && window.VLabComponents.UIModals) {
+      window.VLabComponents.UIModals.inject((id) => {
+        window.location.href = `visor3d.html?exp=${id}`;
+      });
+    }
+  </script>
 
 </body>
 </html>
