@@ -1,4 +1,4 @@
-# 🌌 VirtualLab_N: Laboratorio de Física en Realidad Aumentada & Escritorio
+﻿# 🌌 VirtualLab_N: Laboratorio de Física en Realidad Aumentada & Escritorio
 > **Plataforma Educativa de Código Abierto • $0 USD Costo Permanente • Estilo Natex**  
 > Desarrollado por **[NachoFari](https://github.com/NachoFari)**
 
@@ -44,5 +44,5 @@ VirtualLab_N/
 ---
 
 ## 📜 Licencia y Autoría
-Creado por **NachoFari** bajo licencia de código abierto **MIT**.  
+Creado por **NachoFari** bajo licencia de código abierto **GNU General Public License v3.0 (GPLv3)**. Consulta el archivo [LICENSE](LICENSE) para más información..  
 Libre para uso pedagógico, científico y comunitario en colegios y universidades de todo el mundo.
